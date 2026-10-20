@@ -126,7 +126,9 @@ The model selector prefers `gpt-6-luna` with `max` reasoning when the account ad
 
 The [2026-10-20 verification record](docs/validation-20261020.md) covers the
 previously omitted tests, fresh Ubuntu installation, browser workflow and
-progress indicators, with the execution scope and scientific limits.
+progress indicators, including an unchanged run of the published one-line
+installer through Excel download and result reopening after app restart,
+with the execution scope and scientific limits.
 
 ```sh
 python3 scripts/check-public-tree.py

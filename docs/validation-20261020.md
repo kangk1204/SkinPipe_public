@@ -91,3 +91,55 @@ the source XML hashes.
 
 Raw private fixtures, study databases, installation state and credentials are
 not part of this public verification summary.
+
+## Follow-up: published-source installation and operating UI
+
+The README's one-line command was run unchanged in another pristine Ubuntu
+24.04.5 x86_64 guest, as the regular `researcher` user with sudo available.
+It fetched public source `3f1174656be3e64d7103c2002b3824650c18ddaa` and completed
+the starter installation without a repair or retry. The default browser port
+4317 returned HTTP 200. Preparation took approximately 5 minutes 45 seconds
+in this guest; this is an observed duration, not an installation-time promise.
+It again produced 333 structures, 322 successful CPU predictions and 11
+unsupported multicomponent structures. Installed UI files matched the source.
+
+Following the README, the browser showed installation readiness, resolved
+Nicotinamide to PubChem CID 936, ran input-only assessment, displayed completion,
+and saved the Excel ZIP using the documented preparation button and download
+link. The actual downloaded workbook opened with five sheets, two structure
+images and one candidate row. All 52 ADMET numeric values and their complete
+JSON metadata matched the source row included in that ZIP; name and SMILES
+also matched. No formula cells were present.
+
+The new app was then stopped and restarted through its launchers. Its study,
+snapshot, export and database rows were unchanged. Research/result files,
+catalog files, model profiles and weights retained their hashes, sizes and
+modification times. The browser reopened the completed study from its history.
+For parallel browser QA only, this guest used the supported `--port 4396`
+option after the default-port check; the existing user's port 4317 installation
+was preserved. The sudo password prompt itself was outside this test because
+the disposable guest's account had passwordless sudo.
+
+The same progress UI was also published to the existing owner-private operating
+Site. Its access policy and zero-schedule configuration were unchanged.
+Source comparison found only the intended progress assets and generated
+offline bundle changed; all other existing public assets retained their hashes.
+Existing study rows and stored files were checked before and after publication
+and a separately labelled test study. The operating API, coordinator and
+PostgreSQL processes were unchanged.
+
+At the operating URL, a preexisting result reopened with the green completion
+panel. A new Nicotinamide assessment visibly transitioned from submission to
+blue running status and green completion, then its Excel ZIP was downloaded.
+The retained operating exporter produces four sheets, while the fresh public
+installation produces five including the reading guide. Both layouts were
+checked explicitly; both contain the candidate sheet, individual compound tab,
+source contract, ADMET definitions and two structure images. Each ZIP's 52
+ADMET values and full metadata matched its own exported source row.
+
+The Site build and existing web checks passed, including 136 bridge tests and
+the new 18 progress tests. Initial checkout-only checks required canonical
+Python sources that are absent from the standalone Site repository; those
+sources were supplied outside the Site checkout for testing. They were not
+added to the deployment. These checks cover the stated Nicotinamide workflow,
+not a study of first-time users or all possible research inputs.

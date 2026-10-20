@@ -122,6 +122,6 @@ bash ~/SkinPipe/runtime/Catalog-Status.sh
 
 모델 목록에 있으면 `gpt-6-luna` · `max`를 먼저 선택합니다. Luna가 없으면 제공자가 명시한 기본 모델을 사용하며, 기본 모델도 없으면 사용자가 목록에서 선택합니다. 호출 실패 후 다른 모델이나 별도 API 과금으로 자동 전환하지 않습니다. 사용할 수 있는 모델과 사용량은 연결한 계정에 따라 다릅니다. [연결·자료 전달 안내](docs/browser.ko.md#선택적-chatgpt-사용)를 확인하세요.
 
-[2026-10-20 검증 기록](docs/validation-20261020.md)에 기존 누락 테스트, 새 Ubuntu 설치, 브라우저·진행 표시 확인 결과와 검증 한계를 정리했습니다.
+[2026-10-20 검증 기록](docs/validation-20261020.md)에 기존 누락 테스트, 공개 한 줄 명령 그대로의 새 Ubuntu 설치, 첫 연구·진행 확인·Excel 저장, 앱 재시작 후 결과 재열기와 검증 한계를 정리했습니다.
 
 개발용 검사 명령과 기여 규칙은 [영문 README](README.md#development)와 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다. SkinPipe 배포 라이선스는 추후 결정합니다. 포함된 외부 구성 요소는 각자의 고지를 유지합니다.
