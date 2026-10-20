@@ -218,3 +218,6 @@ Choose a model from the account's returned model list. The preference is `gpt-6-
 Public literature review is separate from permission to send private SMILES, uploaded structures or calculated results. Inspect the data-permission choices before running that stage. ChatGPT does not modify the input identity, pocket, toxicity values, scores or task status. Without ChatGPT, the platform provides the saved numerical tables and standard result text.
 
 ![Optional ChatGPT connection screen before account sign-in](images/18-optional-chatgpt.jpg)
+
+
+For the actual CRABP2–1CBS candidate-docking workflow, progress and Excel checks, see [the follow-up verification](candidate-docking-20261021.md).

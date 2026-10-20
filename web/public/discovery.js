@@ -81,7 +81,7 @@ export function receptorPreparationRequest({target,pdb='',chain='',ligand='',ph=
 }
 export async function renderDiscovery(main,api,role='researcher',{isCurrent:isActive}={}){
  const epoch=++generation,startRoute=globalThis.location?.hash?.split('?')[0],routeIsCurrent=()=>epoch===generation&&(isActive?isActive():startRoute!=='#discovery'||globalThis.location?.hash?.split('?')[0]==='#discovery');
- const snapshots=(await api('/v2/snapshots')).snapshots||[];if(!routeIsCurrent())return;
+ const snapshots=(await api('/v2/snapshots?view=summary')).snapshots||[];if(!routeIsCurrent())return;
  let kind='compound',format='name',selectedCid=null,uploadId=null,selection=null,ligandSmiles='',resolution=null,resolutionKey=null,imageUrl=null,activeRun=null,pollTimer=null,progressTimer=null,lastLiveRun=null,lastCheckedAt=null,resultRequest=0,inputGeneration=0,resolveRequest=0,resolveButtonOwner=0,submissionInFlight=false,submissionSequence=0,navigationIntent=0,reviewingControl=null;
  let exportView=0,exportNotice=0;
  const selectedRuns=new Set(),controlRequests=new Map(),exportLinks=new Set();
@@ -349,6 +349,7 @@ export async function renderDiscovery(main,api,role='researcher',{isCurrent:isAc
   try{
    activeRun=runId;lastLiveRun=null;lastCheckedAt=null;step(4,false);$('research-run-controls').innerHTML='';liveChecking(runId,sequence);$('research-result-actions').innerHTML='<button id="research-result-refresh" class="button">결과 갱신</button>';$('research-result-refresh').onclick=()=>refreshRun(runId);$('research-result-assistance-controls').innerHTML='';$('research-result-summary').innerHTML='<p role="status">저장한 결과와 평가 근거를 확인하고 있습니다…</p>';
    const summary=await api('/v2/discovery-runs/'+encodeURIComponent(runId)+'/summary');if(!isCurrent()||activeRun!==runId||sequence!==resultRequest)return;
+   if(!submissionInFlight){$('research-submit-status').textContent='';$('research-submit-status').hidden=true}
    $('research-result-summary').innerHTML=researchSummaryMarkup(summary);
    $('research-result-actions').innerHTML=`<button id="research-result-refresh" class="button">결과 갱신</button>${summary.snapshot_id?'<button id="research-open-population" class="button">전체 후보 표 보기</button><button id="research-result-excel" class="button primary">Excel · 전체 후보·개별 물질 탭</button><button id="research-result-zip" class="button">오프라인 ZIP</button>':''}`;
    $('research-result-assistance-controls').innerHTML=`<details class="research-assistance-controls"><summary>결과 설명·다음 실험 안내 (선택)</summary><h3>결과를 읽고 다음 연구 준비하기</h3><p><a class="inline-link" href="#literature?source=generalized">화합물·단백질 공개 문헌 검토 →</a> · 기존 입력은 가져오지 않습니다. 공개 이름을 직접 입력하고 전달에 동의한 뒤 실행합니다.</p><p>계산 결과의 기본 안내는 언제든 사용할 수 있습니다. ChatGPT 설명은 아래 허용 범위를 확인하고 직접 요청합니다.</p><label><input type="checkbox" id="research-result-ai">저장한 결과 요약을 이번 ChatGPT 설명에 사용</label><p id="research-result-scope" class="research-scope" role="status"></p><div class="form-actions"><button id="research-explain-result" class="button">결과 해석 도움말</button><button id="research-followup" class="button">다음 실험 검토 안내</button></div><div id="research-result-assistance" aria-live="polite"></div></details>`;

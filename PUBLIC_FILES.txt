@@ -295,3 +295,8 @@ web/public/vendor/molstar/molstar.css
 web/public/vendor/molstar/molstar.js
 tests/test_research_export_state.mjs
 docs/validation-modes-20261021.md
+tests/test_research_docking_summary.mjs
+tests/test_research_submission_timeout.mjs
+docs/candidate-docking-20261021.md
+tests/test_snapshot_summary.py
+tests/test_snapshot_summary_ui.mjs

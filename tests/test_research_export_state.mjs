@@ -50,7 +50,7 @@ async function fixture(exportResponse=()=>ready(),{native=true,download,status}=
  const record=id=>({run_id:id,status:'complete',snapshot_id:'snapshot-'+id,input:{value:id},counts:{},candidates:[]});
  const api=async(path,options)=>{
   const body=options?.body?JSON.parse(options.body):null;calls.push({path,body});
-  if(path==='/v2/snapshots')return{snapshots:[]};
+  if(path==='/v2/snapshots?view=summary')return{snapshots:[]};
   if(path==='/v2/research-capabilities')return{};
   if(path==='/v2/discovery-runs')return{runs:['A','B'].map(record)};
   if(path.endsWith('/summary'))return record(path.split('/')[3]);
@@ -64,6 +64,15 @@ async function fixture(exportResponse=()=>ready(),{native=true,download,status}=
  return{...h,calls,api,view:async index=>h.history[index].view.onclick(),exportResult:()=>h.get('#research-result-excel').onclick()};
 }
 function assertNoNotice(h){for(const id of['research-export-status','research-result-export-status']){assert.equal(h.get('#'+id).textContent,'');assert.equal(h.get('#'+id).attributes['aria-busy'],'false')}}
+
+test('opening a verified saved run clears an old lost-submission acknowledgement',async()=>{
+ const h=await fixture(),notice=h.get('#research-submit-status');
+ notice.textContent='접수 응답을 확인하지 못했습니다. 접수 여부를 먼저 확인해 주세요.';notice.hidden=false;
+ await h.view(0);
+ assert.equal(notice.hidden,true);assert.equal(notice.textContent,'');
+ assert.match(h.get('#research-result-summary').innerHTML,/>A</);
+ assert.equal(h.calls.filter(call=>call.body&&call.path==='/v2/discovery-runs').length,0,'Opening the saved run never submits it again');
+});
 
 test('new input clears a finished result export notice and ready link',async()=>{
  const h=await fixture();await h.view(0);await h.exportResult();assert.match(h.get('#research-result-export-status').textContent,/SkinPipe-A/);assert.equal(h.links[0].isConnected,true);

@@ -106,3 +106,6 @@ PostgreSQL image digest, retaining the same database version and health gate.
 Private GitHub Actions remained unable to start because of the account billing/
 spending restriction; local checks and actual operating runs are reported
 separately from that unavailable CI execution.
+
+
+The subsequent [candidate-docking check](candidate-docking-20261021.md) adds actual non-control candidate docking, pose QC and Excel verification with the QC policy unchanged.

@@ -19,6 +19,9 @@ jobs:
       - run: node tests/test_metric_radar.mjs
       - run: node tests/test_research_progress.mjs
       - run: node tests/test_research_export_state.mjs
+      - run: node tests/test_research_docking_summary.mjs
+      - run: node tests/test_research_submission_timeout.mjs
+      - run: node tests/test_snapshot_summary_ui.mjs
       - name: Check all browser module syntax
         run: |
           for module in web/public/*.js; do node --check "$module"; done

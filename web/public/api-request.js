@@ -17,6 +17,8 @@ export function requestTimeout(path) {
   if (path === '/v1/screens' || path.startsWith('/v1/screens/')) return 120000;
   // First v2 identity lookup verifies the pinned local ChEMBL database bytes.
   if (path === '/v2/targets/resolve' || path === '/v2/research-inputs/resolve') return 600000;
+  // Synchronous receptor downloads and validation precede the acceptance reply.
+  if (path === '/v2/discovery-runs') return 600000;
   if (path === '/v2/research-inputs/uploads' || path === '/v2/research-assistance' || path === '/v2/literature/reviews') return 120000;
   if (path === '/v1/resolve-target' || path === '/v1/assess') return 100000;
   if (path === '/v1/compare-hops') return 40000;

@@ -45,7 +45,7 @@ test('actual discovery renderer transitions running → lost/stale → recovered
  const record=()=>({run_id:'fixture',status:state,input:{value:'Synthetic public input'},counts:{},candidates:[],progress:{stage:'catalog_acquisition',processed:2,total:5},...(state==='complete'?{snapshot_id:'synthetic-snapshot'}:{})});
  const api=async(path,options)=>{
   calls.push({path,method:options?.method||'GET'});
-  if(path==='/v2/snapshots')return{snapshots:[]};
+  if(path==='/v2/snapshots?view=summary')return{snapshots:[]};
   if(path==='/v2/research-capabilities')return{};
   if(path==='/v2/discovery-runs')return{runs:[record()]};
   if(path.endsWith('/summary'))return record();

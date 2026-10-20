@@ -106,6 +106,18 @@ Use **다른 입력으로 새 연구** (New study with another input) for each e
 | Bound PDB structure | **결합 구조가 있어요 → PDB ID → `1CBS`**, check model 1 / chain A / REA / residue 200 / assembly, then **같은 단백질 포켓에서 다른 골격 후보 비교**. For upload, choose **PDB/mmCIF 파일** and an original file containing both protein and ligand. |
 | Optional new structures | In compound similarity/scaffold or bound-structure mode, expand **새 분자 구조도 만들어 비교하기 (선택)** and enable generation. A small check can use BRICS recombination `2`, 3D comparison `2`, conformers `1`. Separate substitution products can make the total exceed two. Protein and assessment modes do not offer this choice. |
 
+### First check of actual candidate docking
+
+1. Choose **단백질을 알고 있어요**, enter `CRABP2`, confirm human / UniProt `P29373`, then **이 입력으로 연구하기 → 이 단백질의 후보 찾기**.
+2. Open **후보 수·필터·최대 처리 시간 조정** and enter **PDB ID `1CBS`, protein chain `A`, reference ligand code `REA`**. Keep the displayed preparation-pH default. This path uses the observed coordinates and templates; pH-specific protein protonation is unassessed.
+3. For a short workflow check set **representative target `3`, catalog limit `50`, time limit `0.5` hours**. Keep the purchase, structural-alert, toxicity and opposing-action filters unchanged. Click **새 연구 실행** once. Structure retrieval/retries can take several minutes before acceptance. If the reply is lost, use **내 연구 실행 기록 → 상태 갱신 → 진행·결과 보기** to find the accepted study before considering another submission.
+4. When the blue progress panel turns green, read **후보 도킹과 관측 리간드 재도킹**: candidate calculations, new calculations, exact-condition reuse, and reference-redocking RMSD/QC are separate. Open **전체 후보 표 보기** for each candidate's pose QC and hold reasons.
+5. Click **Excel · 전체 후보·개별 물질 탭 → 준비된 Excel 묶음 ZIP 저장**. Extract the ZIP and open `review-0001.xlsx`, its **후보 검토** table and `C000001`-style compound tabs. Retain the whole ZIP, including its source JSON and pose files.
+
+For a bound-structure start, choose **결합 구조가 있어요 → PDB ID `1CBS`**, or select the [unmodified official mmCIF](https://files.rcsb.org/download/1CBS.cif) under **PDB/mmCIF 파일**. Confirm model 1 / chain A / REA / residue 200 / assembly 1, supplying the verified REA SMILES below if requested. Select **같은 단백질 포켓에서 다른 골격 후보 비교**, keep the same 3/50/0.5 limits and filters, then follow the same progress/results/Excel steps.
+
+The operating-catalog check completed **3 new candidate docking calculations with passing pose QC** through the protein route and **2** through the mmCIF route. The latter exhausted the eligible pool before reaching the target of 3. Each study's one observed-ligand redocking is separate from these candidate counts. These yields are not guaranteed with the small starter catalog or another environment; follow [catalog preparation](docs/catalog.en.md) to increase coverage. Keep QC and filters unchanged. See [verification scope and zero/held outcomes](docs/candidate-docking-20261021.md).
+
 If the `1CBS` upload requests exact ligand SMILES, RCSB's [REA record](https://files.rcsb.org/ligands/download/REA.cif) provides `SMILES_CANONICAL` (OpenEye OEToolkits 1.7.6). **For this 1CBS/REA example only**, first check chain A / REA / residue 200 and the protein chain, enter the value below, then **선택한 결합 화합물 확인**. Do not reuse it for a different ligand.
 
 ```text

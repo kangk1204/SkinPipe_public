@@ -56,6 +56,29 @@ class _CatalogTransportError(ValueError):
     reason_code = "gateway_transport_unavailable"
 
 
+def _snapshot_list_summary(snapshot):
+    """Project verified list metadata without mutating the sealed manifest."""
+    result = {
+        key: deepcopy(snapshot[key])
+        for key in (
+            "schema_version", "snapshot_id", "created_at", "candidate_count",
+            "target_counts", "status", "reason", "error", "ownership_status",
+        )
+        if key in snapshot
+    }
+    provenance = snapshot.get("provenance")
+    if isinstance(provenance, dict):
+        result["provenance"] = {
+            key: deepcopy(provenance[key])
+            for key in (
+                "marker", "target_id", "screen_id", "search_mode",
+                "primary_docking_protocols",
+            )
+            if key in provenance
+        }
+    return result
+
+
 class PlatformService:
     def __init__(
         self,
@@ -1518,7 +1541,14 @@ class PlatformService:
                 "ranking_weight": 0,
             }
         if parts == ["v2", "snapshots"]:
-            return self.snapshots()
+            # Only an explicit summary view changes the legacy full response.
+            views = parse_qs(parsed.query, keep_blank_values=True).get("view", ["full"])
+            if len(views) != 1 or views[0] not in {"full", "summary"}:
+                raise ValueError("Snapshot list view must be full or summary exactly once")
+            result = self.snapshots()
+            if views[0] == "summary":
+                result["snapshots"] = [_snapshot_list_summary(s) for s in result["snapshots"]]
+            return result
         if len(parts) == 3 and parts[:2] == ["v2", "legacy-imports"]:
             return self.legacy_import_status(parts[2], owner=owner)
         if parts == ["v2", "catalog-status"]:

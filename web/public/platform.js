@@ -48,7 +48,7 @@ export async function renderPlatform({main,api,route='research',screens=[],selec
   if(route==='experiments'){await experiments(body,api,epoch);return}
   if(route==='resources'){await resources(body,api,epoch);return}
   if(route==='catalog'){await catalog(body,api,epoch);return}
-  const snapshots=(await api('/v2/snapshots')).snapshots;
+  const snapshots=(await api('/v2/snapshots?view=summary')).snapshots;
   if(epoch!==state.epoch)return;
   const valid=snapshots.filter(s=>s.status==='verified');
   const failed=snapshots.filter(s=>s.status!=='verified');
@@ -134,7 +134,7 @@ async function resources(body,api,epoch){const [resources,result,campaignList,op
 const resourcesRender=resources;
 
 async function catalog(body,api,epoch){
- const [status,snapshotList]=await Promise.all([api('/v2/catalog-status'),api('/v2/snapshots')]);if(epoch!==state.epoch)return;
+ const [status,snapshotList]=await Promise.all([api('/v2/catalog-status'),api('/v2/snapshots?view=summary')]);if(epoch!==state.epoch)return;
  const snapshots=snapshotList.snapshots.filter(s=>s.status==='verified');
  body.innerHTML=`<div class="platform-metrics"><div><small>등록 구조</small><strong>${number(status.compound_count)}</strong></div><div><small>DB 평가 기록 · 미지원 포함</small><strong>${number(status.published_admet_cache?.record_count??status.prediction_admitted_partitions)}</strong></div></div><p class="platform-note">카탈로그 ID·InChIKey·SMILES로 구조·공급사·기존 평가 기록을 조회합니다. 화합물 이름을 알고 있다면 <a class="inline-link" href="#discovery">새 연구 시작에서 이름을 확인하세요 →</a> DB 평가 기록 수에는 미지원·부분·실패 기록이 포함될 수 있으며, 개별 상태와 값을 함께 확인합니다. ADMET은 구조·모델·파일 검증을 통과한 파티션만 표시합니다. 판매 기록의 확인 날짜를 보고, 현재 재고는 공급사에서 확인하세요.</p><form id="platform-catalog-search" class="platform-toolbar"><label class="platform-search">구조 검색<input id="catalog-q" type="search" placeholder="정확한 카탈로그 ID, InChIKey 또는 SMILES 부분 문자열"></label><label title="피부 감작성·AMES 예측과 겹치는 독성 예측을 숨깁니다. 미평가는 포함합니다."><input type="checkbox" id="catalog-admet-risk" checked>강한 독성·피부독성 예측 숨김</label><label><input type="checkbox" id="catalog-purchase"> 공급사 재고 기록 있는 후보만</label><button class="button primary" type="submit">전체 카탈로그 검색</button></form><div id="catalog-progress" aria-live="polite"></div><div id="catalog-table"></div><div class="platform-pagination"><button class="button" id="catalog-prev" disabled>이전 50개</button><span id="catalog-page"></span><button class="button" id="catalog-next" disabled>다음 50개</button></div><section class="platform-panel"><h2>선택 구조를 표적 후보군으로 보존</h2><p>검색으로 선택했다는 사실과 실측 표적 근거를 구분합니다. 표적 근거가 없는 후보도 저장하며, 도킹은 검증된 수용체·준비형이 있을 때 실행합니다.</p><div class="platform-toolbar"><label>표적의 기준 스냅샷<select id="catalog-target"><option value="">표적 문맥을 선택하세요</option>${snapshots.map(s=>`<option value="${esc(s.snapshot_id)}">${esc(s.provenance?.marker||s.provenance?.target_id||s.snapshot_id)} · ${esc(s.provenance?.target_id||Object.keys(s.target_counts||{}).join(", "))}</option>`).join('')}</select></label><button class="button" id="catalog-snapshot">선택한 구조로 스냅샷 만들기</button><span id="catalog-selected">0개 선택</span></div><div id="catalog-snapshot-result"></div></section><div class="platform-errors"></div>`;
  let offset=0,search='',purchase=false,admetRisk=true,queryEpoch=0,rows=[],selected=new Set();
