@@ -18,14 +18,43 @@ from .engines import ResourceDeferred
 from .identity import digest
 from .export_assets import export_asset_root, implementation_files
 
+REVIEW_FIELDS = [
+    ("review_skin_score", "피부 적용 점수"),
+    ("review_permeation", "피부 투과 분류"),
+    ("review_sensitisation", "감작성 구조 경보"),
+    ("review_stability", "안정성 구조 경보"),
+    ("review_phototoxicity", "광독성 구조 경보"),
+    ("review_irritation", "피부 자극 구조 경보"),
+    ("review_tox_Skin_Reaction", "피부 감작성 예측 (0–1)"),
+    ("review_tox_AMES", "AMES 예측 (0–1)"),
+    ("review_tox_hERG", "hERG 예측 (0–1)"),
+    ("review_tox_DILI", "간 손상 예측 (0–1)"),
+    ("review_tox_ClinTox", "임상 독성 예측 (0–1)"),
+    ("review_tox_Carcinogens_Lagunin", "발암성 예측 (0–1)"),
+    ("review_solubility", "수용해도 예측 (AqSolDB 원 척도)"),
+    ("review_mw", "분자량 (g/mol)"),
+    ("review_logp", "logP"),
+    ("review_tpsa", "TPSA (Å²)"),
+    ("review_hbd", "수소결합 공여체 수"),
+    ("review_hba", "수소결합 수용체 수"),
+    ("review_qed", "QED (0–1)"),
+    ("review_admet_status", "ADMET 계산 상태"),
+    ("review_admet_models", "ADMET 모델"),
+    ("review_procurement", "구매 정보"),
+]
+
 FIELDS = [
     ("candidate_id", "후보 ID"),
     ("name", "화합물명"),
+    ("image", "2D 구조"),
     ("smiles", "SMILES"),
-    ("image", "구조 이미지"),
+    ("priority_score_v2", "평가 점수 (0–100점)"),
+    ("review_dock_affinity", "도킹 (kcal/mol)"),
+    ("review_dock_status", "도킹 실행 상태"),
+    *REVIEW_FIELDS,
     ("image_kind", "이미지 근거"),
-    ("mw", "분자량 (g/mol)"),
-    ("logp", "logP"),
+    ("mw", "분자량 원자료 (g/mol)"),
+    ("logp", "logP 원자료"),
     ("procurement", "구매 근거"),
     ("tox_Skin_Reaction", "피부 감작성 예측 (모델 출력)"),
     ("tox_AMES", "AMES 예측 (모델 출력)"),
@@ -38,7 +67,6 @@ FIELDS = [
     ("primary_docking", "주 도킹 결과"),
     ("docking", "도킹 전체 기록"),
     ("admet_search_risk", "독성·피부독성 검색 판단"),
-    ("priority_score_v2", "실험 우선순위"),
     ("priority_score_status", "우선순위 계산 범위"),
     ("priority_missing_channels", "우선순위 결측 채널"),
     ("discovery_score", "탐색 점수"),
@@ -69,6 +97,83 @@ STRUCTURE_ASSET_KEYS = {
     "assembly_structure_sha256", "assembly_metadata_sha256", "ccd_sha256",
     "template_sdf_sha256", "instance_sdf_sha256", "raw_sha256", "artifact_sha256", "ligand_sdf",
 }
+
+
+def review_columns(row):
+    """Expose existing values without calculating predictions or merging models."""
+    def mapping(value):
+        return value if isinstance(value, dict) else {}
+
+    def number(value):
+        return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) else None
+
+    predictions = [p for p in row.get("admet") or [] if isinstance(p, dict)]
+
+    def values(endpoint, *, classifier=False):
+        found, invalid = [], []
+        for prediction in predictions:
+            if prediction.get("status") not in {"success", "partial_nonfinite"}:
+                continue
+            payload = prediction.get("values")
+            if payload is None and isinstance(prediction.get("values_json"), str):
+                try:
+                    payload = json.loads(prediction["values_json"])
+                except ValueError:
+                    payload = None
+            raw = mapping(payload).get(endpoint)
+            value = number(raw)
+            if value is not None and (not classifier or 0 <= value <= 1):
+                found.append((prediction.get("model_id") or "모델 미기록", value))
+            elif raw is not None:
+                invalid.append(str(prediction.get("model_id") or "모델 미기록"))
+        if not found:
+            return "값 오류 · 원자료 확인" if invalid else "미평가"
+        if len(found) == 1 and not invalid:
+            return found[0][1]
+        return "\n".join([str(model) + ": " + repr(value) for model, value in found]
+                         + [model + ": 값 오류 · 원자료 확인" for model in invalid])
+
+    def alerts(skin, key, status):
+        value = skin.get(key)
+        if not isinstance(value, list) or skin.get(status) != "EVALUATED":
+            return "미평가"
+        return "; ".join(str(item) for item in value) if value else "경보 없음"
+
+    skin = mapping(row.get("skin"))
+    structural = mapping(row.get("structural_admet"))
+    concern = {"none": "경보 없음", "low": "낮음", "moderate": "중간", "high": "높음", "critical": "매우 높음"}
+    permeation = skin.get("permeation_class")
+    permeation = {"good": "높음 (good)", "moderate": "중간 (moderate)", "poor": "낮음 (poor)"}.get(permeation, permeation or "미평가")
+    primary = mapping(row.get("primary_docking"))
+    observations = row.get("docking") or []
+    observations = [observations] if isinstance(observations, dict) else observations
+    index = primary.get("observation_index", 0)
+    if observations and not any(key in primary for key in ("score", "value", "affinity")):
+        primary = mapping(observations[index]) if isinstance(index, int) and 0 <= index < len(observations) else primary
+    from .procurement import has_purchase_record
+    fields = {
+        "review_skin_score": number(skin.get("topical_score", row.get("topical_score"))),
+        "review_permeation": permeation,
+        "review_sensitisation": alerts(skin, "sensitiser_alerts", "sensitisation_status"),
+        "review_stability": alerts(skin, "stability_alerts", "stability_status"),
+        "review_phototoxicity": concern.get(mapping(structural.get("phototoxicity")).get("concern"), "미평가"),
+        "review_irritation": concern.get(mapping(structural.get("skin_irritation")).get("concern"), "미평가"),
+        "review_solubility": values("Solubility_AqSolDB"),
+        "review_mw": number(row.get("mw")) if number(row.get("mw")) is not None else values("molecular_weight"),
+        "review_logp": number(row.get("logp")) if number(row.get("logp")) is not None else values("logP"),
+        "review_tpsa": values("tpsa"), "review_hbd": values("hydrogen_bond_donors"),
+        "review_hba": values("hydrogen_bond_acceptors"), "review_qed": values("QED"),
+        "review_admet_status": "\n".join(str(p.get("model_id") or "모델 미기록") + ": " +
+            {"success": "계산 완료", "partial_nonfinite": "일부 결측", "failed": "실패", "unsupported_structure": "미지원"}.get(p.get("status"), str(p.get("status") or "미평가"))
+            for p in predictions) or "미평가",
+        "review_admet_models": "\n".join(str(p.get("model_id") or "모델 미기록") for p in predictions) or "미기록",
+        "review_procurement": row.get("procurement_label") or ("구매 정보 있음" if has_purchase_record(row) else "구매 정보 미기록"),
+        "review_dock_affinity": number(primary.get("score", primary.get("affinity", primary.get("value")))),
+        "review_dock_status": primary.get("status") or "미평가",
+    }
+    for endpoint in ("Skin_Reaction", "AMES", "hERG", "DILI", "ClinTox", "Carcinogens_Lagunin"):
+        fields["review_tox_" + endpoint] = values(endpoint, classifier=True)
+    return {key: "미평가" if value is None else value for key, value in fields.items()}
 
 
 def xlsx_value(value, *, candidate_id, field, warnings):
@@ -135,7 +240,7 @@ class RunExports:
     def implementation_identity():
         files = {name: sha256_file(path) for name, path in implementation_files().items()}
         return {
-            "version": "whole-run-export-v3",
+            "version": "whole-run-export-v4",
             "files": files,
             "sha256": digest(files),
         }
@@ -447,10 +552,12 @@ class RunExports:
 
     def _build(self, request, directory, *, sdf, stop, progress):
         from rdkit import Chem
-        from rdkit.Chem import Draw
+        from rdkit.Chem import Draw, rdDepictor
         from openpyxl import Workbook
         from openpyxl.drawing.image import Image
+        from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, TwoCellAnchor
         from openpyxl.styles import Alignment, Font
+        from openpyxl.utils.units import pixels_to_EMU
         from .pose_view import candidate_docking_view
 
         source = self.service.catalog.manifest(request["snapshot_id"])
@@ -486,8 +593,26 @@ class RunExports:
 
             for i in range(len(FIELDS)):
                 table.column_dimensions[get_column_letter(i + 1)].width = 24
-            table.column_dimensions["C"].width = 45
+            for i, (field, _) in enumerate(FIELDS, 1):
+                if field in {"priority_score_v2", "review_skin_score", "review_logp", "review_tpsa", "review_mw"} or field.startswith("review_tox_"):
+                    table.column_dimensions[get_column_letter(i)].width = 20
+            table.column_dimensions["C"].width = 36
+            table.column_dimensions["D"].width = 60
             return book, table
+
+        def add_structure_image(table, path, *, row, column, width=240, height=140):
+            image = Image(str(path))
+            image.width, image.height = width, height
+            # Tie both corners to the candidate's cell rather than an absolute
+            # drawing position.
+            image.anchor = TwoCellAnchor(
+                editAs="twoCell",
+                _from=AnchorMarker(col=column, row=row - 1,
+                                   colOff=pixels_to_EMU(6), rowOff=pixels_to_EMU(6)),
+                to=AnchorMarker(col=column, row=row - 1,
+                                colOff=pixels_to_EMU(width + 6), rowOff=pixels_to_EMU(height + 6)),
+            )
+            table.add_image(image)
 
         def flush_book():
             if workbook is None:
@@ -500,7 +625,9 @@ class RunExports:
                 ("실행 상태", xlsx_value((run_summary or {}).get("status"), candidate_id="run", field="status", warnings=warnings)),
                 ("범위", "전체 저장 후보 · 필터 제외 후보 포함"),
                 ("결측", "빈 수치는 미평가·미기록이며 0이 아닙니다."),
-                ("구조", "저장 도킹 포즈가 있으면 해당 좌표의 투영, 없으면 2D 구조"),
+                ("구조", "후보 표와 개별 탭의 2D 구조는 입력 SMILES에서 생성. 저장 도킹 포즈는 개별 탭에 별도로 표시"),
+                ("계산값 열", "피부 평가 → 주요 독성 예측 → 물성 → 모델·구매 정보. 원래 ADMET 전체 값은 뒤쪽 원자료 열에 보존"),
+                ("ADMET 표시", "단일 모델 값은 숫자로 표시. 복수 모델은 모델별 값을 구분. 미평가·실패는 0으로 바꾸지 않음"),
                 ("점수", "우선순위 휴리스틱 · 효능이나 결합 확률 아님"),
                 ("도킹", "같은 수용체·포켓·엔진·주 프로토콜 비교군 내 해석"),
                 ("개별 화합물 탭", "C번호 탭 · 전체 후보 및 제외 후보 포함" if with_details else "미요청"),
@@ -552,7 +679,7 @@ class RunExports:
             workbook.save(directory / name)
             books.append(name)
 
-        def candidate_sheet(row, image_path):
+        def candidate_sheet(row, image_path, pose_image_path):
             title = "C" + str(count).zfill(6)
             detail = workbook.create_sheet(title)
             detail.append(["화합물 연구 기록", text(row["candidate_id"])])
@@ -631,6 +758,8 @@ class RunExports:
             add("선정·제외 근거", row.get("selection_reason") or row.get("discovery_filter_reasons"))
             add("구조 준비·도킹 보류", row.get("preparation_diagnostic") or qualification.get("hold_reasons") or (row.get("docking_execution") or {}).get("reason"))
             add("SMILES · 원래 입력 구조", row.get("smiles"))
+            for field, label in REVIEW_FIELDS:
+                add(label, row.get(field))
             add("분자 특성", "분자량 " + brief(row.get("mw")) + " g/mol · logP " + brief(row.get("logp")))
             add("연구 목적", context.get("research_goal"))
             add("피부 평가 조건", "제품 " + brief(context.get("product")) + " · 함량 " + brief(context.get("applied_percent")) + ("%" if context.get("applied_percent") is not None else "")
@@ -728,7 +857,7 @@ class RunExports:
             add("원자료 필드", ", ".join(field for field, _ in FIELDS))
             detail.column_dimensions["A"].width = 32
             detail.column_dimensions["B"].width = 95
-            detail.column_dimensions["D"].width = 28
+            detail.column_dimensions["D"].width = 38
             detail.freeze_panes = "B4"
             for cells in detail:
                 for cell in cells:
@@ -738,11 +867,19 @@ class RunExports:
                 detail.row_dimensions[cells[0].row].height = min(260, max(30, 18 * lines + 14))
             detail.row_dimensions[1].height = 30
             for cell in detail[1]:
-                cell.font = Font(bold=True, color="FFFFFF")
-                from openpyxl.styles import PatternFill
-                cell.fill = PatternFill("solid", fgColor="173E52")
+                cell.font = Font(bold=True, color="000000")
             if image_path:
-                detail.add_image(Image(str(image_path)), "D4")
+                detail["D3"] = "2D 구조 · 입력 SMILES"
+                image = Image(str(image_path))
+                image.width, image.height = 240, 140
+                detail.add_image(image, "D4")
+            else:
+                detail["D3"] = row["image_kind"]
+            if pose_image_path:
+                detail["D12"] = "저장 도킹 포즈 · 좌표 투영"
+                image = Image(str(pose_image_path))
+                image.width, image.height = 180, 100
+                detail.add_image(image, "D13")
             sheet.cell(sheet.max_row, 1).hyperlink = "#'" + title + "'!A1"
             sheet.cell(sheet.max_row, 1).style = "Hyperlink"
             detail_tabs.append({"candidate_id": row["candidate_id"], "workbook": "review-" + str(len(books) + 1).zfill(4) + ".xlsx", "sheet": title})
@@ -1024,7 +1161,32 @@ class RunExports:
                     warnings.append(
                         {"candidate_id": cid, "reason": "pose_view_unavailable"}
                     )
-            image_kind, png, image_path = "2D · 미계산 또는 저장 포즈 없음", None, None
+            image_path, pose_image_path = None, None
+            smiles = row.get("smiles")
+            molecule = Chem.MolFromSmiles(smiles) if isinstance(smiles, str) and smiles.strip() else None
+            if molecule is not None and molecule.GetNumAtoms() == 0:
+                molecule = None
+            row["image"] = None
+            row["image_kind"] = "2D 구조 없음 · SMILES 미제공" if not smiles else "2D 구조 없음 · SMILES 해석 불가"
+            if molecule is not None:
+                try:
+                    depiction = Chem.Mol(molecule)
+                    rdDepictor.Compute2DCoords(depiction, clearConfs=True, forceRDKit=True)
+                    buffer = io.BytesIO()
+                    Draw.MolToImage(depiction, size=(480, 280)).save(buffer, format="PNG")
+                    relative = "images/" + hashlib.sha256(cid.encode()).hexdigest() + "-2d.png"
+                    image_path = directory / relative
+                    image_path.write_bytes(buffer.getvalue())
+                    row["image"] = relative
+                    row["image_kind"] = "2D 구조 · 입력 SMILES"
+                    add_structure_image(sheet, image_path, row=sheet.max_row + 1, column=2)
+                except (ValueError, RuntimeError):
+                    row["image_kind"] = "2D 구조 생성 실패 · 원래 SMILES 참조"
+                    warnings.append({"candidate_id": cid, "reason": "2D_depiction_failed"})
+            else:
+                warnings.append({"candidate_id": cid, "reason": "2D_structure_unavailable"})
+            row["pose_image"] = None
+            row["pose_image_kind"] = None
             if pose and pose.get("data"):
                 # Reuse the audited coordinate-projection renderer, without a
                 # generated conformer fallback (undocked molecules use 2D).
@@ -1039,33 +1201,29 @@ class RunExports:
                     spec.loader.exec_module(module)
                     png, metadata = module.thumbnail(None, pose)
                     if png:
-                        image_kind = "저장 도킹 포즈 · 좌표 투영"
+                        relative = "images/" + hashlib.sha256(cid.encode()).hexdigest() + "-pose.png"
+                        pose_image_path = directory / relative
+                        pose_image_path.write_bytes(png)
+                        row["pose_image"] = relative
+                        row["pose_image_kind"] = "저장 도킹 포즈 · 좌표 투영"
                 except (ValueError, OSError):
                     pass
-            molecule = Chem.MolFromSmiles(row.get("smiles") or "")
-            if png is None and molecule is not None:
-                buffer = io.BytesIO()
-                Draw.MolToImage(molecule, size=(180, 100)).save(buffer, format="PNG")
-                png = buffer.getvalue()
-            if png:
-                image_path = (
-                    directory
-                    / "images"
-                    / (hashlib.sha256(cid.encode()).hexdigest() + ".png")
-                )
-                image_path.write_bytes(png)
-                sheet.add_image(Image(str(image_path)), "D" + str(sheet.max_row + 1))
-            row["image_kind"] = image_kind
             row.update(toxicity_columns(row, warnings))
+            row.update(review_columns(row))
             values = []
             for field, _ in FIELDS:
                 values.append(xlsx_value(row.get(field), candidate_id=cid, field=field, warnings=warnings))
             sheet.append(values)
-            sheet.row_dimensions[sheet.max_row].height = 80
+            sheet.row_dimensions[sheet.max_row].height = 114
             for cell in sheet[sheet.max_row]:
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
+            for i, (field, _) in enumerate(FIELDS, 1):
+                if field in {"priority_score_v2", "review_skin_score", "review_logp", "review_tpsa", "review_mw"}:
+                    sheet.cell(sheet.max_row, i).number_format = "0.00"
+                elif field.startswith("review_tox_") or field in {"review_solubility", "review_qed"}:
+                    sheet.cell(sheet.max_row, i).number_format = "0.0000"
             if with_details:
-                candidate_sheet(row, image_path)
+                candidate_sheet(row, image_path, pose_image_path)
             # SDF order matches JSON/XLSX. Structurally invalid rows get a
             # separate explicit ledger rather than a fabricated molecule.
             if molecule is not None:

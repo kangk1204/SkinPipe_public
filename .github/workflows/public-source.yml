@@ -13,7 +13,18 @@ jobs:
         with:
           python-version: '3.12'
       - run: python scripts/check-public-tree.py
-      - run: python -m unittest discover -s tests -v
+      - run: python -m unittest discover -s tests -p test_public_install.py -v
       - run: python -m compileall -q skinpipe/skinpipe
       - run: python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/skinpipe-wheel" ./skinpipe
       - run: python scripts/check-public-tree.py --package "$RUNNER_TEMP"/skinpipe-wheel/*.whl
+  excel-structures:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install './skinpipe[platform]'
+      - run: python -m unittest discover -s tests -p test_excel_structures.py -v
