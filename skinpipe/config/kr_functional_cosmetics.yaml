@@ -1,0 +1,731 @@
+version: 1
+source_note: '주요 출처: 「기능성화장품 심사에 관한 규정」 [별표 4], 현행본 = 식품의약품안전처고시 제2025-88호
+  (2025.12.16. 일부개정·시행). 이전에 이 파일이 인용하던 law.go.kr flSeq=133405543 은 제2023-61호 판본으로
+  폐지·대체되었음(그 판본에는 과산화수소 12.0%와 제2025-88호가 삭제한 염모제 성분 12종이 남아 있어 현행이 아님을
+  식별할 수 있음). 제2025-88호 개정으로 미백·주름개선 제형에 ''고형제''가, 여드름 제형에도 ''고형제''가 추가됨.
+  보조 출처: 「기능성화장품 기준 및 시험방법」 [별표 9] = 고시 제2025-89호 (law.go.kr flSeq=160450231,
+  2026-09-22 취득), MFDS 기능성화장품 심사를 위한 질의응답집(민원인 안내서) 2023.12, 화장품법 시행규칙 제2조
+  [시행 2026.4.2., 총리령 제2109호].
+
+  두 목록을 혼동하지 말 것: 이 파일의 uv_protection notified_ingredients 27종은 「기능성화장품 심사에 관한 규정」
+  별표 4의 ''자료제출을 생략할 수 있는'' 성분, 즉 보고 루트용 목록이다. 화장품에 배합 자체가 허용되는 자외선차단
+  성분 목록은 「화장품 안전기준 등에 관한 규정」 [별표 2]로 별개이며, 고시 제2026-16호가 페닐렌 비스-디페닐트리아진
+  (5%)을 추가해 현행 32종이다. 이 27종을 ''한국의 자외선차단 성분''으로 읽으면 안 된다.
+
+  별표 4의 최신 개정 여부는 law.go.kr 원문을 항상 재확인할 것.
+
+  '
+retrieved: '2026-09-22'
+categories:
+- key: whitening
+  ko: 피부의 미백에 도움을 주는 제품
+  statutory_items_ko:
+  - '1호: 피부에 멜라닌색소가 침착하는 것을 방지하여 기미·주근깨 등의 생성을 억제함으로써 피부의 미백에 도움을 주는 기능을 가진 화장품'
+  - '2호: 피부에 침착된 멜라닌색소의 색을 엷게 하여 피부의 미백에 도움을 주는 기능을 가진 화장품'
+  claim_examples_ko:
+  - 피부의 미백에 도움을 줍니다
+  product_restriction_ko: '별표 4(고시 제2025-88호) 원문: 제형은 로션제, 액제, 크림제, 고형제 및 침적 마스크에 한하며. 고형제는 제2025-88호 개정으로 추가됨'
+  notes_ko: '고시원료 9종이 지정되어 있음. 이 범위 내 성분·함량·제형을 사용하면 보고(제1호) 루트 가능. 히드로퀴논(하이드로퀴논)은
+    한국에서 화장품 배합 금지 성분이므로 미백 원료로 사용 불가. 2022년 개정으로 알부틴·아데노신 침적 마스크 제형 기준 추가 및 히드로퀴논
+    시험항목 신설.
+
+    '
+- key: anti_wrinkle
+  ko: 피부의 주름개선에 도움을 주는 제품
+  statutory_items_ko:
+  - '3호: 피부에 탄력을 주어 피부의 주름을 완화 또는 개선하는 기능을 가진 화장품'
+  claim_examples_ko:
+  - 피부의 주름개선에 도움을 줍니다
+  product_restriction_ko: '별표 4(고시 제2025-88호) 원문: 제형은 로션제, 액제, 크림제, 고형제 및 침적 마스크에 한하며. 고형제는 제2025-88호 개정으로 추가됨'
+  notes_ko: '고시원료 4종. 레티놀·레티닐팔미테이트는 IU/g 단위로 규정됨(mg/g 아님). 아데노신 0.04%는 주름개선 전용 고시원료이지,
+    미백 원료가 아님(Discovery pipeline이 자주 혼동).
+
+    '
+- key: uv_protection
+  ko: 자외선으로부터 피부를 보호하거나 곱게 태워주는 기능을 주는 제품
+  statutory_items_ko:
+  - '4호: 강한 햇볕을 방지하여 피부를 곱게 태워주는 기능을 가진 화장품'
+  - '5호: 자외선을 차단 또는 산란시켜 자외선으로부터 피부를 보호하는 기능을 가진 화장품'
+  claim_examples_ko:
+  - 자외선으로부터 피부를 보호합니다
+  - SPF○○, PA+++
+  product_restriction_ko: '별표 4 고시: 영·유아용 제품류 중 로션·크림·오일, 기초화장용 제품류, 색조화장용 제품류에 한함'
+  notes_ko: '별표 4에 29개 번호 중 1번·16번이 <삭 제>로 되어 있어 실질 27종의 자외선차단 필터가 허용됨. 징크옥사이드·티타늄디옥사이드는
+    자외선차단 성분으로서 최대 25%로 규정(기타 용도로는 별도 배합한도 적용). EU나 미국에서 허가된 필터라도 이 목록에 없으면 별도 심사
+    필요. 이 27종은 「기능성화장품 심사에 관한 규정」 별표 4의 ''자료제출 생략'' 목록(보고 루트용)이며, 화장품에 배합할 수 있는 자외선차단 성분
+    목록은 「화장품 안전기준 등에 관한 규정」 별표 2로 별개다(고시 제2026-16호의 페닐렌 비스-디페닐트리아진 5% 추가로 현행 32종). 27종을
+    ''한국의 자외선차단 성분''으로 읽지 말 것.
+
+    '
+- key: hair_loss
+  ko: 탈모 증상의 완화에 도움을 주는 제품
+  statutory_items_ko:
+  - '8호: 탈모 증상의 완화에 도움을 주는 화장품. 다만, 코팅 등 물리적으로 모발을 굵게 보이게 하는 제품은 제외한다.'
+  claim_examples_ko:
+  - 탈모 증상의 완화에 도움을 줍니다
+  product_restriction_ko: null
+  notes_ko: '2017.05.30 의약외품에서 기능성화장품으로 재분류. 별표 9에 개별 원료(덱스판테놀·비오틴·엘-멘톨·징크피리치온) 규격이
+    등재되어 있으나, 보고(심사 면제) 루트는 특정 조합 배합에만 적용됨(아래 notified_ingredients 참조). 미녹시딜·피나스테리드·두타스테리드는
+    「화장품 안전기준 등에 관한 규정」 별표 1 사용금지 원료로 등재되어 있으므로, 화장품 배합 불가의 근거는 ''의약품이라서''가 아니라
+    별표 1 statute다(각각 ''6-(피페리디닐)-2,4-피리미딘디아민-3-옥사이드(미녹시딜), 그 염류 및 유도체'', ''피나스테리드, 그 염류 및
+    유도체'', ''두타스테리드, 그 염류 및 유도체''). 발모·육모·양모·DHT 억제 등 표현은 의약품 오인 우려로 금지.
+
+    '
+- key: acne
+  ko: 여드름성 피부를 완화하는 데 도움을 주는 제품
+  statutory_items_ko:
+  - '9호: 여드름성 피부를 완화하는 데 도움을 주는 화장품. 다만, 인체세정용 제품류로 한정한다.'
+  claim_examples_ko:
+  - 여드름성 피부를 완화하는 데 도움을 줍니다
+  product_restriction_ko: '유형은 인체세정용 제품류(비누조성의 제제)로 한정 — 화장품법 시행규칙 제2조제9호 [시행 2026.4.2., 총리령 제2109호] 및 별표 4 §6. 제형은 별표 4(고시 제2025-88호) 원문으로 로션제, 액제, 크림제, 고형제에 한함(부직포 등에 침적된 상태는 제외함). 고형제는 제2025-88호 개정으로 추가됨. 앰플·크림·세럼류는 여드름 기능성 주장 불가.'
+  notes_ko: '살리실릭애씨드 0.5% 단독 고시원료 1종. 배합한도 고시에서 살리실릭애씨드는 기능성 목적 외에도 보존제 용도로 0.5% 이하
+    사용 가능하나, 기능성 클레임을 내려면 반드시 심사 또는 고시 보고 루트를 밟아야 하며 제형을 인체세정용으로 제한해야 함.
+
+    '
+- key: hair_color
+  ko: 모발의 색상을 변화시키는 기능을 가진 화장품
+  statutory_items_ko:
+  - '6호: 모발의 색상을 변화[탈염·탈색을 포함한다]시키는 기능을 가진 화장품. 다만, 일시적으로 모발의 색상을 변화시키는 제품은 제외한다.'
+  claim_examples_ko:
+  - 모발의 색상을 변화시킵니다
+  product_restriction_ko: 분말제, 액제, 크림제, 로션제, 에어로졸제, 겔제에 한함
+  notes_ko: '별표 4에 산화염모제, 비산화염모제, 탈색제, 산화제 등의 성분 목록이 있음. 산화염모 성분만 수십 종으로 본 파이프라인 범위(바이오마커
+    분석) 밖이므로 상세 목록 생략.
+
+    '
+- key: hair_removal
+  ko: 체모를 제거하는 기능을 가진 화장품
+  statutory_items_ko:
+  - '7호: 체모를 제거하는 기능을 가진 화장품. 다만, 물리적으로 체모를 제거하는 제품은 제외한다.'
+  claim_examples_ko:
+  - 체모를 제거합니다
+  product_restriction_ko: null
+  notes_ko: '고시원료: 치오글리콜산 80% 기준 3.0~4.5%. 본 파이프라인 범위 외.'
+- key: skin_barrier
+  ko: 피부장벽의 기능을 회복하여 가려움 등의 개선에 도움을 주는 화장품
+  statutory_items_ko:
+  - '10호: 피부장벽(피부의 가장 바깥 쪽에 존재하는 각질층의 표피를 말한다)의 기능을 회복하여 가려움 등의 개선에 도움을 주는 화장품'
+  claim_examples_ko:
+  - 피부장벽의 기능을 회복하여 가려움 등의 개선에 도움을 줍니다
+  product_restriction_ko: null
+  notes_ko: '2017.05.30 기능성화장품으로 신규 추가. 고시원료 없음 — 모든 품목이 심사(전면심사) 대상. 식약처에서 인체적용시험
+    가이드라인만 별도 제정·안내. Discovery pipeline에서 신원료를 제안하는 경우 반드시 심사 루트.
+
+    '
+- key: stretch_marks
+  ko: 튼살로 인한 붉은 선을 엷게 하는 데 도움을 주는 화장품
+  statutory_items_ko:
+  - '11호: 튼살로 인한 붉은 선을 엷게 하는 데 도움을 주는 화장품'
+  claim_examples_ko:
+  - 튼살로 인한 붉은 선을 엷게 하는 데 도움을 줍니다
+  product_restriction_ko: null
+  notes_ko: '2017.05.30 기능성화장품으로 신규 추가. 고시원료 없음 — 모든 품목이 심사 대상.
+
+    '
+notified_ingredients:
+- category: whitening
+  inci: Broussonetia Extract
+  ko: 닥나무추출물
+  concentration: 2%
+  concentration_min_pct: 2.0
+  concentration_max_pct: 2.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Arbutin
+  ko: 알부틴
+  note_ko: 'β-알부틴(베타-알부틴) 기준. α-알부틴(알파-알부틴)은 별도 규정 존재 가능성 있으나 이 별표 4에서 확인되지 않음(verified:
+    false 처리 필요).'
+  concentration: 2~5%
+  concentration_min_pct: 2.0
+  concentration_max_pct: 5.0
+  smiles: OC1=CC=C(O[C@@H]2OC(CO)[C@@H](O)[C@H](O)[C@H]2O)C=C1
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Ethyl Ascorbyl Ether
+  ko: 에칠아스코빌에텔
+  concentration: 1~2%
+  concentration_min_pct: 1.0
+  concentration_max_pct: 2.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Licorice Extract (oil-soluble)
+  ko: 유용성감초추출물
+  concentration: 0.05%
+  concentration_min_pct: 0.05
+  concentration_max_pct: 0.05
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Ascorbyl Glucoside
+  ko: 아스코빌글루코사이드
+  concentration: 2%
+  concentration_min_pct: 2.0
+  concentration_max_pct: 2.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Magnesium Ascorbyl Phosphate
+  ko: 마그네슘아스코빌포스페이트
+  concentration: 3%
+  concentration_min_pct: 3.0
+  concentration_max_pct: 3.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Niacinamide
+  ko: 나이아신아마이드
+  concentration: 2~5%
+  concentration_min_pct: 2.0
+  concentration_max_pct: 5.0
+  smiles: NC(=O)c1cccnc1
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Alpha-Bisabolol
+  ko: 알파-비사보롤
+  concentration: 0.5%
+  concentration_min_pct: 0.5
+  concentration_max_pct: 0.5
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: whitening
+  inci: Ascorbyl Tetraisopalmitate
+  ko: 아스코빌테트라이소팔미테이트
+  concentration: 2%
+  concentration_min_pct: 2.0
+  concentration_max_pct: 2.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: anti_wrinkle
+  inci: Retinol
+  ko: 레티놀
+  concentration: 2,500 IU/g
+  concentration_min_pct: null
+  concentration_max_pct: null
+  concentration_note: IU/g 단위 규정. 2,500 IU/g ≈ 0.075% w/w 수준이나 변환계수는 고시 외 정보이므로 IU/g
+    기준을 우선함.
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: anti_wrinkle
+  inci: Retinyl Palmitate
+  ko: 레티닐팔미테이트
+  concentration: 10,000 IU/g
+  concentration_min_pct: null
+  concentration_max_pct: null
+  concentration_note: IU/g 단위 규정.
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: anti_wrinkle
+  inci: Adenosine
+  ko: 아데노신
+  concentration: 0.04%
+  concentration_min_pct: 0.04
+  concentration_max_pct: 0.04
+  smiles: Nc1ncnc2n(cnc12)[C@@H]1O[C@H](CO)[C@@H](O)[C@H]1O
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: anti_wrinkle
+  inci: Polyethoxylated Retinamide
+  ko: 폴리에톡실레이티드레틴아마이드
+  concentration: 0.05~0.2%
+  concentration_min_pct: 0.05
+  concentration_max_pct: 0.2
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Drometrizole
+  ko: 드로메트리졸
+  table_no: 2
+  concentration: 최대 1%
+  concentration_min_pct: null
+  concentration_max_pct: 1.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Digalloyl Trioleate
+  ko: 디갈로일트리올리에이트
+  table_no: 3
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: 4-Methylbenzylidene Camphor
+  ko: 4-메칠벤질리덴캠퍼
+  table_no: 4
+  concentration: 최대 4%
+  concentration_min_pct: null
+  concentration_max_pct: 4.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Menthyl Anthranilate
+  ko: 멘틸안트라닐레이트
+  table_no: 5
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Benzophenone-3
+  ko: 벤조페논-3
+  table_no: 6
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: O=C(c1ccccc1)c1ccc(O)cc1OC
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Benzophenone-4
+  ko: 벤조페논-4
+  table_no: 7
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Benzophenone-8
+  ko: 벤조페논-8
+  table_no: 8
+  concentration: 최대 3%
+  concentration_min_pct: null
+  concentration_max_pct: 3.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Butyl Methoxydibenzoylmethane
+  ko: 부틸메톡시디벤조일메탄
+  table_no: 9
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Cinoxate
+  ko: 시녹세이트
+  table_no: 10
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Ethylhexyl Triazone
+  ko: 에칠헥실트리아존
+  table_no: 11
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Octocrylene
+  ko: 옥토크릴렌
+  table_no: 12
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Ethylhexyl Dimethyl PABA
+  ko: 에칠헥실디메칠파바
+  table_no: 13
+  concentration: 최대 8%
+  concentration_min_pct: null
+  concentration_max_pct: 8.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Ethylhexyl Methoxycinnamate
+  ko: 에칠헥실메톡시신나메이트
+  table_no: 14
+  concentration: 최대 7.5%
+  concentration_min_pct: null
+  concentration_max_pct: 7.5
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Ethylhexyl Salicylate
+  ko: 에칠헥실살리실레이트
+  table_no: 15
+  concentration: 최대 5%
+  concentration_min_pct: null
+  concentration_max_pct: 5.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Phenylbenzimidazole Sulfonic Acid
+  ko: 페닐벤즈이미다졸설포닉애씨드
+  table_no: 17
+  concentration: 최대 4%
+  concentration_min_pct: null
+  concentration_max_pct: 4.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Homosalate
+  ko: 호모살레이트
+  table_no: 18
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Zinc Oxide
+  ko: 징크옥사이드
+  table_no: 19
+  concentration: 최대 25% (자외선차단성분으로서)
+  concentration_min_pct: null
+  concentration_max_pct: 25.0
+  concentration_note: '''자외선차단성분으로서''라는 조건이 붙음. 기타 용도(수렴제 등)로 쓸 때는 배합한도 고시 별도 적용.'
+  smiles: '[Zn]=O'
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Titanium Dioxide
+  ko: 티타늄디옥사이드
+  table_no: 20
+  concentration: 최대 25% (자외선차단성분으로서)
+  concentration_min_pct: null
+  concentration_max_pct: 25.0
+  concentration_note: '''자외선차단성분으로서''라는 조건이 붙음.'
+  smiles: O=[Ti]=O
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Isoamyl p-Methoxycinnamate
+  ko: 이소아밀p-메톡시신나메이트
+  table_no: 21
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Bis-Ethylhexyloxyphenol Methoxyphenyl Triazine
+  ko: 비스-에칠헥실옥시페놀메톡시페닐트리아진
+  table_no: 22
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Disodium Phenyl Dibenzimidazole Tetrasulfonate
+  ko: 디소듐페닐디벤즈이미다졸테트라설포네이트
+  table_no: 23
+  concentration: 산으로서 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  concentration_note: '''산으로 10%'' - 산 기준 함량 규정'
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Drometrizole Trisiloxane
+  ko: 드로메트리졸트리실록산
+  table_no: 24
+  concentration: 최대 15%
+  concentration_min_pct: null
+  concentration_max_pct: 15.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Diethylhexyl Butamido Triazone
+  ko: 디에칠헥실부타미도트리아존
+  table_no: 25
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Polysilicone-15
+  ko: 폴리실리콘-15 (디메치코디에칠벤잘말로네이트)
+  table_no: 26
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Methylene Bis-Benzotriazolyl Tetramethylbutylphenol
+  ko: 메칠렌비스-벤조트리아졸릴테트라메칠부틸페놀
+  table_no: 27
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Terephthalylidene Dicamphor Sulfonic Acid
+  ko: 테레프탈릴리덴디캠퍼설포닉애씨드 및 그 염류
+  table_no: 28
+  concentration: 산으로서 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  concentration_note: '''산으로 10%'' - 산 기준 함량 규정'
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: uv_protection
+  inci: Diethylamino Hydroxybenzoyl Hexyl Benzoate
+  ko: 디에칠아미노하이드록시벤조일헥실벤조에이트
+  table_no: 29
+  concentration: 최대 10%
+  concentration_min_pct: null
+  concentration_max_pct: 10.0
+  smiles: null
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+- category: hair_loss
+  type: combination_notified
+  note_ko: '출처 정정: 이 조합은 「기능성화장품 심사에 관한 규정」 별표 4에서 온 것이 아니다. 별표 4에는 탈모 섹션이 없으며 여섯 섹션(자외선차단·태닝, 미백, 주름개선, 모발색상변화, 체모제거, 여드름)뿐이다. 「기능성화장품 기준 및 시험방법」 별표 9(고시 제2025-89호)에는 덱스판테놀·비오틴·엘-멘톨·징크피리치온·징크피리치온 액(50%) 다섯 건의 원료 규격(성상·확인시험·순도시험·정량법)만 있고 완제품 배합 농도는 없다. 따라서 아래 농도에는 1차 출처가 없으며, 업계 기사에 유통되는 수치일 뿐이다. 파이프라인 판단에 직접 쓰지 말 것.'
+  ko: 복합제 조합 1
+  combination_ko:
+  - ingredient: 덱스판테놀 (Dexpanthenol)
+    concentration: 0.2%
+    concentration_note: 일부 출처에서 0.1%로 기재되는 경우 있음. 공식 고시 원문 재확인 필요.
+  - ingredient: 살리실릭애씨드 (Salicylic Acid)
+    concentration: 0.25%
+  - ingredient: 엘-멘톨 (l-Menthol)
+    concentration: 0.3%
+  verified: false
+  uncertainty_note: '덱스판테놀 농도에 대해 cosmorning(0.2%)과 경향신문·하이닥(0.1%) 간 불일치 발생. 공식 고시
+    원문(식약처 고시 또는 의약품안전나라)을 직접 확인하여 해소할 것. 이 수치를 파이프라인에 직접 사용하지 말 것.
+
+    '
+  source_url: https://www.cosmorning.com/news/article.html?no=38072
+- category: hair_loss
+  type: combination_notified
+  note_ko: '출처 정정: 이 조합은 「기능성화장품 심사에 관한 규정」 별표 4에서 온 것이 아니다. 별표 4에는 탈모 섹션이 없으며 여섯 섹션(자외선차단·태닝, 미백, 주름개선, 모발색상변화, 체모제거, 여드름)뿐이다. 「기능성화장품 기준 및 시험방법」 별표 9(고시 제2025-89호)에는 덱스판테놀·비오틴·엘-멘톨·징크피리치온·징크피리치온 액(50%) 다섯 건의 원료 규격(성상·확인시험·순도시험·정량법)만 있고 완제품 배합 농도는 없다. 따라서 아래 농도에는 1차 출처가 없으며, 업계 기사에 유통되는 수치일 뿐이다. 파이프라인 판단에 직접 쓰지 말 것.'
+  ko: 복합제 조합 2
+  combination_ko:
+  - ingredient: 나이아신아마이드 (Niacinamide)
+    concentration: 0.3%
+  - ingredient: 덱스판테놀 (Dexpanthenol)
+    concentration: 0.5%
+  - ingredient: 비오틴 (Biotin)
+    concentration: 0.06%
+  - ingredient: 징크피리치온액(50%) (Zinc Pyrithione Solution 50%)
+    concentration: 2.0%
+  verified: false
+  uncertainty_note: '복수 출처에서 일치하나 공식 고시 고시 원문 재확인 권장. 징크피리치온액은 50% 수용액 기준임.
+
+    '
+  source_url: https://www.cosmorning.com/news/article.html?no=38072
+- category: acne
+  inci: Salicylic Acid
+  ko: 살리실릭애씨드 (살리실산)
+  concentration: 0.5%
+  concentration_min_pct: 0.5
+  concentration_max_pct: 0.5
+  smiles: OC(=O)c1ccccc1O
+  verified: true
+  source_url: https://www.law.go.kr/LSW/flDownload.do?flSeq=133405543
+categories_without_notified_ingredients:
+- key: skin_barrier
+  ko: 피부장벽 기능 회복
+  note_ko: 별표 4에 고시원료 없음. 모든 품목 심사 대상.
+- key: stretch_marks
+  ko: 튼살 붉은 선 완화
+  note_ko: 별표 4에 고시원료 없음. 모든 품목 심사 대상.
+prohibited_as_cosmetic:
+- ko: 미녹시딜
+  en: Minoxidil
+  smiles: C1CCN(CC1)C2=NC(=N)N(C(=C2)N)O
+  inchikey: ZIMGGGWCDYVHOY-UHFFFAOYSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Minoxidil/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 4201
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: 76351d3dbcbc1ebbad881b8470234706c562bf52bbc809a17e4ee9d525e1170f
+  reason_ko: 의약품 성분(일반의약품). 식약처에서 의약품으로 규정. 화장품 배합 불가.
+  source_url: https://m.iporter.com/ko/customer/notice-detail?notice_id=2950
+- ko: 피나스테리드
+  en: Finasteride
+  smiles: C[C@]12CC[C@H]3[C@H]([C@@H]1CC[C@@H]2C(=O)NC(C)(C)C)CC[C@@H]4[C@@]3(C=CC(=O)N4)C
+  inchikey: DBEPLOCGEIEOCV-WSBQPABSSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Finasteride/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 57363
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: 77fe8312e81a33d9542717b002171778b89c4cc53a290c80c870d2b87cad3235
+  reason_ko: 전문의약품(5α-환원효소 억제제). 남성형 탈모 치료 전문의약품으로 화장품 배합 불가.
+  source_url: https://www.pharmnews.com/news/articleView.html?idxno=230329
+- ko: 두타스테리드
+  en: Dutasteride
+  smiles: C[C@]12CC[C@H]3[C@H]([C@@H]1CC[C@@H]2C(=O)NC4=C(C=CC(=C4)C(F)(F)F)C(F)(F)F)CC[C@@H]5[C@@]3(C=CC(=O)N5)C
+  inchikey: JWJOTENAMICLJG-QWBYCMEYSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Dutasteride/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 6918296
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: aeb835f0c1307f447eee609373b51cac0be222342cd4781dd0799c3860e76c05
+  reason_ko: 전문의약품(5α-환원효소 억제제). 2009년 남성형 탈모 허가. 화장품 배합 불가.
+  source_url: https://www.pharmnews.com/news/articleView.html?idxno=230329
+- ko: 히드로퀴논
+  en: Hydroquinone
+  smiles: C1=CC(=CC=C1O)O
+  inchikey: QIGBRXMKCJKVMJ-UHFFFAOYSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Hydroquinone/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 785
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: 5ae860fb84a3507d44ac5d85259799754cd6f563d731e77d540bf7643f1259a6
+  aliases:
+  - 하이드로퀴논
+  - HYDROQUINONE
+  reason_ko: '「화장품 안전기준 등에 관한 규정」 별표 1 사용금지 원료(히드로퀴논, CAS 123-31-9, 단서 없는 단독 등재).
+    따라서 판정 근거는 의약품 제외가 아니라 별표 1 statute이며, kr_prohibited_ingredients.yaml의 해당 항목이 이 물질의
+    1차 근거다. 미국의 2% OTC 허용이라는 과거 설명은 철회한다. FDA는 hydroquinone 함유 OTC
+    피부 미백제의 판매가 승인되지 않았다고 명시한다(2026-10-11 원문 확인).'
+  us_scope_source_url: https://www.fda.gov/consumers/skin-facts-what-you-need-know-about-skin-lightening-products/skin-product-safety
+  note_ko: '표기 정정: 고시 원문 표기는 히드로퀴논이며 하이드로퀴논은 업계 표기다(고시 원문 검색 시 하이드로퀴논은 0건).
+    이름 조회가 부분일치에서 정규화 후 완전일치로 바뀌었으므로 1차 표기가 틀리면 누락이 발생한다. 업계 표기는 aliases로 보존한다.'
+  source_url: https://www.k-health.com/news/articleView.html?idxno=43642
+  verified: true
+- ko: 트레티노인(레티노산, 올트랜스레티노산)
+  en: Tretinoin
+  aliases:
+  - all-trans retinoic acid
+  - all trans retinoic acid
+  smiles: CC1=C(C(CCC1)(C)C)/C=C/C(=C/C=C/C(=C/C(=O)O)/C)/C
+  inchikey: SHGAZHPCJJPHSC-YCNIQYBTSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Tretinoin/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 444795
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: 875ae925525aef95ed3336bc2d4f2503bf576168f9b79739dd5f5192d00747a0
+  reason_ko: 전문의약품. 레티놀·레티닐팔미테이트와 달리 화장품 원료가 아니며 최기형성이 확인된 성분이다.
+  source_url: https://nedrug.mfds.go.kr
+- ko: 이소트레티노인
+  en: Isotretinoin
+  smiles: CC1=C(C(CCC1)(C)C)/C=C/C(=C/C=C/C(=C\C(=O)O)/C)/C
+  inchikey: SHGAZHPCJJPHSC-XFYACQKRSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Isotretinoin/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 5282379
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: 9111f6362f53f395c2743209dcb68ab7f2070aaa4072bd984e00de49d3b0ea0a
+  reason_ko: '전문의약품(강한 최기형성). 이 목록에서 유일하게 DRUG_ONLY가 정확한 근거인 항목이다: 별표 1의 트레티노인
+    항목은 ''트레티노인(레티노익애씨드 및 그 염류)''로 염류만 포괄하는데, 이소트레티노인은 13-cis 기하이성질체이지 염이 아니므로
+    조문이 문언상 미치지 않는다. 배합 불가의 근거는 화장품법 제2조제1호(「약사법」 제2조제4호의 의약품에 해당하는 물품은 제외)다.
+    별표 1 위반이라고 말하면 부정확하다.'
+  source_url: https://nedrug.mfds.go.kr
+- ko: 아다팔렌
+  en: Adapalene
+  smiles: COC1=C(C=C(C=C1)C2=CC3=C(C=C2)C=C(C=C3)C(=O)O)C45CC6CC(C4)CC(C6)C5
+  inchikey: LZCDAPDGXCYOEH-UHFFFAOYSA-N
+  structure_source_url: https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/Adapalene/property/IsomericSMILES,InChIKey/JSON
+  structure_pubchem_cid: 60164
+  structure_retrieved: "2026-10-10"
+  structure_response_sha256: 4968b71e71ceebe06991ca0af1973fea1a8da9916c15c8ce3457999aa79960a7
+  reason_ko: 의약품 성분.
+  source_url: https://nedrug.mfds.go.kr
+claim_traps:
+- trap_ko: 발모 / 육모 / 양모
+  category: hair_loss
+  why_ko: 새로운 모발 생성·성장 유도를 시사하여 의약품 영역으로 인식됨. 화장품은 탈모 '증상 완화' 수준만 허용.
+  safer_ko: 탈모 증상의 완화에 도움을 줍니다
+  source_url: https://www.cosmorning.com/news/article.html?no=49100
+- trap_ko: 탈모 치료 / 탈모 예방 / 탈모 방지
+  category: hair_loss
+  why_ko: 치료·예방 표현은 의약품 효능 암시. 식약처 단속 적발 대표 표현.
+  safer_ko: 탈모 증상의 완화에 도움을 줍니다
+  source_url: https://www.cosmorning.com/news/article.html?no=49100
+- trap_ko: DHT 억제 / 5α-환원효소 억제
+  category: hair_loss
+  why_ko: 호르몬 억제 메커니즘을 직접 표방하는 것은 의약품(피나스테리드·두타스테리드) 작용기전을 암시. 화장품 정의('인체에 대한 작용이
+    경미한 것')를 벗어남.
+  safer_ko: 두피 환경 개선에 도움을 줍니다 / 탈모 증상의 완화에 도움을 줍니다
+  source_url: https://www.cosmorning.com/news/article.html?no=49100
+- trap_ko: 모발 굵기 증가 / 모발 성장 촉진
+  category: hair_loss
+  why_ko: 모발 두께나 성장 자체를 변화시킨다는 주장은 의약품 영역.
+  safer_ko: 탈모 증상의 완화에 도움을 줍니다
+  source_url: https://www.cosmorning.com/news/article.html?no=49100
+- trap_ko: 아토피 치료 / 습진 치료 / 피부 질환 치료
+  category: skin_barrier
+  why_ko: 질환(disease) 치료를 명시하면 의약품 영역. 피부장벽 기능성화장품은 '가려움 개선에 도움' 수준으로 한정.
+  safer_ko: 피부장벽의 기능을 회복하여 가려움 등의 개선에 도움을 줍니다
+  source_url: https://www.mfds.go.kr
+- trap_ko: 미백 효과 (광고 문구로 단독 사용)
+  category: whitening
+  why_ko: '''미백 효과''라는 표현은 기능성화장품 심사 미이행 시 표시·광고 금지. 반드시 ''미백에 도움을 줍니다''로 한정.'
+  safer_ko: 피부의 미백에 도움을 줍니다
+  source_url: https://www.mfds.go.kr
+routes:
+- key: report
+  ko: 보고 (심사 제외 품목 보고)
+  when_ko: "다음 세 가지 경우에 한하여 심사 없이 보고만으로 유통 가능: 제1호(1호 보고) — 성분·함량·효능·용법·용량·기준 및 시험방법이\n\
+    \  별표 4 고시 기준과 동일한 품목;\n제2호(2호 보고) — 이미 심사를 받은 타 품목과 모든 항목이 동일한 경우; 제3호(3호 보고)\
+    \ — 심사받은 성분과 고시 성분이 혼합된 경우.\n"
+  requirements_ko:
+  - 기능성화장품 심사 제외 품목 보고서 제출 (의약품안전나라 온라인)
+  - '성분·함량이 별표 4와 정확히 일치해야 함 (미백 제형: 로션제·액제·크림제·침적마스크로 제한)'
+  - 별표 4에 지정된 효능·효과·용법·용량 문구 그대로 사용
+  - '기준 및 시험방법: 고시 기준 적용'
+  typical_duration_ko: '보고 접수 후 서류 요건 충족 시 사실상 즉시(수일 내) 처리 가능. 공식 처리기간 미공표(확인 필요).
+
+    '
+  advantages_ko: '심사비용·심사기간 없이 사용 가능. 신원료 임상 없이도 신제품 출시 가능. 고시원료 범위 내 배합비 조정은 자유(단
+    농도 범위 이탈 불가).
+
+    '
+- key: review
+  ko: 심사 (기능성화장품 전면 심사)
+  when_ko: '고시원료 외의 신원료 사용, 고시 농도 범위 이탈, 피부장벽·튼살 등 고시원료 미지정 카테고리 진입 시 의무.
+
+    '
+  requirements_ko:
+  - 기원 및 개발경위 자료
+  - '안전성 자료: GLP 준수 독성시험(급성독성·피부자극·안자극 등), 「비임상시험관리기준」 적용'
+  - '유효성 자료: 효력시험(in vitro/in vivo) 또는 인체적용시험(Human Clinical Trial) — 인체적용시험 제출 시
+    효력시험 면제 가능'
+  - 기준 및 시험방법 자료 (검체 포함)
+  - '자외선차단제 추가: SPF·내수성차단지수·자외선A차단등급(PA) 설정 근거 자료'
+  typical_duration_ko: '공식 처리기간: 60일 (화장품법 시행규칙 제9조, NIFDS 확인). 실무상 서류 보완 요청이 반복될
+    경우 6~18개월 소요되는 경우도 보고됨. 인체적용시험(Human trial) 자체 설계·수행 기간(통상 3~6개월 이상) 별도.
+
+    '
+  disadvantages_ko: '신원료의 경우 인체적용시험 포함 총 소요기간 1~3년, 비용 수억 원 수준이 일반적. 고시 확대(새 원료를 별표
+    4에 등재) 추진 시 별도 행정예고 절차 필요.
+
+    '
+  source_url: https://www.nifds.go.kr/brd/m_480/view.do?seq=12906

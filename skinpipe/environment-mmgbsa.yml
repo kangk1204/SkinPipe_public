@@ -1,0 +1,29 @@
+name: skinpipe-mmgbsa
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - pip
+  - rdkit
+  - requests
+  - pandas
+  - numpy
+  - pyyaml
+  - typer
+  - rich
+  - tqdm
+  - biopython
+  - ijson>=3.4,<4
+  - scipy
+  - gemmi
+  - vina=1.2.7
+  - meeko=0.8.0
+  - openbabel=3.1.1
+  - openmm=8.6.1
+  - pdbfixer=1.12
+  - openmmforcefields=0.16.0
+  - openff-toolkit=0.18.0
+  - openff-forcefields=2026.01.0
+  # OpenMMForceFields 0.16 requires AmberTools >=22,<25 on conda-forge.
+  - ambertools>=22,<25

@@ -1,0 +1,61 @@
+{
+  "name": "ADMET-AI",
+  "version": "2.0.1",
+  "license": "MIT",
+  "upstream_commit": "c65bf0418e19c65d7228f9e40da5d0152aade756",
+  "weights": [
+    {
+      "path": "resources/models/admet_classification/model_0.pt",
+      "sha256": "9a5fb298a6564e8ef739890c90b02e831521073f49eefd2310fb56cdb61a2378",
+      "bytes": 1320249
+    },
+    {
+      "path": "resources/models/admet_classification/model_1.pt",
+      "sha256": "2bf047553eef397060af376e78dd4e990114df8428e05f734c4e4aca284280ca",
+      "bytes": 1320249
+    },
+    {
+      "path": "resources/models/admet_classification/model_2.pt",
+      "sha256": "0e9d7eb3ff0b53bd2f20e43a75e0872c682b0ee27059dd50735c416d97a3fd24",
+      "bytes": 1320249
+    },
+    {
+      "path": "resources/models/admet_classification/model_3.pt",
+      "sha256": "4b35cb5686f23c6e3e5a4c587a5c4dd79b7f1f46be26684260c0b78366145d58",
+      "bytes": 1320249
+    },
+    {
+      "path": "resources/models/admet_classification/model_4.pt",
+      "sha256": "9fdac559e3058b5f7b03780f9c696223d27adb94c78f9eb9aba6154e2dbff492",
+      "bytes": 1320249
+    },
+    {
+      "path": "resources/models/admet_regression/model_0.pt",
+      "sha256": "c709dc4526dc7f6cf39cea64190f63adbb2b95e280d34582c492fc53da64a1a4",
+      "bytes": 1300041
+    },
+    {
+      "path": "resources/models/admet_regression/model_1.pt",
+      "sha256": "57e8011a180cddf8acf66f94f5b123023c3fed503e3870a2f3f6f5300a7f3c82",
+      "bytes": 1300041
+    },
+    {
+      "path": "resources/models/admet_regression/model_2.pt",
+      "sha256": "05e8509fea4ddc4686c521d75ee2fe770113cb93f09a849a6378b0a0e3ce113e",
+      "bytes": 1300041
+    },
+    {
+      "path": "resources/models/admet_regression/model_3.pt",
+      "sha256": "04b265ff444190247b159932ab2225afc844bae9552299bf1ddf99b336c28d71",
+      "bytes": 1300041
+    },
+    {
+      "path": "resources/models/admet_regression/model_4.pt",
+      "sha256": "b58c76493744edfb022e50e531a8ad82453bdf543c2195d878ecfd248795c7c8",
+      "bytes": 1300041
+    }
+  ],
+  "endpoint_metadata_sha256": "32d46092deab7a553e319bdecaaed5e7dc2300c992d74d0a68c13c37f4af9d2d",
+  "implementation_sha256": "70a0bd4687f0d897485584a4314c6c254dd1d721228002d2c458131d66e5aedd",
+  "source": "https://github.com/swansonk14/admet_ai"
+}

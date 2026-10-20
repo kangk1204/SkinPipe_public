@@ -1,0 +1,19 @@
+name: Public platform checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  public-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/check-public-tree.py
+      - run: python -m unittest discover -s tests -v
+      - run: python -m compileall -q skinpipe/skinpipe
+      - run: python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/skinpipe-wheel" ./skinpipe
+      - run: python scripts/check-public-tree.py --package "$RUNNER_TEMP"/skinpipe-wheel/*.whl

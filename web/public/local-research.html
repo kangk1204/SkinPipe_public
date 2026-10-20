@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="referrer" content="no-referrer">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+ <title>SkinPipe · 피부 화합물 연구</title>
+ <link rel="stylesheet" href="styles.css">
+ <style>
+ body{margin:0;background:#f5f8f5}.local-research-shell{max-width:1280px;margin:auto;padding:0 28px 48px}.local-research-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid #d5dfd8;margin-bottom:24px}.local-research-brand{color:#1d5b46;font-size:26px;font-weight:750;text-decoration:none}.local-research-header nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.local-research-header .button{white-space:nowrap}.local-research-intro{color:#53685f;font-size:13px;margin:0 0 24px}.local-research-shell main{padding:0;margin:0;min-width:0}.local-research-shell .platform-panel{margin-bottom:22px}.local-research-connection{padding:20px;border:1px solid #c6d7ce;border-radius:12px;background:#fff;margin-bottom:22px}.local-research-connection p{line-height:1.7}.local-research-banner:empty{display:none}.local-research-banner{padding:14px 18px;background:#fff3df;color:#70490f;border:1px solid #dcc08e;border-radius:10px;margin-bottom:18px}.local-research-status-list{display:grid;gap:12px;padding-left:22px;line-height:1.7}.local-research-shell pre{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;max-height:440px;font-size:12px}.local-research-shell [hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:760px){.local-research-shell{padding:0 16px 32px}.local-research-header{align-items:flex-start;flex-direction:column;padding:18px 0}.local-research-header nav{gap:8px}.local-research-brand{font-size:23px}}
+ </style>
+</head>
+<body>
+ <div class="local-research-shell">
+  <header class="local-research-header"><a class="local-research-brand" href="#new-research">SkinPipe</a><nav aria-label="주요 화면"><a class="button primary" href="#new-research">새 피부 연구</a><a class="button" href="#connection">ChatGPT 연결 (선택)</a><button id="local-setup-status" class="button" type="button">설치 상태</button></nav></header>
+  <p class="local-research-intro">내 컴퓨터에서 연구 입력과 결과를 보존합니다. 단백질·화합물·결합 구조에서 시작할 수 있습니다.</p>
+  <div id="local-research-banner" class="local-research-banner" role="status" aria-live="polite"></div>
+  <main id="local-research-main" tabindex="-1"><p>SkinPipe 연구 화면을 준비하고 있습니다…</p></main>
+ </div>
+ <script src="local-research-app.js" type="module"></script>
+</body>
+</html>

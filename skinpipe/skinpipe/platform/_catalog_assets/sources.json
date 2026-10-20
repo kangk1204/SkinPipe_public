@@ -1,0 +1,264 @@
+[
+  {
+    "id": "mcule_instock",
+    "url": "https://dl.mcule.com/database/mcule_purchasable_in_stock_260927.smi.gz",
+    "filename": "mcule_purchasable_in_stock_260927.smi.gz",
+    "license": "Mcule official bulk download terms; internal screening",
+    "license_evidence": {
+      "url": "https://mcule.com/database/",
+      "retrieved_at": "2026-10-05T01:22:18.412624+00:00",
+      "sha256": "44f5354c50fde6dcedcf6b7efd6745eddb0162218ac6b0544898e5d09f1ae5a5"
+    },
+    "version": "2026-09-27",
+    "kind": "smiles",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "checksum": "sha256:ab748c976aaf3a955a0da24d27f230c6ab59e18c2416a0ac4529412cd386f939",
+    "expected_records": 7072929,
+    "purchasing": "catalog_reported_in_stock",
+    "purchasing_date": "2026-09-27",
+    "supplier": "Mcule aggregator",
+    "redistribution": "restricted",
+    "sha256": "ab748c976aaf3a955a0da24d27f230c6ab59e18c2416a0ac4529412cd386f939"
+  },
+  {
+    "id": "ice_skin_sensitization",
+    "url": "https://ice.ntp.niehs.nih.gov/downloads/DataonICE/skin_sensitization.xlsx",
+    "filename": "skin_sensitization.xlsx",
+    "license": "US government data; check individual worksheet third-party notes",
+    "license_evidence": {
+      "url": "https://ntp.niehs.nih.gov/support/policies",
+      "retrieved_at": "2026-10-05T01:22:20.010618+00:00",
+      "sha256": "8fde8e46863cc69f2e4db3270d223bb5b64915ee70415c209559f24ae93be200"
+    },
+    "version": "retrieved-2026-10-05",
+    "kind": "ice_xlsx",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "1fde74eef72f4130a7fa51e059aa4523ec841de93d154df25c674547b44ca487"
+  },
+  {
+    "id": "ice_skin_irritation",
+    "url": "https://ice.ntp.niehs.nih.gov/downloads/DataonICE/skin_irritation.xlsx",
+    "filename": "skin_irritation.xlsx",
+    "license": "US government data; check individual worksheet third-party notes",
+    "license_evidence": {
+      "url": "https://ntp.niehs.nih.gov/support/policies",
+      "retrieved_at": "2026-10-05T01:22:20.341537+00:00",
+      "sha256": "8fde8e46863cc69f2e4db3270d223bb5b64915ee70415c209559f24ae93be200"
+    },
+    "version": "retrieved-2026-10-05",
+    "kind": "ice_xlsx",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "8737ad8237bdd27c4de76bf5c4628810f8488ddab575c0612332a4fa1df420f0"
+  },
+  {
+    "id": "ice_eye_irritation",
+    "url": "https://ice.ntp.niehs.nih.gov/downloads/DataonICE/eye_irritation.xlsx",
+    "filename": "eye_irritation.xlsx",
+    "license": "US government data; check individual worksheet third-party notes",
+    "license_evidence": {
+      "url": "https://ntp.niehs.nih.gov/support/policies",
+      "retrieved_at": "2026-10-05T01:22:21.020737+00:00",
+      "sha256": "8fde8e46863cc69f2e4db3270d223bb5b64915ee70415c209559f24ae93be200"
+    },
+    "version": "retrieved-2026-10-05",
+    "kind": "ice_xlsx",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "a368c1bfac179681d53812a9d13e14c5798ad954c546910367cac6ae316c2597"
+  },
+  {
+    "id": "ice_acute_dermal",
+    "url": "https://ice.ntp.niehs.nih.gov/downloads/DataonICE/acute_dermal.xlsx",
+    "filename": "acute_dermal.xlsx",
+    "license": "US government data; check individual worksheet third-party notes",
+    "license_evidence": {
+      "url": "https://ntp.niehs.nih.gov/support/policies",
+      "retrieved_at": "2026-10-05T01:22:21.277745+00:00",
+      "sha256": "8fde8e46863cc69f2e4db3270d223bb5b64915ee70415c209559f24ae93be200"
+    },
+    "version": "retrieved-2026-10-05",
+    "kind": "ice_xlsx",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "8e2ba020b50326e3623c12fcb8ec2be4d353c9e465e494137db6a87b14da4e09"
+  },
+  {
+    "id": "ice_adme_parameters",
+    "url": "https://ice.ntp.niehs.nih.gov/downloads/DataonICE/adme_parameters.xlsx",
+    "filename": "adme_parameters.xlsx",
+    "license": "US government data; check individual worksheet third-party notes",
+    "license_evidence": {
+      "url": "https://ntp.niehs.nih.gov/support/policies",
+      "retrieved_at": "2026-10-05T01:22:21.919928+00:00",
+      "sha256": "8fde8e46863cc69f2e4db3270d223bb5b64915ee70415c209559f24ae93be200"
+    },
+    "version": "retrieved-2026-10-05",
+    "kind": "ice_xlsx",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "52b682ee46e41c26232e1f61a855bcb8443bc512fe7a6d591e17389b4ef1a227"
+  },
+  {
+    "id": "ice_functional_use",
+    "url": "https://ice.ntp.niehs.nih.gov/downloads/DataonICE/functional_use.xlsx",
+    "filename": "functional_use.xlsx",
+    "license": "US government data; check individual worksheet third-party notes",
+    "license_evidence": {
+      "url": "https://ntp.niehs.nih.gov/support/policies",
+      "retrieved_at": "2026-10-05T01:22:22.183782+00:00",
+      "sha256": "8fde8e46863cc69f2e4db3270d223bb5b64915ee70415c209559f24ae93be200"
+    },
+    "version": "retrieved-2026-10-05",
+    "kind": "ice_xlsx",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "cbd222ee33e4b4e0a0e431cbf030ba3a6ca67ce7e33854245cf1c90a98229947"
+  },
+  {
+    "id": "coconut",
+    "url": "https://coconut.s3.uni-jena.de/prod/downloads/2026-09/coconut_csv-09-2026.zip",
+    "filename": "coconut_csv-09-2026.zip",
+    "license": "CC0-1.0",
+    "license_evidence": {
+      "url": "https://coconut.naturalproducts.net/download",
+      "retrieved_at": "2026-10-05T01:22:24.575052+00:00",
+      "sha256": "802e8e2602bda10d625b28c905c66c412a8bcf725ecd57d5cdf9cf1448acbab3"
+    },
+    "version": "2026-09",
+    "kind": "coconut_csv",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "rights_note": "Preserve original collection list; flag known upstream rights conflicts separately",
+    "sha256": "38b8a3a73a40c90239ff4d5b0caf832981fd3029f4c8fc0f43c5011b39461800"
+  },
+  {
+    "id": "lotus_metadata",
+    "url": "https://zenodo.org/api/records/19360665/files/260413_frozen_metadata.csv.gz/content",
+    "filename": "260413_frozen_metadata.csv.gz",
+    "license": "CC-BY-4.0",
+    "license_evidence": {
+      "url": "https://zenodo.org/records/19360665",
+      "retrieved_at": "2026-10-05T01:22:29.681568+00:00",
+      "sha256": "de2b782e8e36e4eb4240fde6d9f7e08bc72fbba925e8d87863bc2cccd52dc3df"
+    },
+    "version": "2026-04-13",
+    "kind": "lotus_metadata",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "checksum": "md5:b17048b3b77daae9ab1e480b6591aabd",
+    "sha256": "09885dcfb3bc0e6d700fefcd5778e91446a1f9d5d2fbbcbf00eb5d2e83b68844"
+  },
+  {
+    "id": "chembl_structures",
+    "url": "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/releases/chembl_37/chembl_37_chemreps.txt.gz",
+    "filename": "chembl_37_chemreps.txt.gz",
+    "license": "CC-BY-SA-3.0",
+    "license_evidence": {
+      "url": "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/releases/chembl_37/LICENSE",
+      "retrieved_at": "2026-10-05T01:22:32.524093+00:00",
+      "sha256": "f0c22ca33207ad8a85129a71f1454fcf8f2f71c99e68da5da01538210fa3ffba"
+    },
+    "version": "37",
+    "kind": "chembl_tsv",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "checksum": "sha256:ea6181ce8dc7af41974e35b92e1febb0c9dcbe2c62f7ccc4a5d983ac19f696e7",
+    "sha256": "ea6181ce8dc7af41974e35b92e1febb0c9dcbe2c62f7ccc4a5d983ac19f696e7"
+  },
+  {
+    "id": "chebi",
+    "url": "https://ftp.ebi.ac.uk/pub/databases/chebi/archive/rel255/SDF/chebi.sdf.gz",
+    "filename": "chebi.sdf.gz",
+    "license": "CC-BY-4.0",
+    "license_evidence": {
+      "url": "https://ftp.ebi.ac.uk/pub/databases/chebi/SDF/LICENSE",
+      "sha256": "fe7b4ce83b8381cc5b216bbb4af73c570688d1b819c73bbaed8ca401f4677cd6",
+      "retrieved_at": "2026-10-05T01:27:07.917047+00:00"
+    },
+    "version": "ChEBI release 255 (2026-09-09); bytes pinned from retrieval 2026-10-05",
+    "kind": "sdf",
+    "admission": "allowed",
+    "checksum": null,
+    "use_scope": "internal_commercial_research",
+    "sha256": "9e180253b1d6b57c197a06e5ea97c500488935c85a2df9ffcea6339e56ab3451",
+    "archive_resolution": {
+      "original_url": "https://ftp.ebi.ac.uk/pub/databases/chebi/SDF/chebi.sdf.gz",
+      "original_retrieval_date": "2026-10-05",
+      "release": 255,
+      "release_date": "2026-09-09",
+      "official_readme_url": "https://ftp.ebi.ac.uk/pub/databases/chebi/archive/rel255/SDF/README",
+      "verified_at": "2026-10-18T12:25:34.677340+00:00",
+      "sha256_unchanged": true,
+      "bytes": 145814280,
+      "gzip_crc_valid": true
+    }
+  },
+  {
+    "id": "skinpix",
+    "url": "https://entrepot.recherche.data.gouv.fr/api/access/datafile/168182",
+    "filename": "20230620_cleanedDB.xlsx",
+    "license": "Etalab-2.0",
+    "license_evidence": {
+      "url": "https://entrepot.recherche.data.gouv.fr/api/datasets/:persistentId/?persistentId=doi:10.57745/7FHQOY",
+      "sha256": "999cca0b8e69b48081e41ad17a0a2aa7ff7321c070882f0a30f44e65d5582001",
+      "retrieved_at": "2026-10-05T01:27:15.235196+00:00"
+    },
+    "version": "1.1",
+    "kind": "skinpix_xlsx",
+    "admission": "allowed",
+    "checksum": "md5:8372490bbfdc6c2782f1e18c33bea727",
+    "use_scope": "internal_commercial_research",
+    "sha256": "a9ed97618a1218fcaf4240a724fa8ae6f709bbb63fa25ad56f5f5ff797709770"
+  },
+  {
+    "id": "huskindb",
+    "url": "https://raw.githubusercontent.com/RhDm/huskinDB_publication/3edb8073e4b92de57b634ced8fcba03acbd32fa2/data/huskinDB.csv",
+    "filename": "huskinDB.csv",
+    "license": "CC-BY-4.0",
+    "license_evidence": {
+      "url": "https://www.nature.com/articles/s41597-020-00764-z",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "retrieved_at": "2026-10-05T01:27:17.623381+00:00"
+    },
+    "version": "2020 author snapshot 3edb8073e4b92de57b634ced8fcba03acbd32fa2",
+    "kind": "huskin_csv",
+    "admission": "allowed",
+    "checksum": null,
+    "use_scope": "internal_commercial_research",
+    "sha256": "51aabf6beb450ca5fe146ea9cf1911d5bf8d0050119f39b8aa203987b61523e4"
+  },
+  {
+    "id": "npatlas_2024_03",
+    "url": "https://zenodo.org/api/records/8144459/files/np_atlas_2024_03.tsv/content",
+    "filename": "np_atlas_2024_03.tsv",
+    "checksum": "md5:c3095777d62acb660298a0c589437de7",
+    "license": "CC-BY-4.0",
+    "license_evidence": {
+      "url": "https://zenodo.org/api/records/8144459"
+    },
+    "version": "2024_03",
+    "kind": "npatlas_tsv",
+    "admission": "allowed",
+    "use_scope": "internal_commercial_research",
+    "sha256": "c3075b3c4f1ea9e6774540a37798809dbcdc55e6487ad787e0bc4b7311de4b3e"
+  },
+  {
+    "id": "zinc_instock",
+    "license": "ZINC internal use; redistribution restricted",
+    "license_evidence": {
+      "url": "https://wiki.docking.org/index.php/Terms_And_Conditions"
+    },
+    "admission": "allowed",
+    "version": "historical in-stock layers a/g, pinned 2026-10-05",
+    "kind": "smiles",
+    "filename": "zinc-a-g.records-v2.smi.gz",
+    "url": "https://cache.docking.org/zinc22/",
+    "expected_records": 10211542,
+    "purchasing": "historical_in_stock",
+    "purchasing_date": "cache files generally 2024; see individual headers",
+    "supplier": "ZINC archive; supplier not resolved"
+  }
+]

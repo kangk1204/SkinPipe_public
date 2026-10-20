@@ -1,0 +1,23 @@
+{
+  "library": "Mol*",
+  "version": "5.12.0",
+  "license": "MIT",
+  "source": "https://github.com/molstar/molstar",
+  "npm": "molstar@5.12.0",
+  "sha256": {
+    "molstar.js": "7d2fe9bc69577f3f7615f2c460ddefd5a7a47bbb425feaa811d2c4e5a611be00",
+    "molstar.css": "5b68ceb6d3642549b4e9b2c071e58e41b98a5350ae269180587b39da86925d55",
+    "LICENSE": "aa42900c6ea7bfcf22d25a4c369025e01a526c66501fd9193f9a8aecee7a0753"
+  },
+  "adapters": [
+    {
+      "id": "skinpipe-static-emscripten-bindings-v1",
+      "upstream_sha256": "8b77dcb87d0920edf5e838a865a9b7f346b177875b1ff85f8689c2e6cfc7cfbd",
+      "output_sha256": "7d2fe9bc69577f3f7615f2c460ddefd5a7a47bbb425feaa811d2c4e5a611be00",
+      "replacements": 3,
+      "scope": "Static Emscripten function wrappers and lazy MP4 initialization; molecular/numerical implementation unchanged",
+      "script": "scripts/molstar-csp-adapter.mjs",
+      "script_sha256": "353fba3e693a240b1c129aa21920472f420072e3491437097d8f5b181f57a69e"
+    }
+  ]
+}

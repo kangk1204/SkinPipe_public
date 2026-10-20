@@ -1,0 +1,25 @@
+{
+  "source": "SkinScout catalog software snapshot",
+  "snapshot_sha256": "9641012cd81f1150dd7e057b2815b7a8ab0228fd747fdee412984929849b1bb7",
+  "files": {
+    "common.py": "e66e00ce383d5841cd5c2f60f5cf8e08b0c37cf4a1569a5519da4a7d965e6176",
+    "chemistry.py": "fbdd8919b0c86ab62de0f4d88cc1e46b817cb30fcae2c1905a9ffbde99d0c7f6",
+    "ingest.py": "1d83de42ea824a00436eb9a98d01957b986403f8f50cbe11a732d6f439503ab8",
+    "skin.py": "39d75a23b27dbdb4ad94eba780a2b0aae3854fc7ff599c2264ce908bf8d745c4",
+    "database.py": "df6ffd82b897fea97644e533245a5e5ac99eb0427ac147bc30f3ef2e5eb5491b",
+    "publish.py": "e74a2df5ba7b0df6bcb1cf0cf30e9ddf33ebcae19b8109cb664b423658754c26",
+    "prediction_schema.py": "30a9ff880fd51d429840b29435ed4fd762d797690d0eaa9100821420886096b6",
+    "prediction_integrity.py": "33b0b71fe496e2d427eba5144a7d38205517433645b78df7afcd220fee351259",
+    "model_registry.py": "64d9e8022bb58751266f853d5026365485f415653d657f16a218f68d318adf01",
+    "policy.py": "09e55703bd64740275f5208135f4b1bcfb9032f3007b5b0676fb001c730741f2",
+    "audit.py": "e899cdcb4c82f21d314d0d72770490963d2b657437ccb1884cd899b231791361",
+    "download.py": "36b7e69f863a3b8ba7d4f4633fb1e2b215ad5017176fa1747ec23df8fbb0b30a"
+  },
+  "changes": [
+    "Copied source subset into SkinPipe internal namespace; no data or weights included",
+    "database.py limits two threads and 2GB",
+    "download.py permits HTTPS only",
+    "Formatting and unused imports cleaned; original donor files unchanged"
+  ],
+  "data_included": false
+}
