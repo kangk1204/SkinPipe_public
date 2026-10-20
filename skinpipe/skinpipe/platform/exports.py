@@ -1172,6 +1172,7 @@ class RunExports:
             "ref_observed_sdf_sha256",
             "raw_predictions_sha256",
             "exact_input_receipt_sha256",
+            "cached_row_artifact_sha256",
         }
         expanded_json = set()
         structured_artifacts = {"target_descriptor_sha256", "reference_set_sha256", "comparison_reference_set_sha256",
@@ -1214,6 +1215,16 @@ class RunExports:
                         save_model_metadata(value, key, item, candidate_id=candidate_id)
                     elif key == "sdf_artifact" and isinstance(item, dict):
                         save_hash(item.get("sha256"), candidate_id=candidate_id, component="saved_pose_sdf")
+                    elif key == "routine_pose_quality" and isinstance(item, dict):
+                        # Only this declared QC artifact list owns CAS hashes.
+                        # Never follow artifact paths or generic sha256 fields.
+                        artifacts = item.get("artifacts")
+                        if isinstance(artifacts, list):
+                            for artifact in artifacts:
+                                if isinstance(artifact, dict):
+                                    save_hash(artifact.get("sha256"), candidate_id=candidate_id,
+                                              component="routine_pose_quality_artifact")
+                        save_evidence(item, candidate_id=candidate_id)
                     elif key in structured_artifacts:
                         save_structured(item, candidate_id=candidate_id, component=key)
                     elif key in asset_keys:

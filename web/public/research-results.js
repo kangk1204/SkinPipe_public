@@ -63,6 +63,20 @@ export function researchDockingView(summary={}){
  }
  return{state,message,candidateCount,redockingCount,redockingQc,holds,selectionReasons:[...reasons.values()]};
 }
+export function researchExecutionScopeMarkup(summary={}){
+ const execution=summary.execution||{},counts=summary.counts||{},receipt=summary.bound_complex_docking||{},selection=summary.routine_selection||{};
+ const count=value=>dockingCount(value)===null?'미기록':number(value)+'개',requestCount=value=>dockingCount(value)>0?count(value):'미기록';
+ const seconds=dockingCount(execution.compute_budget_seconds),time=seconds>0?(seconds%3600===0?number(seconds/3600)+'시간 ('+number(seconds)+'초)':seconds%60===0?number(seconds/60)+'분 ('+number(seconds)+'초)':number(seconds)+'초'):'미기록';
+ const facts=rows=>'<dl class="research-evaluation-facts">'+rows.map(([label,value])=>'<dt>'+e(label)+'</dt><dd>'+value+'</dd>').join('')+'</dl>';
+ const heading='<section class="research-options research-execution-scope"><h3>이번 연구의 요청과 처리 범위</h3>';
+ if(summary.analysis_mode==='assessment')return heading+'<p>입력 화합물만 평가한 연구입니다. 카탈로그 후보 탐색·대표 후보 선정·수용체 도킹은 요청하지 않았습니다.</p>'+facts([['전체 연구 최대 처리 시간',time]])+'</section>';
+ const notRequested=researchDockingView(summary).state==='not_requested',docking=value=>notRequested?'미요청':count(value);
+ const requested=[['공통 카탈로그 요청 한도',requestCount(execution.catalog_limit)],['대표 후보 목표',requestCount(execution.screening_policy?.target_candidates)],['전체 연구 최대 처리 시간',time]];
+ const actual=[['확보한 카탈로그 행',count(counts.collected)],['검색 필터 통과 후보 행',count(counts.filter_pass)],['도킹 계획 후보',docking(receipt.planned_candidate_count)],['후보 도킹 계산 완료',docking(counts.docking_completed)],['이번 연구의 신규 도킹 계산',docking(receipt.new_docking_count)],['동일 조건의 저장 도킹 재사용',docking(receipt.reused_count)],['대표 선정 결과',count(selection.selected_count)]];
+ const stops={eligible_pool_exhausted:'이번 조건에 맞는 추가 후보가 없어 후보 도킹을 마쳤습니다.',target_reached:'대표 후보 목표에 도달해 후보 도킹을 마쳤습니다.',budget_deferred:'남은 계산 시간 예산으로 다음 도킹 묶음을 시작할 수 없어 후속 계산을 보류했습니다.',model_held:'계산 모델을 확인해야 해 후속 도킹을 보류했습니다.',pose_quality_runtime_or_input_held:'도킹 자세 QC의 실행 환경 또는 입력을 확인해야 해 후속 계산을 보류했습니다.'};
+ const shortfall=dockingCount(selection.shortfall),stop=typeof receipt.stop_reason==='string'?'<p>기록된 후보 도킹 종료 사유: '+e(Object.hasOwn(stops,receipt.stop_reason)?stops[receipt.stop_reason]:'처리 코드: '+receipt.stop_reason)+'</p>':'';
+ return heading+'<h4>제출 당시 저장된 요청</h4>'+facts(requested)+'<p>요청 한도와 대표 목표는 보장되는 결과 수가 아닙니다. 과거 기록에 값이 없으면 현재 기본값으로 채우지 않습니다.</p><p class="research-muted">카탈로그 요청 한도는 공통 카탈로그에서 새로 가져올 때 적용됩니다. 기존 연구를 후보 모집단으로 선택했다면 저장된 전체 모집단을 보존합니다. 이 요약에 모집단 출처가 없으면 한도의 실제 적용 여부를 단정하지 않습니다.</p><h4>저장된 처리·선정 결과</h4>'+facts(actual)+'<p class="research-muted">검색 필터 통과는 도킹 자세 QC 통과나 대표 선정을 뜻하지 않습니다. 도킹 계획 후보도 QC를 통과한 최종 후보 수가 아닙니다. 후보 도킹 계산 완료에는 동일 조건의 저장 결과 재사용이 포함될 수 있습니다. 관측 리간드 재도킹은 후보 도킹 수에 합치지 않습니다.</p>'+(shortfall>0?'<p>저장된 대표 선정 결과는 목표보다 '+number(shortfall)+'개 적습니다. 보류·평가 대기 사유는 아래 대표 선정 내역과 전체 후보 표에서 확인하세요.</p>'+stop:'')+'</section>';
+}
 export function dockingContextMarkup(summary){
  if(summary.analysis_mode==='assessment')return'';
  const context=summary.protein_receptor_context,receipt=summary.bound_complex_docking,view=researchDockingView(summary);
@@ -192,7 +206,7 @@ export function researchSummaryMarkup(summary){
  const mode=input.kind==='protein'&&selection?.fallback_used===true?'단백질 입력 · 일반 DB 후보의 구조·피부 평가':input.kind==='bound_complex'&&!assessment?'결합 구조에서 시작 · 같은 포켓의 골격 비교':input.kind==='protein'?'확인한 단백질의 표적 기반 탐색':MODES[summary.analysis_mode]||summary.analysis_mode||'입력에 따른 탐색';
  const cancellation=summary.cancellation,summaryStatus=cancellation?.requested===true?(cancellation.state==='cleanup_unverified'?'작업 자원 정리 확인 필요':cancellation.state==='stopped'&&cancellation.resources_released===true?'취소 완료 · 작업 자원 정리 확인됨':'취소 요청됨 · 종료·자원 정리 확인 중'):(STATUS[summary.status]||summary.status||'상태 확인 중');
  return`<div class="page-heading"><div><span class="eyebrow">연구 결과</span><h2>${e(identityLabel(input))}</h2><p>${e(mode)} · ${e(summaryStatus)}</p></div></div>
- ${primaryCountsMarkup(summary)}${dockingContextMarkup(summary)}${routineSelectionMarkup(summary.routine_selection,candidates.length)}${counts.length?`<details><summary>전체 처리 수와 역할별 집계</summary><dl>${counts.map(([k,v])=>`<dt>${e(COUNTS[k]||k)}</dt><dd>${number(v)}</dd>`).join('')}</dl></details>`:''}
+ ${researchExecutionScopeMarkup(summary)}${primaryCountsMarkup(summary)}${dockingContextMarkup(summary)}${routineSelectionMarkup(summary.routine_selection,candidates.length)}${counts.length?`<details><summary>전체 처리 수와 역할별 집계</summary><dl>${counts.map(([k,v])=>`<dt>${e(COUNTS[k]||k)}</dt><dd>${number(v)}</dd>`).join('')}</dl></details>`:''}
  <p>${context.product?`${e(PRODUCTS[context.product]||context.product)} · `:'제품 형태 미지정 · '}${context.applied_percent!==null&&context.applied_percent!==undefined?`배합 ${number(context.applied_percent)}%`:'배합 농도 미지정'} · ${e(GOALS[context.goal]||'탐색 목적')}</p>
  ${catalogSelectionMarkup(selection)}
  ${seedAssessmentMarkup(summary.seed_assessment)}

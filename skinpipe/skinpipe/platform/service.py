@@ -603,6 +603,34 @@ class PlatformService:
         return self._materialization_public(state)
 
     def _scout_materialization_chunk(self, ids, *, progress=None, require_offers=True):
+        # A full top-K population still has to fit each bounded gateway transfer.
+        # Materialize 50 identities at a time without changing retrieval or QC.
+        if type(require_offers) is not bool:
+            raise ValueError("Supplier evidence requirement must be boolean")
+        if (not isinstance(ids, list) or not 1 <= len(ids) <= 1000
+                or any(not isinstance(cid, str) or not cid or len(cid) > 256 for cid in ids)
+                or len(set(ids)) != len(ids)):
+            raise ValueError("Materialization requires 1..1000 unique bounded compound IDs")
+        if len(ids) <= 50:
+            return self._scout_materialization_batch(ids, progress=progress, require_offers=require_offers)
+        from .catalog_cancellation import catalog_checkpoint
+        started = time.monotonic()
+        combined, rows, chunks = None, [], []
+        for offset in range(0, len(ids), 50):
+            catalog_checkpoint()
+            part = self._scout_materialization_batch(
+                ids[offset:offset + 50], progress=progress, require_offers=require_offers)
+            if combined is None:
+                combined = dict(part)
+            elif part["source"] != combined["source"]:
+                raise ValueError("Catalog source changed between materialization batches")
+            rows.extend(part["rows"])
+            chunks.append({"query_id": part.get("query_id"), "candidate_count": len(part["rows"]),
+                           "source_sha256": hashlib.sha256(canonical_json(part["source"])).hexdigest()})
+        return {**combined, "rows": rows, "materialization_chunks": chunks,
+                "elapsed_seconds": round(time.monotonic() - started, 3)}
+
+    def _scout_materialization_batch(self, ids, *, progress=None, require_offers=True):
         if type(require_offers) is not bool:
             raise ValueError("Supplier evidence requirement must be boolean")
         response = self._scout_request(

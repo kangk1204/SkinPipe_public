@@ -118,6 +118,8 @@ For a bound-structure start, choose **결합 구조가 있어요 → PDB ID `1CB
 
 The operating-catalog check completed **3 new candidate docking calculations with passing pose QC** through the protein route and **2** through the mmCIF route. The latter exhausted the eligible pool before reaching the target of 3. Each study's one observed-ligand redocking is separate from these candidate counts. These yields are not guaranteed with the small starter catalog or another environment; follow [catalog preparation](docs/catalog.en.md) to increase coverage. Keep QC and filters unchanged. See [verification scope and zero/held outcomes](docs/candidate-docking-20261021.md).
 
+**Larger study scope:** the 3/50/0.5 settings above are a short workflow check. Defaults remain **representative target 200, common-catalog limit 1,000, time limit 2 hours**; 200 is a target, not a guaranteed yield. Start a separate study and distinguish the requested limit, acquired candidates, docking plan, new calculations/reuse, pose QC and final representatives. See [catalog scope and the 3/2 candidate funnel](docs/catalog-scale-20261021.md) for the larger-run and Excel workflow.
+
 If the `1CBS` upload requests exact ligand SMILES, RCSB's [REA record](https://files.rcsb.org/ligands/download/REA.cif) provides `SMILES_CANONICAL` (OpenEye OEToolkits 1.7.6). **For this 1CBS/REA example only**, first check chain A / REA / residue 200 and the protein chain, enter the value below, then **선택한 결합 화합물 확인**. Do not reuse it for a different ligand.
 
 ```text

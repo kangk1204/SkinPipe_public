@@ -113,3 +113,5 @@ The public repository contains code, synthetic tests, documentation and prior
 public-example screenshots. It does not contain the operating database,
 original 31 studies, new study exports, candidate pose packages or credentials.
 The new studies remain in the existing owner-private installation.
+
+The separate [catalog-scale guide](catalog-scale-20261021.md) explains why the 50-row checks yielded 3/2 candidates, how the unchanged default target 200 differs from actual docking counts, and how to submit a larger catalog study without relaxing QC.
