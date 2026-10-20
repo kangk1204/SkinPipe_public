@@ -235,11 +235,14 @@ export function installColumnHelp() {
     tip.innerHTML = `<strong>${esc(help[0])}</strong><p>${esc(help[1])}</p><p class="column-help-direction">${esc(help[2])}</p>`;
     const host = button.closest('dialog[open]') || document.body;
     if (tip.parentElement !== host) host.append(tip);
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+    tip.style.maxWidth = Math.max(0, viewportWidth - 24) + 'px';
     tip.hidden = false; button.setAttribute('aria-expanded', 'true');
     const anchor = button.getBoundingClientRect(), box = tip.getBoundingClientRect(), margin = 12;
-    const left = Math.max(margin, Math.min(anchor.left + anchor.width / 2 - box.width / 2, window.innerWidth - box.width - margin));
+    const left = Math.max(margin, Math.min(anchor.left + anchor.width / 2 - box.width / 2, viewportWidth - box.width - margin));
     const below = anchor.bottom + 10;
-    const top = Math.max(margin, Math.min(below + box.height <= window.innerHeight - margin ? below : anchor.top - box.height - 10, window.innerHeight - box.height - margin));
+    const top = Math.max(margin, Math.min(below + box.height <= viewportHeight - margin ? below : anchor.top - box.height - 10, viewportHeight - box.height - margin));
     tip.style.left = left + 'px'; tip.style.top = top + 'px';
   };
   const scheduleClose = () => {
