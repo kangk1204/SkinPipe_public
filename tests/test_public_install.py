@@ -34,6 +34,23 @@ class PublicSourceTests(unittest.TestCase):
         self.assertTrue(guard.inspect_bytes("file.txt", ("sk-proj-" + "a" * 40).encode()))
         self.assertTrue(guard.inspect_bytes("file.txt", ("/Users/" + "researcher/research").encode()))
 
+    def test_screenshot_exception_is_exact_and_hash_bound(self):
+        import hashlib
+        name = "docs/images/01-example.jpg"
+        data = b"\xff\xd8\xffreviewed-tutorial\xff\xd9"
+        approved = {name: hashlib.sha256(data).hexdigest()}
+        self.assertEqual(guard.inspect_bytes(name, data, approved), [])
+        self.assertTrue(guard.inspect_bytes(name, data + b"changed", approved))
+        self.assertTrue(guard.inspect_bytes("docs/images/02-unreviewed.jpg", data, approved))
+        self.assertTrue(guard.inspect_bytes(name, data))
+
+    def test_screenshot_manifest_cannot_authorize_other_files(self):
+        value = {"scope": "public-tutorial-screenshots", "images": [
+            {"file": "../research.jpg", "sha256": "0" * 64}]}
+        self.assertTrue(guard.screenshot_manifest({guard.SCREENSHOT_MANIFEST: json.dumps(value).encode()})[1])
+        value["images"][0]["file"] = "01-example.jpg"
+        self.assertTrue(guard.screenshot_manifest({guard.SCREENSHOT_MANIFEST: json.dumps(value).encode()})[1])
+
     def test_package_guard(self):
         import zipfile
         with tempfile.TemporaryDirectory() as temporary:

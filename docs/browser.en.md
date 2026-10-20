@@ -4,9 +4,12 @@
 
 Open http://127.0.0.1:4317 after the installer prints **Ready**. The current interface has Korean labels. This guide pairs those labels with English descriptions.
 
+
+Screenshots use public tutorial examples in a local **0.3.0rc1 starter installation**: Nicotinamide (compound), HSP90AA1 (protein) and PDB 1CBS (bound structure). Click an image to enlarge it. These are walkthrough captures, not bundled research datasets.
+
 ## 1. Choose an input
 
-Open **새 연구 시작** (*Start a new study*). The four steps are input → confirmation → execution → results.
+Open **새 피부 연구** (*New skin study*, top navigation). The four steps are input → confirmation → execution → results.
 
 | Starting point | What to enter | What to check |
 |---|---|---|
@@ -18,6 +21,28 @@ Choose the input type **before** entering the value. Its input-method menu chang
 
 If a name refers to a family, mixture or several structures, choose an exact item or provide an exact structure. A compound is not replaced automatically by a related protein. A lookup failure keeps you at the input step with a suggested next action. The original uploaded file is retained; a filesystem path is not treated as a command.
 
+![Compound name input and Check input button](images/02-compound-input.jpg)
+
+### SMILES example
+
+Select **SMILES 분자 구조 (선택)** in the compound input-method menu and paste `NC(=O)c1cccnc1` (Nicotinamide). Use the same confirmation steps as the name example.
+
+![SMILES input selected with Nicotinamide structure](images/11-smiles-input.jpg)
+
+### Protein example
+
+Choose **단백질을 알고 있어요**, enter `HSP90AA1`, and click **입력 확인하기 →**. The compound-name menu is replaced by a protein input field. Confirm **Homo sapiens / UniProt P07900** before continuing.
+
+![Protein input field with HSP90AA1](images/12-protein-input.jpg)
+
+![Confirmed HSP90AA1 species and UniProt identifier](images/13-confirm-protein.jpg)
+
+### Bound-structure example
+
+Choose **결합 구조가 있어요**, leave **PDB ID** selected, and enter `1CBS`. To use your own file, select **PDB/mmCIF 파일** in that menu and use the file chooser, then **입력 확인하기 →**.
+
+![Bound structure input with public PDB ID 1CBS](images/14-bound-structure-input.jpg)
+
 ## 2. Confirm the target
 
 Read **확인한 입력** (*Confirmed input*). Check the displayed identifiers and source records. For compounds, verify the 2D diagram and SMILES. For proteins, verify the species and identity. For bound structures, check the model, chain and bound ligand; use **구성이나 정확한 분자 구조를 다시 선택** (*Change components or chemical identity*) if necessary. If ligand chemistry is incomplete, provide the requested SMILES or SDF rather than accepting an unknown structure.
@@ -25,6 +50,16 @@ Read **확인한 입력** (*Confirmed input*). Check the displayed identifiers a
 The observed bound ligand coordinates define the pocket in structure mode. A free conformer is shown separately from an observed or docked pose. The protein can be used as a validated structure even when its biological name is still unidentified.
 
 Click **← 입력 수정** (*Edit input*) to go back, or **이 입력으로 연구하기 →** (*Use this input*) to continue. This does not start a calculation yet.
+
+![Confirmed compound and 2D structure](images/03-confirm-compound.jpg)
+
+For the public `1CBS` example, inspect **model 1 / chain A / REA / residue 200** and the assembly. Click **결합 화합물과 주변 포켓을 3D로 확인** to open the observed pocket. Use **구성이나 정확한 분자 구조를 다시 선택** to change the selection when several ligands are present.
+
+![Selected ligand and chain in the public 1CBS structure](images/15-confirm-bound-structure.jpg)
+
+![MolStar display of observed ligand and receptor, with pocket and whole-structure controls](images/16-observed-pocket-3d.jpg)
+
+**3D controls:** drag to rotate, use the wheel/pinch to zoom, **결합 부위** to focus on the pocket, **전체 구조** to restore the whole protein, and **×** to close. This screenshot is an observed PDB ligand, not a new docking result.
 
 ## 3. Choose the analysis and limits
 
@@ -44,6 +79,10 @@ The additional-toxicity panel shows whether a local model is registered. Exact-s
 
 Open **ChatGPT 설명과 자료 전달 설정 (선택)** (*Optional ChatGPT and data permissions*) to inspect the permitted data categories. Finally click **새 연구 실행** (*Run new study*) **once**. Submission has a busy state. If a request times out, check history first; do not immediately submit it again.
 
+![First tutorial assessment mode and optional skin conditions](images/04-analysis-options.jpg)
+
+![Calculation scope and the final Run study button](images/05-run-study.jpg)
+
 ## 4. Follow progress, cancel or resume
 
 Once accepted, the study is saved in **내 연구 실행 기록** (*My study history*). Stage, elapsed time, completed counts and held/failed stages are reported as work proceeds. Use **상태 갱신** (*Refresh*) if a page has been open for a long time. **진행·결과 보기** (*View progress/results*) opens and scrolls to that study's result panel.
@@ -53,6 +92,14 @@ Changing menu pages or closing the browser does **not** cancel an accepted study
 To cancel computation, use that study's cancel control and follow the displayed confirmation/status. Wait until cancellation/resource cleanup is acknowledged; a queued request is not yet a completed cleanup. Completed observations and logs remain. The worker stops its managed child processes; other users' jobs are not cancelled. A process that cannot be reclaimed is reported as a cleanup problem rather than silently marked finished.
 
 Resume appears for resumable interrupted/cancelled work. It validates the saved input, catalog, model and calculation conditions before using completed work. Changed conditions may require a separate study. Do not start a duplicate study just because you changed screens. Use the installation's **Stop-SkinPipe.sh** when intentionally shutting down the whole local app.
+
+![A longer tutorial study reporting its current stage and refresh time](images/06-study-progress.jpg)
+
+The progress screenshot shows a separate, longer tutorial run; the quick Nicotinamide assessment may finish before you see an intermediate stage.
+
+![Cancel confirmation with Continue and Cancel controls](images/17-cancel-confirmation.jpg)
+
+**계속 분석하기** keeps the study running. **이 연구 분석 취소** confirms cancellation. The screenshot shows the confirmation prompt only; wait for the subsequent cleanup status after confirming.
 
 ## 5. Read results and structures
 
@@ -68,7 +115,21 @@ Open a candidate to see:
 
 The 2D diagram shows bonding; the 3D viewer shows spatial coordinates. Rotate/zoom in the viewer. Where no saved pose is available, the interface states that instead of displaying a generated conformer as a bound pose. Close the viewer before opening another candidate on a small screen.
 
-Filters can be toggled independently. **All enabled conditions must match** (AND). **전체 해제** (*Clear all*) removes them. The count distinguishes stored rows, matches and the display limit. Sorting changes order, not the underlying saved observations. Hide/unhide unassessed values deliberately; absent activity or toxicity is not a measured zero.
+Click **전체 후보 표 보기** (*Open complete candidate table*) in a completed study to compare rows. Filters can be toggled independently. **All enabled conditions must match** (AND). **제외 필터 해제** (*Clear exclusion filters*) resets exclusion criteria; the snapshot, search and sorting controls are separate. The count distinguishes stored rows, matches and the display limit. Sorting changes order, not the underlying saved observations. Hide/unhide unassessed values deliberately; absent activity or toxicity is not a measured zero.
+
+![Candidate comparison filters and counts from a separate Nicotinamide similarity search](images/19-candidate-filters.jpg)
+
+This similarity-search example has **4 stored observations**, including the seed and a repeated structure; its study summary reports **2 new unique candidates**. The first “assess input only” example does not search for candidates.
+
+![An enabled purchase-only filter gives zero matches while four observations remain saved](images/20-empty-filter-results.jpg)
+
+If the table becomes empty, compare **전체 모집단** (*Stored population*) with **필터 적용 후** (*After filters*). Here the purchase-only condition hides all four rows. Turn it off or click **제외 필터 해제** to see them again. Filters do not delete saved results.
+
+![Completed Nicotinamide assessment and result actions](images/07-completed-study.jpg)
+
+![Two-dimensional compound structure and skin properties](images/08-structure-and-skin.jpg)
+
+![ADMET outputs with scales and model version](images/09-admet-results.jpg)
 
 ## 6. Download Excel and raw data
 
@@ -77,6 +138,10 @@ Use **Excel 받기** (*Download Excel*) in the study history/result panel. Wait 
 An **Excel 묶음 ZIP** (*Excel bundle ZIP*) contains the summary, complete candidate tables, compound worksheets, conditions and source data. Individual compound tabs are split into groups of at most 200; download/extract the whole bundle and follow its index. The same compound in different studies retains each observation and protocol. Excluded/failed/unassessed records and zero-candidate studies remain in the export. A visible table limit does not truncate the stored export scope.
 
 Use the summary worksheet to choose a study and the candidate index to find a compound tab. The compound tabs include a structure image, key numbers, selection/exclusion reasons, skin/toxicity information and sources. Keep the JSON/SDF/conditions included with the export when sharing results privately. An export failure does not delete the study; correct the displayed issue and retry the export.
+
+![The prepared ZIP save link must be clicked to save the export](images/10-excel-ready.jpg)
+
+**Download check:** look in your browser’s Downloads folder for `SkinPipe-…-xlsx.zip`. Extract it, open `review-0001.xlsx`, then **후보 검토** → `C000001`. In the first assessment example there is one input row and one compound tab; searching for new candidates is a separate mode.
 
 ## Optional ChatGPT
 
@@ -89,3 +154,5 @@ Open **ChatGPT 연결 (선택)** (*Connect ChatGPT*) → **Continue with ChatGPT
 Choose a model from the account's returned model list. The preference is `gpt-6-luna` with `max` reasoning; an explicitly returned provider default is the fallback when Luna is absent. If neither is available, choose manually. Check the reasoning option supported by that model. A listed model is not a successful call: access/limits are confirmed by an actual completed response. A timeout, quota or validation error affects the AI step; screening and exports remain available. There is no automatic conversion to a paid API request.
 
 Public literature review is separate from permission to send private SMILES, uploaded structures or calculated results. Inspect the data-permission choices before running that stage. ChatGPT does not modify the input identity, pocket, toxicity values, scores or task status. Without ChatGPT, the platform provides the saved numerical tables and standard result text.
+
+![Optional ChatGPT connection screen before account sign-in](images/18-optional-chatgpt.jpg)

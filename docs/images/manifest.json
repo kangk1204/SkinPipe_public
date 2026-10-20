@@ -1,0 +1,93 @@
+{
+  "scope": "public-tutorial-screenshots",
+  "version": "0.3.0rc1",
+  "capture_environment": "Installed Ubuntu 24.04 starter catalog, local browser interface",
+  "examples": [
+    "Nicotinamide / PubChem CID 936",
+    "Nicotinamide SMILES",
+    "HSP90AA1 / UniProt P07900",
+    "PDB 1CBS / chain A / REA 200"
+  ],
+  "images": [
+    {
+      "file": "01-installation-ready.jpg",
+      "sha256": "60bd8727af81f5e30db67a91e4abc6493f935e3e0b854223f2dcc70a886a8cf7"
+    },
+    {
+      "file": "02-compound-input.jpg",
+      "sha256": "255915f62833b7d073be5df1a5bb830d02f8d9e25450a3f9b477fe043675d879"
+    },
+    {
+      "file": "03-confirm-compound.jpg",
+      "sha256": "65f63bfd19c6ee9a3ac6d72c5fadc706d934a54daedfe8a64d262d459c372757"
+    },
+    {
+      "file": "04-analysis-options.jpg",
+      "sha256": "72a9de49d15cdbca00a937660f414e1b5eb71419b044efaba43de4f4c172f425"
+    },
+    {
+      "file": "05-run-study.jpg",
+      "sha256": "4ba54258d575cd702b2b516564d5555298ff842d3712d6851f16d423e9cd7d11"
+    },
+    {
+      "file": "06-study-progress.jpg",
+      "sha256": "a1be4fb8217457c5d4ac590700e9fa8f0c3ec786fbb3bd06489ed8bd09fd1933"
+    },
+    {
+      "file": "07-completed-study.jpg",
+      "sha256": "93c5d66c19bb52702445ed2551f558acdd0abc6f22842845c8e43569bdabff87"
+    },
+    {
+      "file": "08-structure-and-skin.jpg",
+      "sha256": "72359b18fbf7c471b850c48938d1ecaec0d15bc6f8d812a94909057e7afdac5a"
+    },
+    {
+      "file": "09-admet-results.jpg",
+      "sha256": "0cd346eece8aaecf309dc90759a239debbe25827249d2cd105da94d0d827af08"
+    },
+    {
+      "file": "10-excel-ready.jpg",
+      "sha256": "a0ee384ef817a8cc760aba7206ee650fa33b24884e4cceaaecd7746d7597deb5"
+    },
+    {
+      "file": "11-smiles-input.jpg",
+      "sha256": "79a610b3e637ead5a0a890f9072cf463703a8e37dcf2f0050754612f6ca9934e"
+    },
+    {
+      "file": "12-protein-input.jpg",
+      "sha256": "de6a7b938eb49b9331ac619736f27521c23c9a87720d3a621377ef97681b8aff"
+    },
+    {
+      "file": "13-confirm-protein.jpg",
+      "sha256": "7b1663210515275af64646c7da531705647862ccba7e73f314ddc3c9b7407105"
+    },
+    {
+      "file": "14-bound-structure-input.jpg",
+      "sha256": "107d959745de5bf70b7a22c5c693297a52bd8449a3de1512e924b7f6e71d7c91"
+    },
+    {
+      "file": "15-confirm-bound-structure.jpg",
+      "sha256": "6c8ac287d91f306e83a6a3d7f7d2850f4899913edcad9f1fb7cee24582dfc57f"
+    },
+    {
+      "file": "16-observed-pocket-3d.jpg",
+      "sha256": "43f17ae0b6fae7313bc01288ea4cbc51d920b1e84e417c9d5cfaa8142d6474c0"
+    },
+    {
+      "file": "17-cancel-confirmation.jpg",
+      "sha256": "4c1db4734f6784b4018e17e608f10a6bc5301e0bd8bfe308224560c5231ea5ae"
+    },
+    {
+      "file": "18-optional-chatgpt.jpg",
+      "sha256": "97cdfc2c90f65cd7585d42eeaa53a90a9a591d0888b8d804528bb27f0daf83df"
+    },
+    {
+      "file": "19-candidate-filters.jpg",
+      "sha256": "a106c3b1b58a08e061664e3505a69c01fd12f38d5583f538e595e7f038d7c4d8"
+    },
+    {
+      "file": "20-empty-filter-results.jpg",
+      "sha256": "966064149c8246c7e3892693b0125a94a1a2c0412a0c90ca5e267eff4be894aa"
+    }
+  ]
+}

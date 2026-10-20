@@ -59,7 +59,7 @@ The catalog status records download → ingest → database → ADMET → audit 
 
 If package installation fails before that launcher exists, read the reported log. The partial environment remains for diagnosis. Correct the dependency/network/storage error and choose a new `--prefix`; no partial environment or completed research is overwritten. If source/model/code settings differ, use a new catalog folder instead of modifying an in-progress plan.
 
-Once installed, launch with `Start-SkinPipe.sh`; do not repeat full preparation for every study. The browser's **설치 상태 확인** (*Check installation*) reports app/database/index/model/engine readiness. For details, inspect the installation logs and `model-runtime-selection.json` under `runtime`.
+Once installed, launch with `Start-SkinPipe.sh`; do not repeat full preparation for every study. The browser's **설치 상태** (*Installation status*) reports app/database/index/model/engine readiness. For details, inspect the installation logs and `model-runtime-selection.json` under `runtime`.
 
 ## Use a browser on macOS or Windows
 
@@ -69,7 +69,7 @@ SkinPipe listens on the Ubuntu server's loopback interface. Keep its start termi
 ssh -N -L 4317:127.0.0.1:4317 YOUR_USER@YOUR_UBUNTU_SERVER
 ```
 
-Keep this tunnel open and browse to **http://127.0.0.1:4317** on the Mac/Windows computer. Do not enter the Ubuntu server's private filesystem path into your browser. If port 4317 is already in use locally, use `-L 4318:127.0.0.1:4317` and browse to port 4318. Do not disable authentication or expose the app's HTTP port publicly to work around a tunnel problem.
+Keep this tunnel open and browse to **http://127.0.0.1:4317** on the Mac/Windows computer. Do not enter the Ubuntu server's private filesystem path into your browser. Keep local port **4317**: the app validates its host and port, so forwarding local 4318 to server 4317 is rejected. If the tunnel reports “Address already in use”, use a browser on Ubuntu or free port 4317 only after identifying the conflicting local app. Do not disable authentication or expose the app's HTTP port publicly to work around a tunnel problem.
 
 ## Stop and update
 

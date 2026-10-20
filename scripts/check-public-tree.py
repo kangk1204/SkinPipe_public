@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
@@ -22,15 +23,49 @@ PATTERNS = [
     re.compile(r"-----BEGIN " + r"(?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(r"31" + r"개 (?:분석|연구|표적)|original" + r"31|routine200-" + r"qualification"),
 ]
+SCREENSHOT_MANIFEST = "docs/images/manifest.json"
 
 
-def inspect_bytes(name: str, data: bytes) -> list[str]:
+def screenshot_manifest(entries: dict[str, bytes]) -> tuple[dict[str, str], list[str]]:
+    """Only individually reviewed, hash-pinned tutorial JPEGs may be binary."""
+    matches = [name for name in entries if name == SCREENSHOT_MANIFEST or name.endswith("/" + SCREENSHOT_MANIFEST)]
+    if not matches:
+        return {}, []
+    if len(matches) != 1:
+        return {}, ["Package has more than one screenshot manifest"]
+    manifest_name = matches[0]
+    prefix = manifest_name[:-len(SCREENSHOT_MANIFEST)]
+    approved, errors = {}, []
+    try:
+        value = json.loads(entries[manifest_name])
+        assert value["scope"] == "public-tutorial-screenshots"
+        for row in value["images"]:
+            filename, digest = row["file"], row["sha256"]
+            assert re.fullmatch(r"[0-9]{2}-[a-z0-9-]+\.jpg", filename)
+            assert re.fullmatch(r"[0-9a-f]{64}", digest)
+            name = prefix + "docs/images/" + filename
+            assert name not in approved
+            if name not in entries:
+                errors.append(f"Reviewed screenshot is missing: {name}")
+            approved[name] = digest
+    except (AssertionError, KeyError, TypeError, ValueError):
+        return {}, ["Invalid reviewed screenshot manifest"]
+    return approved, errors
+
+
+def inspect_bytes(name: str, data: bytes, approved_images: dict[str, str] | None = None) -> list[str]:
     errors = []
     path = PurePosixPath(name)
     if path.is_absolute() or ".." in path.parts or "\\" in name:
         errors.append(f"Unsafe file path: {name}")
     if path.suffix.lower() in FORBIDDEN_SUFFIXES:
         errors.append(f"Research/runtime file type: {name}")
+    if approved_images and name in approved_images:
+        if not (data.startswith(b"\xff\xd8\xff") and data.endswith(b"\xff\xd9")):
+            errors.append(f"Reviewed screenshot is not a JPEG: {name}")
+        if hashlib.sha256(data).hexdigest() != approved_images[name]:
+            errors.append(f"Reviewed screenshot hash changed: {name}")
+        return errors
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:
@@ -77,7 +112,11 @@ def check_tree(root: Path) -> tuple[list[str], int]:
             files.append(path)
             if relative.as_posix() not in allowed:
                 errors.append(f"File is outside the reviewed allowlist: {relative}")
-            errors.extend(inspect_bytes(relative.as_posix(), path.read_bytes()))
+    entries = {path.relative_to(root).as_posix(): path.read_bytes() for path in files}
+    approved_images, image_errors = screenshot_manifest(entries)
+    errors.extend(image_errors)
+    for name, data in entries.items():
+        errors.extend(inspect_bytes(name, data, approved_images))
     actual = {path.relative_to(root).as_posix() for path in files}
     errors.extend(f"Allowlisted file is missing: {name}" for name in sorted(allowed - actual))
     errors.extend(check_templates(root))
@@ -101,8 +140,10 @@ def check_package(path: Path) -> tuple[list[str], int]:
                 stream = archive.extractfile(member)
                 assert stream is not None
                 entries.append((member.name, stream.read()))
+    approved_images, image_errors = screenshot_manifest(dict(entries))
+    errors.extend(image_errors)
     for name, data in entries:
-        errors.extend(inspect_bytes(name, data))
+        errors.extend(inspect_bytes(name, data, approved_images))
     return errors, len(entries)
 
 
