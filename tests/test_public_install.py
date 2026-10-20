@@ -69,6 +69,29 @@ class PublicSourceTests(unittest.TestCase):
             for relative in re.findall(r"(?:from\s*|import\s*)['\"](\./[^'\"]+)['\"]", module.read_text()):
                 self.assertTrue((module.parent / relative).is_file(), (module.name, relative))
 
+    def test_metric_help_is_available_without_sorting(self):
+        import re
+        module = (ROOT / "web/public/column-help.js").read_text()
+        payload = re.search(r"export const metricColumnHelp = (\{.*?\});", module, re.S)
+        self.assertIsNotNone(payload)
+        help_text = json.loads(payload.group(1))
+        self.assertIn("↑", help_text["priority_score_v2"][2])
+        self.assertIn("↓", help_text["original_analysis_rank"][2])
+        self.assertIn("↓", help_text["review_dock_affinity"][2])
+        self.assertIn("같은 수용체", help_text["review_dock_affinity"][2])
+        self.assertIn("적정 범위", help_text["logp"][2])
+        self.assertNotIn("↑", help_text["permeation"][2])
+        self.assertIn('aria-hidden="true">?</span>', module)
+        self.assertIn("'pointerover'", module)
+        self.assertIn("'focusin'", module)
+        self.assertIn("button.closest('dialog[open]')", module)
+        self.assertIn("event.preventDefault()", module)
+        # Help controls have no data-sort attribute and cannot invoke sorting.
+        button = module[module.index("export function helpButton"):module.index("export function installColumnHelp")]
+        self.assertNotIn("data-sort", button)
+        entry = (ROOT / "web/public/local-research-app.js").read_text()
+        self.assertIn("installColumnHelp();startLocalResearch()", entry)
+
     def test_source_versions_agree(self):
         init = (ROOT / "skinpipe/skinpipe/__init__.py").read_text()
         project = (ROOT / "skinpipe/pyproject.toml").read_text()

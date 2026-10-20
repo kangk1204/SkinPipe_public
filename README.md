@@ -80,6 +80,10 @@ The candidate table automatically includes a **2D structure immediately before S
 
 Readable columns show the evaluation score, docking, skin properties and structural alerts, six toxicity endpoints, solubility, molecular weight, logP, TPSA, hydrogen-bond counts and QED. Model identity, calculation status and purchase information follow. Predictions from multiple models remain labelled separately; missing and invalid values are explicit. The complete ADMET records remain in the raw-data columns and JSON files.
 
+Hover over **?** beside a browser score heading to see its meaning, reading direction and comparison conditions. Keyboard focus also opens the help; click to keep it open and press Esc to close it.
+
+Excel column headings explain how to read each value: **↑ higher first**, **↓ lower first**, or **range/research-goal dependent**. The **지표 읽는 법** (*Reading the metrics*) sheet gives units, examples and comparison conditions. A more negative docking score is compared only within the same docking setup. Permeability, logP and molecular size are reviewed against the research goal. Compound tabs show the reading direction beside each metric.
+
 You have completed the first workflow when the study says **처리 완료** and the downloaded workbook opens. Continue with the [illustrated browser guide](docs/browser.en.md) for **SMILES, protein and PDB/file inputs**, running/cancelling/resuming, candidate comparison, 2D/3D and multiple-study exports.
 
 ## Start, stop and check progress

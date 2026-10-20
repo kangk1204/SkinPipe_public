@@ -3,6 +3,7 @@ import {renderPersonalLiterature} from './personal-literature.js';
 import {renderPlatform} from './platform.js';
 import {requestJson,requestTimeout,requestErrorText} from './api-request.js';
 import {escapeHtml as e} from './research-inputs.js';
+import {installColumnHelp} from './column-help.js';
 
 export function localRequestTimeout(path){
  if(path==='/v2/research-inputs/resolve')return 120000;
@@ -112,4 +113,4 @@ export async function startLocalResearch({document=globalThis.document,window=gl
  await route();
  return{refresh:route,stop(){revision++;if(connectionTimer)clearTimeout(connectionTimer);literature?.stop();window.removeEventListener('hashchange',route)}};
 }
-if(globalThis.document?.getElementById('local-research-main'))startLocalResearch();
+if(globalThis.document?.getElementById('local-research-main')){installColumnHelp();startLocalResearch();}

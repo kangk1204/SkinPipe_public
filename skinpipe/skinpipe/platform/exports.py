@@ -19,7 +19,7 @@ from .identity import digest
 from .export_assets import export_asset_root, implementation_files
 
 REVIEW_FIELDS = [
-    ("review_skin_score", "피부 적용 점수"),
+    ("review_skin_score", "피부 적용 점수 (0–10점)"),
     ("review_permeation", "피부 투과 분류"),
     ("review_sensitisation", "감작성 구조 경보"),
     ("review_stability", "안정성 구조 경보"),
@@ -31,7 +31,7 @@ REVIEW_FIELDS = [
     ("review_tox_DILI", "간 손상 예측 (0–1)"),
     ("review_tox_ClinTox", "임상 독성 예측 (0–1)"),
     ("review_tox_Carcinogens_Lagunin", "발암성 예측 (0–1)"),
-    ("review_solubility", "수용해도 예측 (AqSolDB 원 척도)"),
+    ("review_solubility", "수용해도 예측 (log mol/L)"),
     ("review_mw", "분자량 (g/mol)"),
     ("review_logp", "logP"),
     ("review_tpsa", "TPSA (Å²)"),
@@ -42,6 +42,105 @@ REVIEW_FIELDS = [
     ("review_admet_models", "ADMET 모델"),
     ("review_procurement", "구매 정보"),
 ]
+
+METRIC_GUIDE = [
+    ("priority_score_v2", "평가 점수", "0–100점", "↑ 높을수록 먼저 검토",
+     "저장된 평가 기준에 따른 검토 우선순위입니다.", "같은 연구·계산 조건 안에서 비교",
+     "SkinPipe 평가·선정 정책"),
+    ("priority_rank_v2", "원분석 순위", "순위 / 전체 평가 수", "↓ 1위부터 검토",
+     "13 / 10,000은 원분석 평가 대상 10,000개 중 13위입니다. 대조물질 포함 여부를 함께 봅니다.", "원분석의 평가 범위·정렬 기준 확인",
+     "SkinPipe 저장 순위"),
+    ("routine_review_order", "대표 후보 검토 순서", "순서 / 선정 수", "↓ 1번부터 검토",
+     "선정 후보 안에서 확인할 순서입니다. 골격 다양성을 반영하므로 원분석 순위와 다를 수 있습니다.", "해당 연구·조건에서 선정한 후보 안에서 비교",
+     "SkinPipe 대표 후보 선정 정책"),
+    ("review_dock_affinity", "도킹", "kcal/mol", "↓ 더 음수일수록 유리",
+     "예: −9는 −6보다 도킹 점수가 낮습니다. 먼저 실행 상태와 포즈 QC를 확인합니다.", "같은 수용체·포켓·엔진·준비·검색 조건에서 비교",
+     "https://autodock-vina.readthedocs.io/en/latest/docking_basic.html"),
+    ("review_skin_score", "피부 적용 점수", "0–10점", "↑ 높을수록 물성 기준 적합",
+     "분자량·logP·수소결합 공여체·TPSA를 조합한 피부 적용 물성 점수입니다.", "같은 피부 평가 정책·조건에서 비교",
+     "https://github.com/kangk1204/SkinPipe_public/blob/main/skinpipe/skinpipe/filters/topical.py"),
+    ("review_permeation", "피부 투과 분류", "높음·중간·낮음", "목표 부위에 따라 판단",
+     "높음은 더 잘 투과하는 방향입니다. 피부 표면 잔류와 깊은 부위 전달은 목표가 다릅니다.", "연구 목적·목표 부위·제형과 함께 검토",
+     "SkinPipe 피부 투과 모델"),
+    ("review_sensitisation", "감작성 구조 경보", "경보 목록", "경보 내용·수준 검토",
+     "반응성 구조 등 감작성 검토가 필요한 특징을 확인합니다.", "구조 경보와 모델의 감작성 예측값을 나란히 검토",
+     "SkinPipe 구조 경보 규칙"),
+    ("review_stability", "안정성 구조 경보", "경보 목록", "경보 내용·수준 검토",
+     "가수분해·산화 등 구조상의 안정성 검토 항목입니다.", "제형·보관·실험 조건과 함께 검토",
+     "SkinPipe 구조 경보 규칙"),
+    ("review_phototoxicity", "광독성 구조 경보", "없음·낮음·중간·높음", "경보 수준이 낮은 쪽 검토",
+     "빛에 반응할 수 있는 구조 특징에 대한 경보입니다.", "노출 부위·광 노출 조건과 함께 검토",
+     "SkinPipe 광반응 구조 규칙"),
+    ("review_irritation", "피부 자극 구조 경보", "없음·낮음·중간·높음", "경보 수준이 낮은 쪽 검토",
+     "산·염기성 및 자극 관련 구조 특징을 확인합니다.", "농도·pH·제형과 함께 검토",
+     "SkinPipe 피부 자극 구조 규칙"),
+]
+for _endpoint, _label, _meaning in [
+    ("Skin_Reaction", "피부 감작성 예측", "감작성 반응의 양성 방향을 예측하는 출력입니다."),
+    ("AMES", "AMES 예측", "변이원성 양성 방향을 예측하는 출력입니다."),
+    ("hERG", "hERG 예측", "hERG 채널 차단 방향을 예측하는 출력입니다."),
+    ("DILI", "간 손상 예측", "약물 유발 간 손상 양성 방향을 예측하는 출력입니다."),
+    ("ClinTox", "임상 독성 예측", "임상 독성 양성 방향을 예측하는 출력입니다."),
+    ("Carcinogens_Lagunin", "발암성 예측", "발암성 양성 방향을 예측하는 출력입니다."),
+]:
+    METRIC_GUIDE.append(("review_tox_" + _endpoint, _label, "모델 출력 0–1", "↓ 낮을수록 독성 신호 작음",
+                         _meaning, "ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인",
+                         "https://tdcommons.ai/single_pred_tasks/tox/"))
+METRIC_GUIDE.extend([
+    ("review_solubility", "수용해도 예측", "AqSolDB: log(mol/L)", "↑ 높을수록 수용해도 증가",
+     "예: −2는 −4보다 물에 더 잘 녹는 방향입니다.", "수용해도 증가 자체와 연구 적합성을 구분하고 제형 조건 확인",
+     "https://github.com/swansonk14/admet_ai/blob/main/admet_ai/resources/data/admet.csv"),
+    ("review_mw", "분자량", "g/mol", "크기·범위 검토",
+     "분자의 크기 지표입니다. 작은 값만을 목표로 후보를 고르지 않습니다.", "피부 투과·구조·다른 물성과 함께 검토",
+     "https://www.rdkit.org/docs/source/rdkit.Chem.Descriptors.html"),
+    ("review_logp", "logP", "지용성 log 비율", "적정 범위 검토",
+     "높을수록 지용성이 커집니다. 수용성과 피부 지질층 분배의 균형을 봅니다.", "연구 목적·제형과 함께 검토",
+     "https://www.rdkit.org/docs/source/rdkit.Chem.Crippen.html"),
+    ("review_tpsa", "TPSA", "Å²", "극성·범위 검토",
+     "높을수록 극성 표면적이 큽니다.", "투과·용해성 등 다른 물성과 함께 검토",
+     "https://www.rdkit.org/docs/source/rdkit.Chem.rdMolDescriptors.html"),
+    ("review_hbd", "수소결합 공여체 수", "개수", "개수·범위 검토",
+     "수소결합 공여에 참여할 수 있는 작용기 수입니다.", "개수 하나로 우열을 정하지 않고 다른 물성과 함께 검토",
+     "https://www.rdkit.org/docs/source/rdkit.Chem.rdMolDescriptors.html"),
+    ("review_hba", "수소결합 수용체 수", "개수", "개수·범위 검토",
+     "수소결합 수용에 참여할 수 있는 작용기 수입니다.", "개수 하나로 우열을 정하지 않고 다른 물성과 함께 검토",
+     "https://www.rdkit.org/docs/source/rdkit.Chem.rdMolDescriptors.html"),
+    ("review_qed", "QED", "0–1", "↑ 높을수록 약물 유사성",
+     "약물의 물성 분포를 바탕으로 계산한 약물 유사성 지표입니다.", "피부 적용 목적은 피부 평가 열에서 별도로 검토",
+     "https://www.rdkit.org/docs/source/rdkit.Chem.QED.html"),
+])
+_GUIDE_BY_FIELD = {row[0]: row for row in METRIC_GUIDE}
+
+
+def review_header(field, title):
+    guidance = _GUIDE_BY_FIELD.get(field)
+    return title + "\n" + guidance[3] if guidance else title
+
+
+def add_metric_guide(book):
+    from openpyxl.styles import Alignment, Font
+    guide = book.create_sheet("지표 읽는 법", 1)
+    guide.append(["점수·계산값 읽는 법"])
+    guide.append(["비교 순서", "선정·제외·보류 상태를 먼저 보고, 같은 연구·계산 조건의 후보를 비교합니다."])
+    guide.append(["결측·모델", "미평가·실패·값 오류는 0이 아닙니다. 복수 모델은 각 모델의 지표 정의를 확인합니다."])
+    guide.append(["척도", "독성 0–1 출력의 판정 기준은 모델 정의에서 확인합니다. 물성 값은 연구 목적과 제형에 맞춰 봅니다."])
+    for row in range(2, 5):
+        guide.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+    guide.append([])
+    guide.append(["지표", "단위·범위", "읽는 방향", "의미·예시", "비교 조건", "출처"])
+    for row in METRIC_GUIDE:
+        guide.append(list(row[1:]))
+    for column, width in zip("ABCDEF", (27, 25, 37, 68, 65, 78)):
+        guide.column_dimensions[column].width = width
+    guide.freeze_panes = "A7"
+    guide.auto_filter.ref = "A6:F" + str(guide.max_row)
+    for cells in guide:
+        for cell in cells:
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
+        guide.row_dimensions[cells[0].row].height = 58 if cells[0].row >= 7 else 34
+    for cell in guide[6]:
+        cell.font = Font(bold=True)
+    return guide
 
 FIELDS = [
     ("candidate_id", "후보 ID"),
@@ -240,7 +339,7 @@ class RunExports:
     def implementation_identity():
         files = {name: sha256_file(path) for name, path in implementation_files().items()}
         return {
-            "version": "whole-run-export-v4",
+            "version": "whole-run-export-v5",
             "files": files,
             "sha256": digest(files),
         }
@@ -583,9 +682,9 @@ class RunExports:
             book = Workbook()
             table = book.active
             table.title = "후보 검토"
-            table.append([title for _, title in FIELDS])
+            table.append([review_header(field, title) for field, title in FIELDS])
             table.freeze_panes = "A2"
-            table.row_dimensions[1].height = 34
+            table.row_dimensions[1].height = 64
             for cell in table[1]:
                 cell.font = Font(bold=True)
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
@@ -618,6 +717,7 @@ class RunExports:
             if workbook is None:
                 return
             sheet.auto_filter.ref = sheet.dimensions
+            add_metric_guide(workbook)
             info = workbook.create_sheet("원자료 계약")
             for row in [
                 ("스냅샷", request["snapshot_id"]),
@@ -687,6 +787,7 @@ class RunExports:
             detail["B2"].hyperlink = "#'후보 검토'!A" + str(sheet.max_row)
             detail["B2"].style = "Hyperlink"
             detail.append(["근거 범위", "계산·구조 평가이며 피부 개선 효능의 실측 근거가 아닙니다."])
+            detail["C3"] = "읽는 방향"
             def brief(value, missing="미평가·미기록"):
                 if value is None or value == [] or value == {} or value == "":
                     return missing
@@ -703,6 +804,9 @@ class RunExports:
                 if len(value) > 800:
                     value = value[:760] + "… 전체 값은 원자료 참조"
                 detail.append([label, xlsx_value(value, candidate_id=row["candidate_id"], field=label, warnings=warnings)])
+                field = next((key for key, title in FIELDS if title == label), None)
+                if field in _GUIDE_BY_FIELD:
+                    detail.cell(detail.max_row, 3, _GUIDE_BY_FIELD[field][3])
 
             def mapping(value):
                 return value if isinstance(value, dict) else {}
@@ -720,6 +824,7 @@ class RunExports:
             redocking = mapping(qualification.get("redocking"))
             research_input = mapping(provenance.get("research_input") or (request.get("run_request") or {}).get("input"))
             add("화합물명", row.get("name"))
+            add("평가 점수 (0–100점)", row.get("priority_score_v2"))
             role = {"query_seed": "질의 구조 · 실측 활성 대조가 아님", "candidate": "탐색 후보", "control": "대조 구조"}.get(row.get("role", "candidate"), row.get("role"))
             add("연구 내 역할", role)
             routine = mapping(row.get('routine_disposition'))
@@ -857,13 +962,15 @@ class RunExports:
             add("원자료 필드", ", ".join(field for field, _ in FIELDS))
             detail.column_dimensions["A"].width = 32
             detail.column_dimensions["B"].width = 95
+            detail.column_dimensions["C"].width = 37
             detail.column_dimensions["D"].width = 38
             detail.freeze_panes = "B4"
             for cells in detail:
                 for cell in cells:
                     cell.alignment = Alignment(vertical="top", wrap_text=True)
                 value = str(cells[1].value or "")
-                lines = sum(max(1, math.ceil(len(part) / 58)) for part in value.splitlines())
+                lines = max(sum(max(1, math.ceil(len(part) / 58)) for part in value.splitlines()),
+                            sum(max(1, math.ceil(len(part) / 17)) for part in str(cells[2].value or "").splitlines()))
                 detail.row_dimensions[cells[0].row].height = min(260, max(30, 18 * lines + 14))
             detail.row_dimensions[1].height = 30
             for cell in detail[1]:

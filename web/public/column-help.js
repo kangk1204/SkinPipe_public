@@ -28,10 +28,190 @@ export const columnHelp = {
   bookmark: ['관심 후보', '이 브라우저에서 다시 찾아볼 후보를 저장합니다.', '관심 저장은 분석 점수나 실험 선정 결과를 바꾸지 않습니다.']
 };
 
+// Same definitions as the Excel metric guide; these do not change scores.
+export const metricColumnHelp = {
+  "priority_score_v2": [
+    "평가 점수 · 0–100점",
+    "저장된 평가 기준에 따른 검토 우선순위입니다.",
+    "↑ 높을수록 먼저 검토. 같은 연구·계산 조건 안에서 비교"
+  ],
+  "priority_rank_v2": [
+    "원분석 순위 · 순위 / 전체 평가 수",
+    "13 / 10,000은 원분석 평가 대상 10,000개 중 13위입니다. 대조물질 포함 여부를 함께 봅니다.",
+    "↓ 1위부터 검토. 원분석의 평가 범위·정렬 기준 확인"
+  ],
+  "routine_review_order": [
+    "대표 후보 검토 순서 · 순서 / 선정 수",
+    "선정 후보 안에서 확인할 순서입니다. 골격 다양성을 반영하므로 원분석 순위와 다를 수 있습니다.",
+    "↓ 1번부터 검토. 해당 연구·조건에서 선정한 후보 안에서 비교"
+  ],
+  "review_dock_affinity": [
+    "도킹 · kcal/mol",
+    "예: −9는 −6보다 도킹 점수가 낮습니다. 먼저 실행 상태와 포즈 QC를 확인합니다.",
+    "↓ 더 음수일수록 유리. 같은 수용체·포켓·엔진·준비·검색 조건에서 비교"
+  ],
+  "review_skin_score": [
+    "피부 적용 점수 · 0–10점",
+    "분자량·logP·수소결합 공여체·TPSA를 조합한 피부 적용 물성 점수입니다.",
+    "↑ 높을수록 물성 기준 적합. 같은 피부 평가 정책·조건에서 비교"
+  ],
+  "review_permeation": [
+    "피부 투과 분류 · 높음·중간·낮음",
+    "높음은 더 잘 투과하는 방향입니다. 피부 표면 잔류와 깊은 부위 전달은 목표가 다릅니다.",
+    "목표 부위에 따라 판단. 연구 목적·목표 부위·제형과 함께 검토"
+  ],
+  "review_sensitisation": [
+    "감작성 구조 경보 · 경보 목록",
+    "반응성 구조 등 감작성 검토가 필요한 특징을 확인합니다.",
+    "경보 내용·수준 검토. 구조 경보와 모델의 감작성 예측값을 나란히 검토"
+  ],
+  "review_stability": [
+    "안정성 구조 경보 · 경보 목록",
+    "가수분해·산화 등 구조상의 안정성 검토 항목입니다.",
+    "경보 내용·수준 검토. 제형·보관·실험 조건과 함께 검토"
+  ],
+  "review_phototoxicity": [
+    "광독성 구조 경보 · 없음·낮음·중간·높음",
+    "빛에 반응할 수 있는 구조 특징에 대한 경보입니다.",
+    "경보 수준이 낮은 쪽 검토. 노출 부위·광 노출 조건과 함께 검토"
+  ],
+  "review_irritation": [
+    "피부 자극 구조 경보 · 없음·낮음·중간·높음",
+    "산·염기성 및 자극 관련 구조 특징을 확인합니다.",
+    "경보 수준이 낮은 쪽 검토. 농도·pH·제형과 함께 검토"
+  ],
+  "review_tox_Skin_Reaction": [
+    "피부 감작성 예측 · 모델 출력 0–1",
+    "감작성 반응의 양성 방향을 예측하는 출력입니다.",
+    "↓ 낮을수록 독성 신호 작음. ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인"
+  ],
+  "review_tox_AMES": [
+    "AMES 예측 · 모델 출력 0–1",
+    "변이원성 양성 방향을 예측하는 출력입니다.",
+    "↓ 낮을수록 독성 신호 작음. ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인"
+  ],
+  "review_tox_hERG": [
+    "hERG 예측 · 모델 출력 0–1",
+    "hERG 채널 차단 방향을 예측하는 출력입니다.",
+    "↓ 낮을수록 독성 신호 작음. ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인"
+  ],
+  "review_tox_DILI": [
+    "간 손상 예측 · 모델 출력 0–1",
+    "약물 유발 간 손상 양성 방향을 예측하는 출력입니다.",
+    "↓ 낮을수록 독성 신호 작음. ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인"
+  ],
+  "review_tox_ClinTox": [
+    "임상 독성 예측 · 모델 출력 0–1",
+    "임상 독성 양성 방향을 예측하는 출력입니다.",
+    "↓ 낮을수록 독성 신호 작음. ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인"
+  ],
+  "review_tox_Carcinogens_Lagunin": [
+    "발암성 예측 · 모델 출력 0–1",
+    "발암성 양성 방향을 예측하는 출력입니다.",
+    "↓ 낮을수록 독성 신호 작음. ADMET-AI/TDC 양성 정의 기준. 같은 모델·지표끼리 비교. 다른 모델은 지표 정의 확인"
+  ],
+  "review_solubility": [
+    "수용해도 예측 · AqSolDB: log(mol/L)",
+    "예: −2는 −4보다 물에 더 잘 녹는 방향입니다.",
+    "↑ 높을수록 수용해도 증가. 수용해도 증가 자체와 연구 적합성을 구분하고 제형 조건 확인"
+  ],
+  "review_mw": [
+    "분자량 · g/mol",
+    "분자의 크기 지표입니다. 작은 값만을 목표로 후보를 고르지 않습니다.",
+    "크기·범위 검토. 피부 투과·구조·다른 물성과 함께 검토"
+  ],
+  "review_logp": [
+    "logP · 지용성 log 비율",
+    "높을수록 지용성이 커집니다. 수용성과 피부 지질층 분배의 균형을 봅니다.",
+    "적정 범위 검토. 연구 목적·제형과 함께 검토"
+  ],
+  "review_tpsa": [
+    "TPSA · Å²",
+    "높을수록 극성 표면적이 큽니다.",
+    "극성·범위 검토. 투과·용해성 등 다른 물성과 함께 검토"
+  ],
+  "review_hbd": [
+    "수소결합 공여체 수 · 개수",
+    "수소결합 공여에 참여할 수 있는 작용기 수입니다.",
+    "개수·범위 검토. 개수 하나로 우열을 정하지 않고 다른 물성과 함께 검토"
+  ],
+  "review_hba": [
+    "수소결합 수용체 수 · 개수",
+    "수소결합 수용에 참여할 수 있는 작용기 수입니다.",
+    "개수·범위 검토. 개수 하나로 우열을 정하지 않고 다른 물성과 함께 검토"
+  ],
+  "review_qed": [
+    "QED · 0–1",
+    "약물의 물성 분포를 바탕으로 계산한 약물 유사성 지표입니다.",
+    "↑ 높을수록 약물 유사성. 피부 적용 목적은 피부 평가 열에서 별도로 검토"
+  ],
+  "original_analysis_rank": [
+    "원분석 순위 · 순위 / 전체 평가 수",
+    "13 / 10,000은 원분석 평가 대상 10,000개 중 13위입니다. 대조물질 포함 여부를 함께 봅니다.",
+    "↓ 1위부터 검토. 원분석의 평가 범위·정렬 기준 확인"
+  ],
+  "representative_review_order": [
+    "대표 후보 검토 순서 · 순서 / 선정 수",
+    "선정 후보 안에서 확인할 순서입니다. 골격 다양성을 반영하므로 원분석 순위와 다를 수 있습니다.",
+    "↓ 1번부터 검토. 해당 연구·조건에서 선정한 후보 안에서 비교"
+  ],
+  "topical_score": [
+    "피부 적용 점수 · 0–10점",
+    "분자량·logP·수소결합 공여체·TPSA를 조합한 피부 적용 물성 점수입니다.",
+    "↑ 높을수록 물성 기준 적합. 같은 피부 평가 정책·조건에서 비교"
+  ],
+  "mw": [
+    "분자량 · g/mol",
+    "분자의 크기 지표입니다. 작은 값만을 목표로 후보를 고르지 않습니다.",
+    "크기·범위 검토. 피부 투과·구조·다른 물성과 함께 검토"
+  ],
+  "logp": [
+    "logP · 지용성 log 비율",
+    "높을수록 지용성이 커집니다. 수용성과 피부 지질층 분배의 균형을 봅니다.",
+    "적정 범위 검토. 연구 목적·제형과 함께 검토"
+  ],
+  "tpsa": [
+    "TPSA · Å²",
+    "높을수록 극성 표면적이 큽니다.",
+    "극성·범위 검토. 투과·용해성 등 다른 물성과 함께 검토"
+  ],
+  "hbd": [
+    "수소결합 공여체 수 · 개수",
+    "수소결합 공여에 참여할 수 있는 작용기 수입니다.",
+    "개수·범위 검토. 개수 하나로 우열을 정하지 않고 다른 물성과 함께 검토"
+  ],
+  "hba": [
+    "수소결합 수용체 수 · 개수",
+    "수소결합 수용에 참여할 수 있는 작용기 수입니다.",
+    "개수·범위 검토. 개수 하나로 우열을 정하지 않고 다른 물성과 함께 검토"
+  ],
+  "qed": [
+    "QED · 0–1",
+    "약물의 물성 분포를 바탕으로 계산한 약물 유사성 지표입니다.",
+    "↑ 높을수록 약물 유사성. 피부 적용 목적은 피부 평가 열에서 별도로 검토"
+  ],
+  "dock_affinity": [
+    "도킹 · kcal/mol",
+    "예: −9는 −6보다 도킹 점수가 낮습니다. 먼저 실행 상태와 포즈 QC를 확인합니다.",
+    "↓ 더 음수일수록 유리. 같은 수용체·포켓·엔진·준비·검색 조건에서 비교"
+  ],
+  "primary_docking_score": [
+    "도킹 · kcal/mol",
+    "예: −9는 −6보다 도킹 점수가 낮습니다. 먼저 실행 상태와 포즈 QC를 확인합니다.",
+    "↓ 더 음수일수록 유리. 같은 수용체·포켓·엔진·준비·검색 조건에서 비교"
+  ],
+  "permeation": [
+    "피부 투과 분류 · 높음·중간·낮음",
+    "높음은 더 잘 투과하는 방향입니다. 피부 표면 잔류와 깊은 부위 전달은 목표가 다릅니다.",
+    "목표 부위에 따라 판단. 연구 목적·목표 부위·제형과 함께 검토"
+  ]
+};
+Object.assign(columnHelp, metricColumnHelp);
+
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function helpButton(key, label = columnHelp[key]?.[0]) {
   if (!columnHelp[key]) return '';
-  return `<button type="button" class="column-help" data-column-help="${esc(key)}" aria-label="${esc(label)} 설명" aria-describedby="column-help-popover" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.2"/></svg></button>`;
+  return `<button type="button" class="column-help" data-column-help="${esc(key)}" aria-label="${esc(label)} 설명" aria-describedby="column-help-popover" aria-expanded="false"><span aria-hidden="true">?</span></button>`;
 }
 
 export function installColumnHelp() {
@@ -53,6 +233,8 @@ export function installColumnHelp() {
     clearTimeout(hideTimer);
     if (active !== button) { close(); active = button; }
     tip.innerHTML = `<strong>${esc(help[0])}</strong><p>${esc(help[1])}</p><p class="column-help-direction">${esc(help[2])}</p>`;
+    const host = button.closest('dialog[open]') || document.body;
+    if (tip.parentElement !== host) host.append(tip);
     tip.hidden = false; button.setAttribute('aria-expanded', 'true');
     const anchor = button.getBoundingClientRect(), box = tip.getBoundingClientRect(), margin = 12;
     const left = Math.max(margin, Math.min(anchor.left + anchor.width / 2 - box.width / 2, window.innerWidth - box.width - margin));
@@ -84,7 +266,7 @@ export function installColumnHelp() {
     } else if (!tip.contains(event.target)) close();
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && active) { close(); event.stopPropagation(); }
+    if (event.key === 'Escape' && active) { close(); event.preventDefault(); event.stopPropagation(); }
   }, true);
   document.addEventListener('scroll', close, true);
   window.addEventListener('resize', close);

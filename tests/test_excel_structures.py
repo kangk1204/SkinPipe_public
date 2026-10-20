@@ -19,7 +19,7 @@ from rdkit.Geometry import Point3D
 
 from skinpipe.platform.artifacts import ArtifactStore
 from skinpipe.platform.catalog import Catalog
-from skinpipe.platform.exports import RunExports
+from skinpipe.platform.exports import RunExports, METRIC_GUIDE
 
 
 class ExcelStructureTests(unittest.TestCase):
@@ -161,8 +161,8 @@ class ExcelStructureTests(unittest.TestCase):
             book = load_workbook(output / result["workbooks"][0])
             try:
                 table = book["후보 검토"]
-                cells = {table.cell(1, i).value: table.cell(2, i) for i in range(1, table.max_column + 1)}
-                self.assertEqual(cells["피부 적용 점수"].value, 0)
+                cells = {table.cell(1, i).value.splitlines()[0]: table.cell(2, i) for i in range(1, table.max_column + 1)}
+                self.assertEqual(cells["피부 적용 점수 (0–10점)"].value, 0)
                 self.assertEqual(cells["피부 감작성 예측 (0–1)"].value, 0)
                 self.assertEqual(cells["AMES 예측 (0–1)"].value, 0.123456789)
                 self.assertEqual(cells["피부 감작성 예측 (0–1)"].data_type, "n")
@@ -186,11 +186,42 @@ class ExcelStructureTests(unittest.TestCase):
             book = load_workbook(output / result["workbooks"][0])
             try:
                 table = book["후보 검토"]
-                columns = {table.cell(1, i).value: i for i in range(1, table.max_column + 1)}
+                columns = {table.cell(1, i).value.splitlines()[0]: i for i in range(1, table.max_column + 1)}
                 self.assertEqual(table.cell(2, columns["AMES 예측 (0–1)"]).value,
                                  "synthetic-a: 0.1\nsynthetic-b: 0.7")
                 self.assertIn("failed-model: 실패", table.cell(2, columns["ADMET 계산 상태"]).value)
                 self.assertEqual(saved[0]["admet"], row["admet"])
+            finally:
+                book.close()
+
+    def test_metric_directions_distinguish_scores_ranks_and_properties(self):
+        import re
+        browser = (SOURCE.parent / "web/public/column-help.js").read_text()
+        definitions = json.loads(re.search(r"export const metricColumnHelp = (\{.*?\});", browser, re.S).group(1))
+        for field, _label, units, direction, meaning, comparison, _source in METRIC_GUIDE:
+            self.assertIn(units, definitions[field][0])
+            self.assertEqual(meaning, definitions[field][1])
+            self.assertEqual(direction + ". " + comparison, definitions[field][2])
+        with tempfile.TemporaryDirectory() as temporary:
+            output, result, _ = self.export(Path(temporary), [self.row("directions", "CCO")])
+            book = load_workbook(output / result["workbooks"][0])
+            try:
+                table, guide = book["후보 검토"], book["지표 읽는 법"]
+                self.assertEqual(book.sheetnames[1], "지표 읽는 법")
+                columns = {c.value.splitlines()[0]: c for c in table[1]}
+                self.assertIn("↑ 높을수록", columns["평가 점수 (0–100점)"].value)
+                self.assertIn("↓ 더 음수", columns["도킹 (kcal/mol)"].value)
+                self.assertIn("↓ 낮을수록", columns["AMES 예측 (0–1)"].value)
+                self.assertIn("적정 범위", columns["logP"].value)
+                self.assertIn("목표 부위", columns["피부 투과 분류"].value)
+                self.assertEqual(len(list(guide.iter_rows(min_row=7))), len(METRIC_GUIDE))
+                self.assertIn("↓ 1위", guide["C8"].value)
+                for field, label in [("priority_score_v2", "평가 점수 (0–100점)"), ("review_tox_AMES", "AMES 예측 (0–1)")]:
+                    target = next(i for i, row in enumerate(METRIC_GUIDE, 7) if row[0] == field)
+                    self.assertIn(guide.cell(target, 3).value, columns[label].value)
+                detail = {r[0].value: r[2].value for r in book["C000001"]}
+                self.assertIn("↑ 높을수록", detail["평가 점수 (0–100점)"])
+                self.assertIn("↓ 낮을수록", detail["AMES 예측 (0–1)"])
             finally:
                 book.close()
 
