@@ -293,3 +293,5 @@ web/public/vendor/molstar/LICENSE
 web/public/vendor/molstar/NOTICE.json
 web/public/vendor/molstar/molstar.css
 web/public/vendor/molstar/molstar.js
+tests/test_research_export_state.mjs
+docs/validation-modes-20261021.md

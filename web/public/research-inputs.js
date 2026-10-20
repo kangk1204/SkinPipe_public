@@ -79,7 +79,7 @@ export function researchResolutionGuidance(result={}){
 }
 function boundIdentityMarkup(result){
  const selected=result.selection||{},chains=Array.isArray(selected.protein_chains)?selected.protein_chains.join(', '):'미확정';
- const assembly=selected.assembly_id==='as_uploaded'?'업로드한 좌표 그대로':selected.assembly_id==='asymmetric_unit'?'공개 구조의 비대칭 단위':selected.assembly_id?'공개 구조의 조립체 '+selected.assembly_id:'미확정';
+ const assembly=selected.assembly_id==='as_uploaded'?'업로드한 좌표 그대로':selected.assembly_id==='asymmetric_unit'?'구조의 비대칭 단위':selected.assembly_id?'구조에 기록된 조립체 '+selected.assembly_id:'미확정';
  return`<div class="research-options"><strong>확인할 결합 구조의 구성</strong><p>모델 ${e(selected.model_id||'미확정')} · 단백질 사슬 ${e(chains)} · 결합 화합물 ${e(selected.ligand_code||'미확정')} (사슬 ${e(selected.ligand_chain??'미확정')}, 잔기 ${e(selected.ligand_residue??'미확정')})</p><p>조립체: ${e(assembly)}</p><p>${result.actual_protein_id?'확인한 단백질 식별자: '+e(result.actual_protein_id):'단백질 이름·종은 아직 확정하지 않았습니다. 선택한 사슬의 원래 좌표를 계산에 사용합니다.'}</p><p>화합물의 정확한 화학 구조는 ${result.chemistry_receipts?.basis?'저장한 구조 원자료와의 대조 기록이 있습니다.':'식별 근거에서 확인해 주세요.'} 관측된 결합 좌표만으로 효능이 확인되지는 않습니다.</p>${(result.docking_hold_reasons||[]).length?'<p>구조 탐색은 가능하지만 도킹에는 추가 준비가 필요합니다. 실행 결과에서 구체적인 보류 사유를 확인해 주세요.</p>':''}</div>`;
 }
 export function researchIdentityMarkup(result){

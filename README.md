@@ -38,6 +38,8 @@ After the terminal prints **`SkinPipe: http://127.0.0.1:4317`**, open **http://1
 
 Choose **화합물을 알고 있어요** (*I have a compound*). Leave the input method as **화합물 이름** (*Compound name*), type `Nicotinamide`, then click **입력 확인하기 →** (*Check input*). Wait for the identity lookup; this has not started the study yet.
 
+**If name lookup times out:** a study has not been submitted yet. Change **화합물을 알고 있어요 → input method → SMILES 분자 구조 (선택)**, enter this Nicotinamide example's exact structure `NC(=O)c1cccnc1`, and click **입력 확인하기 →** again. Check the 2D structure before continuing. A name-provider outage is distinct from an invalid molecule; use this path for another compound only when you have its verified SMILES.
+
 ![Compound input: Nicotinamide and the Check input button](docs/images/02-compound-input.jpg)
 
 ### 3. Check the molecule before proceeding
@@ -92,6 +94,26 @@ Excel column headings explain how to read each value: **↑ higher first**, **�
 
 You have completed the first workflow when the green panel says **연구 완료** and the downloaded workbook opens. Continue with the [illustrated browser guide](docs/browser.en.md) for **SMILES, protein and PDB/file inputs**, running/cancelling/resuming, candidate comparison, 2D/3D and multiple-study exports.
 
+## Try the other inputs and analysis modes
+
+Use **다른 입력으로 새 연구** (New study with another input) for each example and confirm its input. Earlier studies remain saved. A small first interaction check can set **후보 수·필터·최대 처리 시간 조정** to **representative target `2`, catalog limit `5`, time limit `0.1` hours**. These are practice limits, not a change to the normal 200/1,000/two-hour defaults or a validated research protocol. Assessment mode does not search candidates.
+
+| Task | Continue from the README |
+|---|---|
+| SMILES assessment | **화합물을 알고 있어요 → SMILES 분자 구조 (선택)**, enter `NC(=O)c1cccnc1`, confirm the 2D diagram/SMILES, then **입력 화합물만 평가**. |
+| Similarity or scaffold comparison | Confirm `Nicotinamide` or the same SMILES, then choose **비슷한 화합물 찾기** or **다른 골격 후보 찾기**. Submit each as a separate study. |
+| Protein candidates | **단백질을 알고 있어요**, enter `HSP90AA1`, confirm human / P07900, then **이 단백질의 후보 찾기**. On the first screen, **다른 종·작용 방향을 지정하려면** offers **아직 정하지 않음 / 억제 후보 / 활성화 후보** (unspecified / inhibition / activation); confirm again after choosing. |
+| Bound PDB structure | **결합 구조가 있어요 → PDB ID → `1CBS`**, check model 1 / chain A / REA / residue 200 / assembly, then **같은 단백질 포켓에서 다른 골격 후보 비교**. For upload, choose **PDB/mmCIF 파일** and an original file containing both protein and ligand. |
+| Optional new structures | In compound similarity/scaffold or bound-structure mode, expand **새 분자 구조도 만들어 비교하기 (선택)** and enable generation. A small check can use BRICS recombination `2`, 3D comparison `2`, conformers `1`. Separate substitution products can make the total exceed two. Protein and assessment modes do not offer this choice. |
+
+If the `1CBS` upload requests exact ligand SMILES, RCSB's [REA record](https://files.rcsb.org/ligands/download/REA.cif) provides `SMILES_CANONICAL` (OpenEye OEToolkits 1.7.6). **For this 1CBS/REA example only**, first check chain A / REA / residue 200 and the protein chain, enter the value below, then **선택한 결합 화합물 확인**. Do not reuse it for a different ligand.
+
+```text
+CC1=C(C(CCC1)(C)C)/C=C/C(=C/C=C/C(=C/C(=O)O)/C)/C
+```
+
+Check conditions and data permissions, then click **새 연구 실행** once. Follow steps 5–7 above through **progress/results → status and unassessed items → prepare Excel → save ZIP → open workbook**. Green completion does not mean every endpoint succeeded; read zero candidates and held docking with their reasons. A requested protein action does not establish inhibition or activation. Do not use `1CBS` as an HSP90AA1 docking structure. See the [mode-by-mode instructions and zero/held-result guidance](docs/browser.en.md#mode-by-mode-walkthrough).
+
 ## Start, stop and check progress
 
 After installation:
@@ -138,3 +160,5 @@ python3 -m pip wheel --no-deps --wheel-dir /tmp/skinpipe-public-wheel ./skinpipe
 ```
 
 Put installations and test outputs outside the checkout. Before contributing, read [CONTRIBUTING.md](CONTRIBUTING.md). Distribution licensing for SkinPipe is being decided; no project license has been selected. Bundled third-party components retain their own notices.
+
+[Operating browser mode verification (2026-10-21)](docs/validation-modes-20261021.md) records the protein, PDB/file and compound workflows, actual Excel downloads and retained scientific holds.

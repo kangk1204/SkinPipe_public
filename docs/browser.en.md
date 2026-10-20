@@ -27,6 +27,8 @@ If a name refers to a family, mixture or several structures, choose an exact ite
 
 Select **SMILES 분자 구조 (선택)** in the compound input-method menu and paste `NC(=O)c1cccnc1` (Nicotinamide). Use the same confirmation steps as the name example.
 
+**If name lookup times out:** a study has not been submitted yet. Change **화합물을 알고 있어요 → input method → SMILES 분자 구조 (선택)**, enter this Nicotinamide example's exact structure `NC(=O)c1cccnc1`, and click **입력 확인하기 →** again. Check the 2D structure before continuing. A name-provider outage is distinct from an invalid molecule; use this path for another compound only when you have its verified SMILES.
+
 ![SMILES input selected with Nicotinamide structure](images/11-smiles-input.jpg)
 
 ### Protein example
@@ -83,6 +85,51 @@ Open **ChatGPT 설명과 자료 전달 설정 (선택)** (*Optional ChatGPT and 
 
 ![Calculation scope and the final Run study button](images/05-run-study.jpg)
 
+### Mode-by-mode walkthrough
+
+For a small first interaction check, open **후보 수·필터·최대 처리 시간 조정** and set **대표 후보 목표** (representative target) to `2`, **DB에서 평가할 최대 후보 수** (catalog limit) to `5` (or `3` for a smaller check), and **최대 처리 시간** to `0.1` hours. This is a six-minute computation budget, not a guarantee of candidate yield or completion of every stage. These are optional practice settings; the normal defaults remain 200 representatives, 1,000 catalog candidates and two hours. Assessment mode does not search candidates and disables the representative target. A short **연구 목적** (research-purpose) note such as `SMILES assessment practice` helps distinguish the saved conditions.
+
+Start each example with **다른 입력으로 새 연구** (New study with another input). Confirm the input and selected mode again, then submit once. The previous study remains unchanged. Selected filters are recorded and can reduce the yield in a small catalog.
+
+| Task | Input and selection | Read in the result |
+|---|---|---|
+| Assess a named compound | **화합물을 알고 있어요 → 화합물 이름 → `Nicotinamide` → 입력 확인하기 → 이 입력으로 연구하기 → 입력 화합물만 평가** | One input molecule; no candidate search requested. No docking or generated structures are expected. |
+| Assess a SMILES structure | In compound mode select **SMILES 분자 구조 (선택)**, paste `NC(=O)c1cccnc1`, confirm, then choose **입력 화합물만 평가** | Check the 2D diagram and SMILES against the name example. A name or PubChem CID may be absent. |
+| Find similar catalog compounds | Confirm the same name or SMILES, then **비슷한 화합물 찾기** | Separate the seed from new unique candidates; read similarity, skin properties, ADMET and exclusions. |
+| Compare other scaffolds | Confirm the same name or SMILES, then **다른 골격 후보 찾기** | Distinguish other scaffolds, same-scaffold analogues and seed/reference rows. A request can yield no new scaffold. |
+| Find protein candidates | **단백질을 알고 있어요 → `HSP90AA1` → 입력 확인하기 → confirm Homo sapiens / P07900 → 이 입력으로 연구하기 → 이 단백질의 후보 찾기** | Target evidence and the selection scope. Read docking holds separately if no pocket was specified. |
+| Compare within an observed pocket | **결합 구조가 있어요 → PDB ID → `1CBS` → 입력 확인하기 → check model 1 / chain A / REA / residue 200 and assembly → 이 입력으로 연구하기 → 같은 단백질 포켓에서 다른 골격 후보 비교** | Observed ligand/pocket, reference redocking/QC, and candidate docking or the reason it was held. |
+
+#### Protein action and docking settings
+
+On the **first input screen**, enter `HSP90AA1` and expand **다른 종·작용 방향을 지정하려면**. Keep NCBI taxon ID `9606` for this human example. Select **살펴볼 작용** before clicking **입력 확인하기 →**:
+
+| Choice | Meaning and checks |
+|---|---|
+| **아직 정하지 않음** — Not decided | Target search without a requested action direction; a suitable first practice setting. |
+| **억제 후보** — Inhibition candidates | A separate request for inhibition. Inspect known action evidence, opposing-action filtering and unassessed items. |
+| **활성화 후보** — Activation candidates | A separate request for activation. Missing evidence remains unassessed; inhibition evidence does not become activation evidence. |
+
+After changing action, confirm the input again. Neither the requested direction nor a docking score establishes actual inhibition or activation. Protein mode does not offer the compound assessment, scaffold-hopping or new-generation choices.
+
+For the first protein example, leave **단백질 도킹용 구조 (선택)** empty and inspect the available candidate/skin/toxicity results and held stages. To request docking, supply a source-verified PDB ID, chain and reference ligand for **that protein**. `1CBS` below is a separate bound-structure example; do not enter it as an HSP90AA1 docking structure.
+
+#### Structure files and optional generation
+
+For file input, use **결합 구조가 있어요 → PDB/mmCIF 파일 → file chooser → 입력 확인하기 →**. Select the original file containing both protein and bound ligand. A ligand-only extract is a different input. If choices appear, select the ligand code, chain, residue and model, check the protein chain, then click **선택한 결합 화합물 확인**. If exact ligand chemistry is required, provide verified SMILES for that ligand or check with the source provider.
+
+**To follow the `1CBS` file example:** download the original [1CBS PDB file](https://files.rcsb.org/download/1CBS.pdb) or [1CBS mmCIF file](https://files.rcsb.org/download/1CBS.cif) from RCSB and select it without editing. PDB-ID lookup and file upload are separate identity paths. If the uploaded coordinates cannot establish exact bond orders/stereochemistry, the form can require **결합 화합물의 정확한 SMILES (이번 파일에 필요)**. For the **REA ligand in this 1CBS example only**, the following is copied from RCSB's [REA chemical-component record](https://files.rcsb.org/ligands/download/REA.cif), descriptor `SMILES_CANONICAL`, `OpenEye OEToolkits 1.7.6`:
+
+```text
+CC1=C(C(CCC1)(C)C)/C=C/C(=C/C=C/C(=C/C(=O)O)/C)/C
+```
+
+Check REA / chain A / residue 200 / model 1 and protein chain A, enter that value in the SMILES field, then **선택한 결합 화합물 확인**. Do not reuse it for another ligand or file. Recheck assembly and coordinate provenance on the confirmation card: a public PDB assembly and **업로드한 좌표 그대로** (coordinates as uploaded) are distinct. Chemical identity confirmation does not establish successful redocking/QC.
+
+Generation is optional in compound similarity/scaffold hopping and bound-pocket comparison. Expand **새 분자 구조도 만들어 비교하기 (선택)** and check **카탈로그 후보 외에 새 구조 생성도 요청**. A short interaction check can use **BRICS 재조합 상한** (BRICS recombination limit) `2`, **3차원 비교 상한** (3D comparison limit) `2`, and **분자당 배치 수** (conformers per molecule) `1`; review the displayed synthetic-accessibility limit. These small limits do not establish adequate molecular exploration or conformational sampling. Generation is unavailable in input-only assessment and protein mode.
+
+For bound-structure generation, read the same receptor, coordinate frame, pocket and QC status. The BRICS recombination limit is not a total generation cap: separate bioisosteric substitution products can be added. Distinguish substitution, BRICS, valid generated structures and successful docked poses, and read the reason when valid generation or docking yields zero. Generated structures are hypotheses distinct from purchasable catalog candidates. If `1CBS` reference redocking fails its check, retain the stated hold rather than interpreting docking as successful.
+
 ## 4. Follow progress, cancel or resume
 
 Once accepted, the study is saved in **내 연구 실행 기록** (*My study history*). A moving indicator appears during submission. Waiting and running use a blue panel with a spinner; completion changes the whole panel to green with a check mark and **연구 완료** (*Study complete*). Partial results and held work use amber, and failure uses red; text also names each state. Stage, elapsed time, completed counts and held/failed stages are reported as work proceeds.
@@ -132,6 +179,19 @@ If the table becomes empty, compare **전체 모집단** (*Stored population*) w
 ![Two-dimensional compound structure and skin properties](images/08-structure-and-skin.jpg)
 
 ![ADMET outputs with scales and model version](images/09-admet-results.jpg)
+
+### Distinguish completion, holds and zero candidates
+
+| Visible state | Check and next action |
+|---|---|
+| Green **연구 완료** (Study complete) | The processing flow has ended. Inspect docking, QC and additional-toxicity holds or unassessed endpoints. It does not mean every endpoint succeeded or efficacy/safety was established. |
+| Amber held/partial result | Read the reason and saved partial results. Separate missing evidence, reference-redocking failure and exhausted time budgets. Repeating the same request does not resolve the underlying hold. |
+| Red failure | Read the error and processing record, alongside any retained results. Failure does not establish candidate absence or safety. |
+| Zero new unique candidates | Expected in assessment mode. In search modes, check seed/reference rows, retrieval, filters, deduplication and QC to see where the count changed. |
+| Zero displayed table rows | Compare total saved observations with the filtered count, then use **제외 필터 해제** (Clear exclusion filters). Hidden rows differ from candidates never retrieved. |
+| Zero generated structures or docked poses | Check whether the feature was requested and read valid-generation, supported-structure, redocking/QC and budget reasons. Interpret zero alongside not-requested/held/excluded status. |
+
+For each mode, complete **진행·결과 보기 → inspect status/processing record → prepare Excel → save ZIP → extract → open workbook**. When an Excel action is available for a held or zero-candidate study, retain its summary and hold/exclusion records. A study with no compounds may have no individual compound tab; do not require `C000001`. Match the workbook's study input and conditions to the browser study.
 
 ## 6. Download Excel and raw data
 
