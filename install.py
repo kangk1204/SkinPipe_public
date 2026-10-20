@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
@@ -163,6 +164,21 @@ def run(command: list[str], log: Path) -> None:
         raise RuntimeError(f"Step exited with status {code}. See {log}. Saved files were preserved.")
 
 
+def check_launchers(runtime: Path) -> None:
+    """Do not mistake a partially written resume script for a usable install."""
+    required = (
+        "Prepare-Catalog.sh", "Catalog-Status.sh", "Start-SkinPipe.sh",
+        "Stop-SkinPipe.sh", "app/Start-SkinPipe.sh", "app/Stop-SkinPipe.sh",
+    )
+    incomplete = [name for name in required
+                  if not (runtime / name).is_file() or not os.access(runtime / name, os.X_OK)]
+    if incomplete:
+        raise ValueError(
+            f"Installation launchers are incomplete: {', '.join(incomplete)}. "
+            f"Files and logs remain in {runtime}. Preserve this folder and use a new --prefix."
+        )
+
+
 def install(args: argparse.Namespace) -> Path:
     check_platform()
     root = checked_prefix(args.prefix)
@@ -214,14 +230,24 @@ def install(args: argparse.Namespace) -> Path:
             print("[2/4] Downloading official data/model files. [3/4] Computing ADMET and building the search index.\nThe first preparation can take a long time. Full-library CPU calculations may take days. Terminal logs and Catalog-Status.sh show progress; the same command resumes saved catalog work.", flush=True)
             prepare = runtime / "Prepare-Catalog.sh"
             if prepare.is_file():
+                check_launchers(runtime)
                 run(["bash", str(prepare)], root / "catalog-resume.log")
             elif runtime.exists():
                 raise ValueError(f"Dependency installation stopped before catalog preparation. Its files and logs remain in {runtime}. Use a new --prefix after fixing the logged error; no catalog was restarted.")
             else:
                 run(["bash", str(source / "scripts/install-from-sources-ubuntu.sh"), str(wheel), str(runtime), args.library, args.device], root / "prepare.log")
+            check_launchers(runtime)
             state["catalog_ready"] = True
             write_json(marker, state)
-        print(f"[4/4] Ready. Browser: http://127.0.0.1:4317\nInstallation: {root}\nStart: bash '{runtime}/Start-SkinPipe.sh'\nStop: bash '{runtime}/Stop-SkinPipe.sh'", flush=True)
+        else:
+            check_launchers(runtime)
+        print(
+            f"[4/4] Installation prepared.\nInstallation: {root}\n"
+            f"Start: bash {shlex.quote(str(runtime / 'Start-SkinPipe.sh'))}\n"
+            f"Stop: bash {shlex.quote(str(runtime / 'Stop-SkinPipe.sh'))}\n"
+            "Open the browser after the server prints: SkinPipe: http://127.0.0.1:4317",
+            flush=True,
+        )
         return runtime
     finally:
         lock.close()

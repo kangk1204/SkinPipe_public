@@ -17,6 +17,7 @@ jobs:
           node-version: '22'
       - run: python scripts/check-public-tree.py
       - run: node tests/test_metric_radar.mjs
+      - run: node tests/test_research_progress.mjs
       - name: Check all browser module syntax
         run: |
           for module in web/public/*.js; do node --check "$module"; done

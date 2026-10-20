@@ -16,7 +16,7 @@ Paste this single command into the Ubuntu terminal:
 python3 -c 'import urllib.request; exec(compile(urllib.request.urlopen("https://raw.githubusercontent.com/kangk1204/SkinPipe_public/main/install.py", timeout=30).read(), "SkinPipe installer", "exec"))'
 ```
 
-It downloads the public source, installs the app and a separate ADMET model environment, obtains a small catalog from official providers, calculates ADMET, builds the search index and starts SkinPipe. Open **http://127.0.0.1:4317** in a browser when the terminal says **Ready**. Keep that terminal open.
+It downloads the public source, installs the app and a separate ADMET model environment, obtains a small catalog from official providers, calculates ADMET, builds the search index and starts SkinPipe. Open **http://127.0.0.1:4317** in a browser after the terminal prints **`SkinPipe: http://127.0.0.1:4317`**. Keep that terminal open. The earlier **Installation prepared** message means setup has finished; the server may still be checking the database.
 
 **The first preparation takes longer than later launches.** Models and dependencies are downloaded once; ADMET and the index are calculated before the research screen becomes ready. Follow the terminal messages and log paths. With `--device auto` (the default), a compatible NVIDIA GPU is tested and used when available; otherwise ADMET runs on CPU. Docking uses the installed CPU Vina engine. The installer does not install or change GPU drivers.
 
@@ -30,7 +30,7 @@ The screenshots below come from an installed **0.3.0rc1 starter environment**. T
 
 ### 1. Check that the installation is ready
 
-After the terminal prints the app address, open **http://127.0.0.1:4317** and click **설치 상태** (*Installation status*, top right). Look for **PostgreSQL 연결됨** and a catalog structure count. An unconnected optional ChatGPT account is normal. Click **연구 화면으로** (*Go to research*) to continue.
+After the terminal prints **`SkinPipe: http://127.0.0.1:4317`**, open **http://127.0.0.1:4317** and click **설치 상태** (*Installation status*, top right). Look for **PostgreSQL 연결됨** and a catalog structure count. An unconnected optional ChatGPT account is normal. Click **연구 화면으로** (*Go to research*) to continue.
 
 ![Installation status: database connected, starter catalog and optional ChatGPT](docs/images/01-installation-ready.jpg)
 
@@ -58,7 +58,9 @@ Scroll to the bottom, check the calculation scope, then click **새 연구 실�
 
 ### 5. Follow the study and open its results
 
-The saved study checks its status every five seconds. A short assessment may reach **처리 완료** (*Complete*) almost immediately. Expect **1 input molecule** and **no new-candidate search** in this example. For a longer search, the panel reports the current stage. You can leave the page and reopen the study using **진행·결과 보기** (*View progress/results*) in **내 연구 실행 기록** (*My study history*).
+A moving indicator appears immediately after submission. A **blue panel and spinner** indicate waiting or processing; a **green panel, check mark and 연구 완료** (*Study complete*) indicate completion. Status refreshes every five seconds. A short assessment may finish almost immediately. Expect **1 input molecule** and **no new-candidate search** in this example. You can reopen the study using **진행·결과 보기** (*View progress/results*) in **내 연구 실행 기록** (*My study history*).
+
+If a status request fails or no new response arrives for 20 seconds, the spinner stops and the panel says the current status is unknown. Click **결과 갱신** (*Refresh results*) to check again. Completion means processing has finished; inspect held and unassessed items in the results.
 
 ![Completed Nicotinamide assessment, one input molecule and result actions](docs/images/07-completed-study.jpg)
 
@@ -88,7 +90,7 @@ The translucent amber area with a bold dashed outline marks the highest componen
 
 Excel column headings explain how to read each value: **↑ higher first**, **↓ lower first**, or **range/research-goal dependent**. The **지표 읽는 법** (*Reading the metrics*) sheet gives units, examples and comparison conditions. A more negative docking score is compared only within the same docking setup. Permeability, logP and molecular size are reviewed against the research goal. Compound tabs show the reading direction beside each metric.
 
-You have completed the first workflow when the study says **처리 완료** and the downloaded workbook opens. Continue with the [illustrated browser guide](docs/browser.en.md) for **SMILES, protein and PDB/file inputs**, running/cancelling/resuming, candidate comparison, 2D/3D and multiple-study exports.
+You have completed the first workflow when the green panel says **연구 완료** and the downloaded workbook opens. Continue with the [illustrated browser guide](docs/browser.en.md) for **SMILES, protein and PDB/file inputs**, running/cancelling/resuming, candidate comparison, 2D/3D and multiple-study exports.
 
 ## Start, stop and check progress
 
@@ -104,13 +106,13 @@ In a second terminal, to stop your local app and its managed jobs:
 bash ~/SkinPipe/runtime/Stop-SkinPipe.sh
 ```
 
-To inspect first-time catalog preparation:
+After dependency and model installation creates `Catalog-Status.sh`, inspect first-time catalog preparation:
 
 ```sh
 bash ~/SkinPipe/runtime/Catalog-Status.sh
 ```
 
-If catalog preparation was interrupted after `Prepare-Catalog.sh` was created, rerun the original installation command with the same options. It resumes the saved catalog rather than starting a second build. Dependency installation failures before that point retain their logs; the error explains how to retry with a new installation folder. Starting an already prepared installation does not recalculate its full ADMET cache.
+If catalog preparation was interrupted after all launchers, including `Prepare-Catalog.sh`, were created, rerun the original installation command with the same options. It resumes the saved catalog rather than starting a second build. Dependency installation failures before that point retain their logs; the error explains how to retry with a new installation folder. Starting an already prepared installation does not recalculate its full ADMET cache.
 
 In the browser, use **설치 상태** — *Installation status* to check the database, search index, model and docking engine. See [troubleshooting and file locations](docs/catalog.en.md).
 
@@ -122,9 +124,14 @@ The model selector prefers `gpt-6-luna` with `max` reasoning when the account ad
 
 ## Development
 
+The [2026-10-20 verification record](docs/validation-20261020.md) covers the
+previously omitted tests, fresh Ubuntu installation, browser workflow and
+progress indicators, with the execution scope and scientific limits.
+
 ```sh
 python3 scripts/check-public-tree.py
 python3 -m unittest discover -s tests -v
+node tests/test_research_progress.mjs
 python3 -m pip wheel --no-deps --wheel-dir /tmp/skinpipe-public-wheel ./skinpipe
 ```
 

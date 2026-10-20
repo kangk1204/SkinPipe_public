@@ -131,7 +131,9 @@ task_prepare_model_runtime() {
 
 task_write_prepare_catalog() {
   printf '#!/usr/bin/env bash\nexec %q build --directory %q --profile %q --library %q --device %q --app-root %q --accept-source-terms\n' \
-    "$task_root/app/software/bin/skinpipe-catalog" "$task_root/catalog" "$task_root/model-profile/profile.json" "$task_library" "$task_device" "$task_root/app/state" > "$task_root/Prepare-Catalog.sh"
+    "$task_root/app/software/bin/skinpipe-catalog" "$task_root/catalog" "$task_root/model-profile/profile.json" "$task_library" "$task_device" "$task_root/app/state" > "$task_root/Prepare-Catalog.sh.tmp" || return
+  chmod 700 "$task_root/Prepare-Catalog.sh.tmp" || return
+  mv "$task_root/Prepare-Catalog.sh.tmp" "$task_root/Prepare-Catalog.sh"
 }
 
 task_write_app_launchers() {
@@ -170,7 +172,7 @@ task_install_main() {
   task_select_model_runtime "$task_requested_device" || return
   cat <<'NOTICE'
 공식 제공처에서 각 설치자에게 데이터를 직접 내려받아 로컬에서 ADMET을 계산합니다.
-DB·예측 파일은 재배포하지 않습니다. 각 출처 이용조건은 docs/local-catalog-build.ko.md를 확인하세요.
+DB·예측 파일은 재배포하지 않습니다. 각 출처 이용조건: https://github.com/kangk1204/SkinPipe_public/blob/main/docs/catalog.ko.md
 skin-starter: 작은 피부 연구용 DB / full: 15개 출처의 대규모 구조 목록, 최소 300 GiB 여유 공간 권장.
 auto: 사용 가능한 NVIDIA GPU를 먼저 확인하며, 없거나 설치·계산 확인이 실패하면 CPU로 진행합니다.
 전체 CPU 계산은 컴퓨터에 따라 수일 이상 걸릴 수 있습니다. 중단 후 같은 폴더에서 재개할 수 있습니다.
@@ -202,10 +204,11 @@ Path(path).write_text(json.dumps({
     'created_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
 }, ensure_ascii=False, indent=2) + '\n')
 PY
-  task_write_prepare_catalog
   printf '#!/usr/bin/env bash\nexec %q status --directory %q\n' "$task_root/app/software/bin/skinpipe-catalog" "$task_root/catalog" > "$task_root/Catalog-Status.sh"
   task_write_app_launchers
-  chmod 700 "$task_root/Prepare-Catalog.sh" "$task_root/Catalog-Status.sh" "$task_root/Start-SkinPipe.sh" "$task_root/Stop-SkinPipe.sh"
+  chmod 700 "$task_root/Catalog-Status.sh" "$task_root/Start-SkinPipe.sh" "$task_root/Stop-SkinPipe.sh"
+  # Publish the resume entry point only after all launchers are executable.
+  task_write_prepare_catalog
   "$task_root/Prepare-Catalog.sh"
   echo "DB 준비·등록 완료. $task_root/Start-SkinPipe.sh 실행 후 표시되는 주소를 여세요."
 }

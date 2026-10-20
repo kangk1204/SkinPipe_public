@@ -29,6 +29,7 @@ docs/images/18-optional-chatgpt.jpg
 docs/images/19-candidate-filters.jpg
 docs/images/20-empty-filter-results.jpg
 docs/images/manifest.json
+docs/validation-20261020.md
 install.py
 scripts/check-public-tree.py
 scripts/install-from-sources-ubuntu.sh
@@ -263,6 +264,7 @@ tests/test_data_audit.py
 tests/test_excel_structures.py
 tests/test_metric_radar.mjs
 tests/test_public_install.py
+tests/test_research_progress.mjs
 tests/test_runtime_audit.py
 tests/test_scientific_audit.py
 web/bridge/export_images.py
@@ -278,6 +280,7 @@ web/public/metric-radar.js
 web/public/personal-literature.js
 web/public/platform.js
 web/public/research-inputs.js
+web/public/research-progress.js
 web/public/research-results.js
 web/public/research-selection.js
 web/public/run-offline-worker.js

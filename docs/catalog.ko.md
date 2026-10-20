@@ -49,15 +49,25 @@ python3 SkinPipe-install.py --prefix ~/SkinPipe-full --library full --device aut
 
 ## 진행 확인과 재개
 
-설치 터미널에 단계와 로그 경로가 나옵니다. 다른 터미널에서:
+설치 터미널에 단계와 로그 경로가 나옵니다. 먼저 패키지·모델 환경을 준비하며, 이 단계가 끝나야 `Catalog-Status.sh`가 생깁니다. 파일이 생성된 뒤 다른 터미널에서:
 
 ```sh
 bash ~/SkinPipe/runtime/Catalog-Status.sh
 ```
 
-다운로드 → 구조 정리 → DB → ADMET → 감사 → 인덱스 상태를 확인합니다. `Prepare-Catalog.sh`가 생성된 뒤 중단됐다면 **동일한 prefix·library·device**의 원래 명령으로 재개합니다. 완료를 확인한 단계는 대조 후 재사용합니다. 설치기와 DB 구축에 각각 잠금이 있어 같은 폴더의 중복 구축을 막습니다.
+다운로드 → 구조 정리 → DB → ADMET → 감사 → 인덱스 상태를 확인합니다. `Prepare-Catalog.sh`를 포함한 실행 스크립트 생성이 모두 끝난 뒤 중단됐다면 **동일한 prefix·library·device**의 원래 명령으로 재개합니다. 완료를 확인한 단계는 대조 후 재사용합니다. 설치기와 DB 구축에 각각 잠금이 있어 같은 폴더의 중복 구축을 막습니다.
 
 그 전에 패키지 설치가 실패하면 표시된 로그를 읽습니다. 부분 환경은 진단용으로 남습니다. 원인을 해결한 뒤 새 `--prefix`를 사용하세요. 소스·모델·설정이 바뀌었을 때도 진행 중인 계획을 바꾸지 말고 새 폴더를 사용합니다.
+
+예를 들어 초기 패키지 설치 오류의 원인을 해결했다면 아래 명령으로 starter를 별도 폴더에 설치합니다. Ubuntu 홈 폴더에서 실행하며, `SkinPipe-retry`는 아직 없는 폴더여야 합니다.
+
+```sh
+cd ~
+python3 -c 'import urllib.request; urllib.request.urlretrieve("https://raw.githubusercontent.com/kangk1204/SkinPipe_public/main/install.py", "SkinPipe-install.py")'
+python3 SkinPipe-install.py --prefix ~/SkinPipe-retry
+```
+
+이후에는 새 폴더 안의 `runtime/Start-SkinPipe.sh`와 `runtime/Stop-SkinPipe.sh`를 사용합니다. 기존 폴더와 로그는 보관하세요. 설치 경로를 바꿨다면 이 안내의 `~/SkinPipe`도 해당 경로로 바꿔 읽습니다.
 
 준비 후에는 매번 `Start-SkinPipe.sh`로 시작합니다. 연구마다 전체 DB를 재구축할 필요가 없습니다. 브라우저 **설치 상태**에서 앱·DB·인덱스·모델·엔진을 확인하고, 세부 장치 선택은 runtime의 `model-runtime-selection.json`과 로그에서 봅니다.
 

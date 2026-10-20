@@ -2,7 +2,7 @@
 
 [한국어](browser.ko.md) · [README](../README.md)
 
-Open http://127.0.0.1:4317 after the installer prints **Ready**. The current interface has Korean labels. This guide pairs those labels with English descriptions.
+Open http://127.0.0.1:4317 after the server prints **`SkinPipe: http://127.0.0.1:4317`**. If the browser cannot connect yet, check the running terminal; database verification can take several minutes. The current interface has Korean labels. This guide pairs those labels with English descriptions.
 
 
 Screenshots use public tutorial examples in a local **0.3.0rc1 starter installation**: Nicotinamide (compound), HSP90AA1 (protein) and PDB 1CBS (bound structure). Click an image to enlarge it. These are walkthrough captures, not bundled research datasets.
@@ -85,7 +85,9 @@ Open **ChatGPT 설명과 자료 전달 설정 (선택)** (*Optional ChatGPT and 
 
 ## 4. Follow progress, cancel or resume
 
-Once accepted, the study is saved in **내 연구 실행 기록** (*My study history*). Stage, elapsed time, completed counts and held/failed stages are reported as work proceeds. Use **상태 갱신** (*Refresh*) if a page has been open for a long time. **진행·결과 보기** (*View progress/results*) opens and scrolls to that study's result panel.
+Once accepted, the study is saved in **내 연구 실행 기록** (*My study history*). A moving indicator appears during submission. Waiting and running use a blue panel with a spinner; completion changes the whole panel to green with a check mark and **연구 완료** (*Study complete*). Partial results and held work use amber, and failure uses red; text also names each state. Stage, elapsed time, completed counts and held/failed stages are reported as work proceeds.
+
+Status refreshes every five seconds. A failed request or 20 seconds without a new response stops the spinner and marks the current status as unknown. Use **결과 갱신** (*Refresh results*) to check again. The system reduced-motion preference disables the rotation. **진행·결과 보기** (*View progress/results*) in the study history opens that study's result panel.
 
 Changing menu pages or closing the browser does **not** cancel an accepted study. Before submission, changing the input type or leaving the input screen can discard the unsent form; return to step 1 and check the input again. Use the page's back buttons when editing. A browser Back action changes the page, not the saved study.
 
@@ -93,9 +95,9 @@ To cancel computation, use that study's cancel control and follow the displayed 
 
 Resume appears for resumable interrupted/cancelled work. It validates the saved input, catalog, model and calculation conditions before using completed work. Changed conditions may require a separate study. Do not start a duplicate study just because you changed screens. Use the installation's **Stop-SkinPipe.sh** when intentionally shutting down the whole local app.
 
-![A longer tutorial study reporting its current stage and refresh time](images/06-study-progress.jpg)
+![Blue progress panel with spinner, current stage and refresh time](images/06-study-progress.jpg)
 
-The progress screenshot shows a separate, longer tutorial run; the quick Nicotinamide assessment may finish before you see an intermediate stage.
+The progress screenshot comes from a separate Nicotinamide similarity search. The input-only assessment may finish before you see an intermediate stage.
 
 ![Cancel confirmation with Continue and Cancel controls](images/17-cancel-confirmation.jpg)
 

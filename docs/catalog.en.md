@@ -49,15 +49,25 @@ The full-library ADMET runtime and a study's additional-toxicity model are recor
 
 ## Progress and resuming
 
-The terminal prints numbered stages and log paths. In a second terminal:
+The terminal prints numbered stages and log paths. Package and model installation comes first; `Catalog-Status.sh` becomes available after that preparation. Once the file exists, use a second terminal:
 
 ```sh
 bash ~/SkinPipe/runtime/Catalog-Status.sh
 ```
 
-The catalog status records download → ingest → database → ADMET → audit → indexes. After `Prepare-Catalog.sh` exists, re-run the same installation command with the **same prefix, library and device** to resume interrupted catalog stages. Already acknowledged stages are checked and reused. The catalog has its own exclusive build lock, and the installer refuses a second owner of the same folder.
+The catalog status records download → ingest → database → ADMET → audit → indexes. After the executable launchers, including `Prepare-Catalog.sh`, have been created, re-run the same installation command with the **same prefix, library and device** to resume interrupted catalog stages. Already acknowledged stages are checked and reused. The catalog has its own exclusive build lock, and the installer refuses a second owner of the same folder.
 
 If package installation fails before that launcher exists, read the reported log. The partial environment remains for diagnosis. Correct the dependency/network/storage error and choose a new `--prefix`; no partial environment or completed research is overwritten. If source/model/code settings differ, use a new catalog folder instead of modifying an in-progress plan.
+
+For example, after resolving an early dependency failure, these commands install the starter in a separate folder. Run them in your Ubuntu home directory; `SkinPipe-retry` must not already exist:
+
+```sh
+cd ~
+python3 -c 'import urllib.request; urllib.request.urlretrieve("https://raw.githubusercontent.com/kangk1204/SkinPipe_public/main/install.py", "SkinPipe-install.py")'
+python3 SkinPipe-install.py --prefix ~/SkinPipe-retry
+```
+
+Use that folder's `runtime/Start-SkinPipe.sh` and `runtime/Stop-SkinPipe.sh` afterward. Keep the previous folder and its logs. With a custom prefix, substitute that path for `~/SkinPipe` in this guide.
 
 Once installed, launch with `Start-SkinPipe.sh`; do not repeat full preparation for every study. The browser's **설치 상태** (*Installation status*) reports app/database/index/model/engine readiness. For details, inspect the installation logs and `model-runtime-selection.json` under `runtime`.
 

@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import subprocess
 import tarfile
 import tempfile
 import unittest
@@ -178,8 +179,14 @@ class InstallerTests(unittest.TestCase):
         (root / "artifacts/app.whl").write_bytes(b"synthetic wheel")
         state = {"schema": bootstrap.SCHEMA, "library": "skin-starter", "device": "auto", "source_ready": True, "wheel": "app.whl", "wheel_sha256": bootstrap.hashlib.sha256(b"synthetic wheel").hexdigest(), "catalog_ready": ready}
         bootstrap.write_json(root / "installation.json", state)
-        (root / "runtime").mkdir()
-        (root / "runtime/Prepare-Catalog.sh").write_text("synthetic")
+        (root / "runtime/app").mkdir(parents=True)
+        for name in (
+            "Prepare-Catalog.sh", "Catalog-Status.sh", "Start-SkinPipe.sh",
+            "Stop-SkinPipe.sh", "app/Start-SkinPipe.sh", "app/Stop-SkinPipe.sh",
+        ):
+            launcher = root / "runtime" / name
+            launcher.write_text("#!/usr/bin/env bash\nexit 0\n")
+            launcher.chmod(0o700)
         args = argparse.Namespace(prefix=str(root), library="skin-starter", device="auto", accept_source_terms=False, check=False, source=None)
         return root, args
 
@@ -217,6 +224,44 @@ class InstallerTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 bootstrap.install(args)
             self.assertFalse(json.loads((root / "installation.json").read_text())["catalog_ready"])
+
+    @patch.object(bootstrap, "check_platform")
+    @patch.object(bootstrap, "run")
+    def test_incomplete_launchers_do_not_resume_or_claim_ready(self, run, platform):
+        for ready in (False, True):
+            for missing in (True, False):
+                with self.subTest(ready=ready, missing=missing), tempfile.TemporaryDirectory() as temporary:
+                    root, args = self.prepared(temporary, ready)
+                    launcher = root / "runtime/app/Start-SkinPipe.sh"
+                    if missing:
+                        launcher.unlink()
+                    else:
+                        launcher.chmod(0o600)
+                    with self.assertRaisesRegex(ValueError, "launchers are incomplete"):
+                        bootstrap.install(args)
+                    run.assert_not_called()
+                    self.assertEqual(
+                        json.loads((root / "installation.json").read_text())["catalog_ready"],
+                        ready,
+                    )
+
+    def test_failed_launcher_permissions_do_not_publish_resume_entry(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            result = subprocess.run(
+                ["bash", "-c", '''
+source "$1"
+task_root="$2"
+task_library=skin-starter
+task_device=cpu
+chmod() { return 17; }
+if task_write_prepare_catalog; then exit 99; fi
+[[ ! -e "$task_root/Prepare-Catalog.sh" ]]
+''', "launcher-test", str(ROOT / "scripts/install-from-sources-ubuntu.sh"), temporary],
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue((Path(temporary) / "Prepare-Catalog.sh.tmp").is_file())
 
 
 if __name__ == "__main__":
