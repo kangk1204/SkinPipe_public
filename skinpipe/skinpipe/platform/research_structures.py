@@ -547,11 +547,13 @@ def _map_template(template, observed, *, names=None):
     Chem.AssignStereochemistry(output, cleanIt=True, force=True)
     Chem.AssignStereochemistry(spatial, cleanIt=True, force=True)
     for expected, measured in zip(output.GetAtoms(), spatial.GetAtoms()):
-        if expected.HasProp("_CIPCode") and measured.HasProp("_CIPCode") and expected.GetProp("_CIPCode") != measured.GetProp("_CIPCode"):
+        if expected.HasProp("_CIPCode") and (
+                not measured.HasProp("_CIPCode")
+                or expected.GetProp("_CIPCode") != measured.GetProp("_CIPCode")):
             raise ValueError("Exact ligand stereochemistry conflicts with the selected observed coordinates")
     stereo = {Chem.BondStereo.STEREOE, Chem.BondStereo.STEREOZ}
     for expected, measured in zip(output.GetBonds(), spatial.GetBonds()):
-        if expected.GetStereo() in stereo and measured.GetStereo() in stereo and expected.GetStereo() != measured.GetStereo():
+        if expected.GetStereo() in stereo and expected.GetStereo() != measured.GetStereo():
             raise ValueError("Exact ligand bond stereochemistry conflicts with the selected observed coordinates")
     return output
 

@@ -90,7 +90,7 @@ def select_bands(rows, target_id, provider, *, trust_stored_identity=False):
         if row.get("target_id") != target_id:
             continue
         identity = candidate_identity(row, trust_stored=trust_stored_identity)
-        if row.get("role") in {"control", "positive_control", "negative_control", "counter_control"} or row.get("opposing_direction"):
+        if row.get("role") in {"control", "positive_control", "negative_control", "counter_control", "reference_control"} or row.get("opposing_direction"):
             if identity.get("parent_id"):
                 controls.add(identity["parent_id"])
             continue

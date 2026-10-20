@@ -142,7 +142,7 @@ def plan_target(candidates: list[dict[str, Any]], target_id: str, *, snapshot_id
             item["states"]["compute"]["status"] = "held"
             item["states"]["compute"]["reasons"].append("verified_protein_receptor_pocket_required")
         assessed.append(item)
-    control_roles = {"control", "positive_control", "negative_control", "counter_control"}
+    control_roles = {"control", "positive_control", "negative_control", "counter_control", "reference_control"}
     controls = [r for r in assessed if r.get("role") in control_roles]
     candidate_rows = [r for r in assessed if r.get("role") not in control_roles]
     control_parents = {r["identity"]["parent_id"] for r in controls if r["identity"]["parent_id"]}

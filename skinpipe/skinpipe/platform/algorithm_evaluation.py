@@ -21,7 +21,7 @@ import tempfile
 from .artifacts import ArtifactIntegrityError, canonical_json
 from .algorithm_pockets import _read, _trusted_profile
 
-CONTROL_ROLES = {"control", "positive_control", "negative_control", "counter_control"}
+CONTROL_ROLES = {"control", "positive_control", "negative_control", "counter_control", "reference_control"}
 CONTEXT = ("target_id", "endpoint", "species", "unit", "assay_type")
 MAX_ROWS = 2000
 

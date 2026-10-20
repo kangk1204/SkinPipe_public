@@ -150,7 +150,9 @@ class PublishedPredictionCache:
 
     def query(self, ids):
         import duckdb
+        from .catalog_query_lifetime import interruptible_query, query_checkpoint
 
+        query_checkpoint()
         if (
             not isinstance(ids, list)
             or not 1 <= len(ids) <= 1000
@@ -163,16 +165,23 @@ class PublishedPredictionCache:
         # Close each small read-only connection so index allocations cannot
         # accumulate across chunks. Preserve the same global result ordering.
         for offset in range(0, len(ids), 16):
+            query_checkpoint()
             chunk = ids[offset : offset + 16]
             with duckdb.connect(str(self.database), read_only=True) as conn:
                 conn.execute("SET threads=1; SET memory_limit='512MB'")
-                c = conn.execute(
-                    "SELECT * FROM predictions WHERE compound_id IN ("
-                    + ",".join("?" for _ in chunk)
-                    + ") ORDER BY compound_id,model_id",
-                    chunk,
-                )
-                rows.extend(dict(zip([x[0] for x in c.description], r)) for r in c.fetchall())
+                with interruptible_query(conn):
+                    try:
+                        c = conn.execute(
+                            "SELECT * FROM predictions WHERE compound_id IN ("
+                            + ",".join("?" for _ in chunk)
+                            + ") ORDER BY compound_id,model_id",
+                            chunk,
+                        )
+                        rows.extend(dict(zip([x[0] for x in c.description], r)) for r in c.fetchall())
+                    except Exception:
+                        query_checkpoint()
+                        raise
+                query_checkpoint()
         rows.sort(key=lambda row: (row["compound_id"], row["model_id"]))
         if self.verify() != before:
             raise ArtifactIntegrityError("ADMET cache changed during lookup")

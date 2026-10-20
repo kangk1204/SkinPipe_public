@@ -122,7 +122,7 @@ def publish_campaign_results(coordinator, catalog, campaign_id, *, owner=None):
         control_ids = set(source.get("provenance", {}).get("reference_control_ids", []))
         if (set(pool) != set(expected) or not control_ids <= set(pool)
                 or any(pool[cid].get("role") not in {
-                    "control", "positive_control", "negative_control", "counter_control"
+                    "control", "positive_control", "negative_control", "counter_control", "reference_control"
                 } for cid in control_ids)
                 or len(set(pool) - control_ids) > 10000):
             raise ArtifactIntegrityError("Campaign source population is missing or exceeds reranking budget")

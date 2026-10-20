@@ -93,13 +93,17 @@ class ScoutCatalog:
 
         db_state = state(self.database)
         if self._structure_dependencies is None or self._structure_dependencies[0] != db_state:
+            from .database_bundle import _sql_paths
+
             with self._connect() as connection:
                 views = connection.execute(
                     "SELECT sql FROM duckdb_views() WHERE view_name IN ('compounds','offers','source_records')"
                 ).fetchall()
             paths = set()
             for (sql,) in views:
-                for name in re.findall(r"'([^']+\.parquet)'", sql or ""):
+                # Use the same SQL-literal contract as portable relocation:
+                # apostrophes in local directory names are escaped as ''.
+                for name in _sql_paths(sql or ""):
                     path = Path(name).resolve()
                     if not path.is_relative_to(self.root.resolve() / "data"):
                         raise ArtifactIntegrityError("Structure view references external donor path")

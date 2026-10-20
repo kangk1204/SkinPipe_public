@@ -259,9 +259,12 @@ skinpipe/skinpipe/structure_policy.py
 skinpipe/skinpipe/triage.py
 skinpipe/skinpipe/types.py
 skinpipe/skinpipe/validation_contract.py
+tests/test_data_audit.py
 tests/test_excel_structures.py
 tests/test_metric_radar.mjs
 tests/test_public_install.py
+tests/test_runtime_audit.py
+tests/test_scientific_audit.py
 web/bridge/export_images.py
 web/public/api-request.js
 web/public/column-help.js

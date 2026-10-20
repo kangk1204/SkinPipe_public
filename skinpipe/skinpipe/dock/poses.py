@@ -12,8 +12,8 @@ and ``RDKitMolCreate.from_pdbqt_mol`` reads them back. The docked coordinates
 are grafted onto the original chemistry instead of being re-perceived.
 
 Every SDF this module writes is read straight back with ``Chem.SDMolSupplier``
-and checked for a valid molecule with a matching heavy-atom count, because a
-file that does not round-trip is worse than no file at all.
+and checked for one valid molecule, finite coordinates, the heavy-atom graph
+and preservation of assigned stereochemistry.
 """
 from __future__ import annotations
 
@@ -110,12 +110,9 @@ def mols_from_docked_pdbqt(pdbqt_text: str) -> Optional[Chem.Mol]:
     except (ValueError, RuntimeError, KeyError) as exc:
         log.error("meeko could not rebuild molecule from docked PDBQT: %s", exc)
         return None
-    mols = [m for m in mols if m is not None]
-    if not mols:
-        log.error("meeko returned no molecule from docked PDBQT")
+    if len(mols) != 1 or mols[0] is None:
+        log.error("docked PDBQT must rebuild exactly one complete molecule")
         return None
-    if len(mols) > 1:
-        log.warning("docked PDBQT held %d molecules; using the first", len(mols))
     return mols[0]
 
 
@@ -139,7 +136,7 @@ def write_pose_sdf(
         writer.close()
 
     if not sdf_roundtrips(out_sdf, expected_heavy_atoms=mol.GetNumHeavyAtoms(),
-                          expected_graph=_flat_smiles(mol)):
+                          expected_graph=_flat_smiles(mol), expected_molecule=mol):
         out_sdf.unlink(missing_ok=True)
         return None
     return out_sdf
@@ -148,12 +145,13 @@ def write_pose_sdf(
 def _flat_smiles(mol: Chem.Mol) -> Optional[str]:
     """Canonical SMILES without stereochemistry, or ``None`` if it cannot be made.
 
-    Stereo is deliberately dropped from the comparison. RDKit assigns chiral
+    Stereo is deliberately dropped from this graph comparison. RDKit assigns chiral
     tags from 3D coordinates when it reads a molblock back, so a ligand whose
     input SMILES left a centre undefined legitimately reloads *with* that centre
     assigned -- comparing isomeric SMILES would throw away a valid pose. What is
-    worth comparing is the bond-order graph, which is exactly what a naive
-    PDBQT conversion gets wrong and what an atom count cannot see.
+    worth comparing here is the bond-order graph, which is exactly what a naive
+    PDBQT conversion gets wrong and what an atom count cannot see. The separate
+    expected-molecule match preserves stereochemistry that was explicitly assigned.
     """
     try:
         return Chem.MolToSmiles(Chem.RemoveHs(Chem.Mol(mol)), isomericSmiles=False)
@@ -162,21 +160,27 @@ def _flat_smiles(mol: Chem.Mol) -> Optional[str]:
 
 
 def sdf_roundtrips(sdf_path: Path, expected_heavy_atoms: Optional[int] = None,
-                   expected_graph: Optional[str] = None) -> bool:
+                   expected_graph: Optional[str] = None,
+                   expected_molecule: Optional[Chem.Mol] = None) -> bool:
     """True when the file reloads as the same molecule.
 
     ``expected_graph`` is a stereo-free canonical SMILES. Checking it is what
     makes this function live up to its own module docstring: an atom count is
     unchanged by a benzene read back as cyclohexatriene, and that is precisely
     the corruption a geometry-based PDBQT conversion produces.
+
+    ``expected_molecule`` also preserves defined atom/bond stereochemistry and
+    isotopes. Unassigned input stereochemistry may acquire coordinate-derived
+    assignments; an explicitly assigned centre cannot invert during export.
     """
-    supplier = Chem.SDMolSupplier(str(sdf_path), removeHs=False, sanitize=True)
-    mols = [m for m in supplier if m is not None]
-    if not mols:
-        log.error("SDF %s does not round-trip: no valid molecule", sdf_path)
+    supplier = iter(Chem.SDMolSupplier(str(sdf_path), removeHs=False, sanitize=True))
+    mol = next(supplier, None)
+    sentinel = object()
+    if mol is None or next(supplier, sentinel) is not sentinel:
+        log.error("SDF %s does not round-trip as exactly one valid molecule", sdf_path)
         return False
     if expected_heavy_atoms is not None:
-        got = mols[0].GetNumHeavyAtoms()
+        got = mol.GetNumHeavyAtoms()
         if got != expected_heavy_atoms:
             log.error(
                 "SDF %s round-trips with %d heavy atoms, expected %d",
@@ -185,14 +189,25 @@ def sdf_roundtrips(sdf_path: Path, expected_heavy_atoms: Optional[int] = None,
                 expected_heavy_atoms,
             )
             return False
-    if mols[0].GetNumConformers() == 0:
+    if mol.GetNumConformers() == 0:
         log.error("SDF %s round-trips without coordinates", sdf_path)
         return False
+    if not all(math.isfinite(value) for xyz in mol.GetConformer().GetPositions() for value in xyz):
+        log.error("SDF %s round-trips with nonfinite coordinates", sdf_path)
+        return False
     if expected_graph is not None:
-        got = _flat_smiles(mols[0])
+        got = _flat_smiles(mol)
         if got != expected_graph:
             log.error("SDF %s round-trips as a different molecule: %s, expected %s",
                       sdf_path, got, expected_graph)
+            return False
+    if expected_molecule is not None:
+        expected = Chem.RemoveHs(Chem.Mol(expected_molecule))
+        observed = Chem.RemoveHs(mol)
+        if (observed.GetNumAtoms() != expected.GetNumAtoms()
+                or observed.GetNumBonds() != expected.GetNumBonds()
+                or not observed.HasSubstructMatch(expected, useChirality=True)):
+            log.error("SDF %s changed the assigned stereochemistry or isotope identity", sdf_path)
             return False
     return True
 

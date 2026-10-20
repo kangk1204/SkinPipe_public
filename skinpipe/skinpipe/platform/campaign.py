@@ -506,6 +506,7 @@ class CampaignCoordinator:
                             "positive_control",
                             "negative_control",
                             "counter_control",
+                            "reference_control",
                         }
                         and mapping[r["candidate_id"]].get("pdbqt_sha256")
                     ]
@@ -1366,6 +1367,7 @@ class CampaignCoordinator:
                         "positive_control",
                         "negative_control",
                         "counter_control",
+                        "reference_control",
                     }
                     and manifest["prepared"]
                     .get(r["candidate_id"], {})
@@ -1593,7 +1595,7 @@ class CampaignCoordinator:
         # remains reserved before the ranked pool reaches confirmation.
         seen = {
             candidate_identity(row, trust_stored=True)["parent_id"] for row in ranked
-            if row.get("role") in {"control", "positive_control", "negative_control", "counter_control"}
+            if row.get("role") in {"control", "positive_control", "negative_control", "counter_control", "reference_control"}
             or row.get("opposing_direction")
         }
         out = []
@@ -1610,6 +1612,7 @@ class CampaignCoordinator:
                     "positive_control",
                     "negative_control",
                     "counter_control",
+                    "reference_control",
                 }
             ):
                 out.append(row)

@@ -101,7 +101,7 @@ export async function startLocalResearch({document=globalThis.document,window=gl
     const parameters=new URLSearchParams(window.location.hash.split('?')[1]||'');
     const controller=await renderPersonalLiterature({main,api,storage,publicResearch:true,legacyHistory:false,isCurrent:()=>current(version),prefill:{query:parameters.get('query')||'',fromDiscovery:parameters.get('source')==='discovery'}});if(current(version))literature=controller;else controller.stop();return;
    }
-   if(hash==='#research'){await renderPlatform({main,api,route:'research',screens:[]});if(current(version))main.insertAdjacentHTML('afterbegin',savedPopulationNoticeMarkup());return}
+   if(hash==='#research'){await renderPlatform({main,api,route:'research',screens:[],namespace:'generalized'});if(current(version))main.insertAdjacentHTML('afterbegin',savedPopulationNoticeMarkup());return}
    await renderDiscovery(main,api,'researcher',{isCurrent:()=>current(version)});
    if(!current(version))return;
    let profile;try{profile=await api('/v2/local/profile')}catch{}

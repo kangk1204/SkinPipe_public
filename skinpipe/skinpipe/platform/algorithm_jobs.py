@@ -104,7 +104,7 @@ class AlgorithmJobs:
         controls = {r['candidate_id']: deepcopy(r)
             for r in manifest["candidates"] + ranked
             if r.get("role")
-            in {"control", "positive_control", "negative_control", "counter_control"}
+            in {"control", "positive_control", "negative_control", "counter_control", "reference_control"}
             or r.get("opposing_direction")
         }
         controls = list(controls.values())

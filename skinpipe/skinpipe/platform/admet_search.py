@@ -73,8 +73,8 @@ def evaluate_risk(predictions, *, policy=None):
             k: v
             for k in RISK_ENDPOINTS
             if type(v := values.get(k)) in (int, float)
-            and math.isfinite(v)
             and 0 <= v <= 1
+            and math.isfinite(v)
         }
         primary = [
             k
@@ -357,7 +357,9 @@ class ADMETSearchGate:
         hide_severe_admet=True,
     ):
         import duckdb
+        from .catalog_query_lifetime import interruptible_query, query_checkpoint
 
+        query_checkpoint()
         if (
             not isinstance(q, str)
             or len(q) > 1024
@@ -389,13 +391,19 @@ class ADMETSearchGate:
         before = self.verify()
         with duckdb.connect(str(self.database), read_only=True) as conn:
             conn.execute("SET threads=1; SET memory_limit='512MB'")
-            c = conn.execute(
-                "SELECT * FROM catalog WHERE "
-                + (" AND ".join(clauses) or "TRUE")
-                + " ORDER BY compound_id LIMIT ? OFFSET ?",
-                [*values, limit, offset],
-            )
-            rows = [dict(zip([x[0] for x in c.description], r)) for r in c.fetchall()]
+            with interruptible_query(conn):
+                try:
+                    c = conn.execute(
+                        "SELECT * FROM catalog WHERE "
+                        + (" AND ".join(clauses) or "TRUE")
+                        + " ORDER BY compound_id LIMIT ? OFFSET ?",
+                        [*values, limit, offset],
+                    )
+                    rows = [dict(zip([x[0] for x in c.description], r)) for r in c.fetchall()]
+                except Exception:
+                    query_checkpoint()
+                    raise
+            query_checkpoint()
         if self.verify() != before:
             raise ArtifactIntegrityError("Search snapshot changed during query")
         return rows

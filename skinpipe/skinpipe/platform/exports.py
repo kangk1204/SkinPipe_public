@@ -204,7 +204,10 @@ def review_columns(row):
         return value if isinstance(value, dict) else {}
 
     def number(value):
-        return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) else None
+        try:
+            return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) else None
+        except OverflowError:
+            return None
 
     predictions = [p for p in row.get("admet") or [] if isinstance(p, dict)]
 
@@ -277,7 +280,13 @@ def review_columns(row):
 
 def xlsx_value(value, *, candidate_id, field, warnings):
     value = text(value)
-    if isinstance(value, str) and (
+    invalid_number = False
+    if type(value) in (int, float):
+        try:
+            invalid_number = not math.isfinite(value)
+        except OverflowError:
+            invalid_number = True
+    if invalid_number or isinstance(value, str) and (
         len(value.encode("utf-16-le", errors="surrogatepass")) // 2 > 32767
         or any(not (ord(c) in (9, 10, 13) or 32 <= ord(c) <= 0xD7FF
                        or 0xE000 <= ord(c) <= 0xFFFD or 0x10000 <= ord(c) <= 0x10FFFF)
@@ -285,7 +294,11 @@ def xlsx_value(value, *, candidate_id, field, warnings):
     ):
         warnings.append({"candidate_id": candidate_id, "field": field,
                          "reason": "xlsx_value_requires_raw_chunk_reference"})
-        return "원자료 파일 참조 · 후보 " + str(candidate_id) + " · " + field
+        # The identifier itself may contain the same unsupported characters.
+        # Escape and bound this display reference; warnings and JSON retain it.
+        reference = json.dumps({"candidate_id": candidate_id, "field": field},
+                               ensure_ascii=True, default=str)
+        return "원자료 파일 참조 · " + reference[:240]
     return value
 
 
@@ -316,7 +329,7 @@ def toxicity_columns(row, warnings):
         if not invalid:
             invalid = any(
                 value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
-                    or not math.isfinite(value) or not 0 <= value <= 1)
+                    or not 0 <= value <= 1 or not math.isfinite(value))
                 for endpoint in RISK_ENDPOINTS
                 for value in [values.get(endpoint)]
             )
@@ -757,11 +770,16 @@ class RunExports:
                     for item in items:
                         definitions.append(
                             [
-                                text(model),
-                                text(item.get("id") or item.get("endpoint")),
-                                text(item.get("name")),
-                                text(item.get("units", item.get("unit"))),
-                                text(item.get("species")),
+                                xlsx_value(value, candidate_id=model,
+                                           field="endpoint_" + field, warnings=warnings)
+                                for field, value in (
+                                    ("model", model),
+                                    ("id", item.get("id") or item.get("endpoint")),
+                                    ("name", item.get("name")),
+                                    ("units", item.get("units", item.get("unit"))),
+                                    ("species", item.get("species")),
+                                )
+                            ] + [
                                 "모델 예측 · 실측 아님",
                             ]
                         )

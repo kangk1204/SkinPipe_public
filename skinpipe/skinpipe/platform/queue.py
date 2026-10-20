@@ -233,12 +233,27 @@ class Queue:
                     raise ValueError(
                         "Idempotency key already bound to different request"
                     )
+                bound = conn.execute(
+                    "SELECT owner_id FROM platform_compute_budgets WHERE id=%s",
+                    (row["budget_scope"],),
+                ).fetchone()
+                if bound is not None and bound["owner_id"] != owner:
+                    raise ValueError("Compute budget belongs to another owner")
                 return self._public(row)
             job_id = uuid.uuid4().hex
             conn.execute(
                 "INSERT INTO platform_compute_budgets(id,owner_id,limit_seconds) VALUES(%s,%s,%s) ON CONFLICT DO NOTHING",
                 (scope, owner, budget_seconds),
             )
+            # Colons are valid in both identifiers, so concatenation alone
+            # does not prove ownership (a:b + c and a + b:c collide). Retain
+            # historical scope IDs but never share a ledger across owners.
+            bound = conn.execute(
+                "SELECT owner_id FROM platform_compute_budgets WHERE id=%s",
+                (scope,),
+            ).fetchone()
+            if bound["owner_id"] != owner:
+                raise ValueError("Compute budget belongs to another owner")
             conn.execute(
                 """INSERT INTO platform_jobs
                 (id,owner_id,project_id,kind,request,request_sha256,idempotency_key,budget_seconds,max_attempts)
@@ -442,7 +457,8 @@ class Queue:
             )
             row = conn.execute(
                 """SELECT j.* FROM platform_jobs j JOIN platform_compute_budgets b ON b.id=j.budget_scope
-                WHERE j.status='queued' AND b.active_job IS NULL AND b.used_seconds<b.limit_seconds
+                WHERE j.status='queued' AND b.owner_id=j.owner_id
+                AND b.active_job IS NULL AND b.used_seconds<b.limit_seconds
                 AND NOT cancel_requested AND not_before<=clock_timestamp()
                 AND kind=ANY(%s) AND compute_seconds<budget_seconds"""
                 + engine_clause
@@ -829,6 +845,8 @@ class Queue:
             ).fetchone()
             if shared is None:
                 raise ValueError("Legacy computation requires an administrator-bound shared budget")
+            if shared["owner_id"] != row["owner_id"]:
+                raise ValueError("Compute budget belongs to another owner")
             if (
                 budget_seconds is None
                 and shared["used_seconds"] >= shared["limit_seconds"]

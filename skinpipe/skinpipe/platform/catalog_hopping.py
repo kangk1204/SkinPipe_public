@@ -371,7 +371,7 @@ def select_docking(rows, maximum=1000):
         r.get("identity", {}).get("parent_id")
         for r in rows
         if r.get("role")
-        in {"control", "positive_control", "negative_control", "counter_control", "query_seed"}
+        in {"control", "positive_control", "negative_control", "counter_control", "reference_control", "query_seed"}
     }
     ordered = sorted(rows, key=discovery_order)
     hops = [

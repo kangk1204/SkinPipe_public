@@ -8,8 +8,9 @@ import re
 
 from .identity import chemical_identity, digest
 from .ranking import finite, rank_candidates
+from ..measurements import observation_status
 
-POLICY = "measured-references-v6-computational-context"
+POLICY = "measured-references-v7-observation-status"
 BAO_FORMAT_SOURCE = "https://raw.githubusercontent.com/BioAssayOntology/BAO/fa8efc176642e59bc19094893d0ace92bdcc425a/vocabulary/bao_vocabulary_format.owl"
 
 # These assay names collide with one-letter substitution notation: receptor
@@ -50,15 +51,21 @@ def _variant_text_evidence(description):
     }
 
 
+def _source_number(value):
+    """Parse source decimal strings without coercing booleans into measurements."""
+    if isinstance(value, str):
+        try:
+            value = float(value)
+        except (ValueError, OverflowError):
+            return None
+    return finite(value)
+
+
 def measurement(raw, descriptor, assay):
     """Preserve original records. Binding and biochemical function stay distinct."""
     record = deepcopy(raw)
     target = raw.get("target_chembl_id")
-    confidence = assay.get("confidence_score", assay.get("assay_confidence_score"))
-    try:
-        confidence = int(confidence)
-    except (ValueError, TypeError):
-        confidence = None
+    confidence = _source_number(assay.get("confidence_score", assay.get("assay_confidence_score")))
     direct = confidence == (7 if descriptor["kind"] == "complex" else 9)
     organism = assay.get("assay_organism", assay.get("organism")) or raw.get(
         "target_organism"
@@ -82,20 +89,16 @@ def measurement(raw, descriptor, assay):
         if assay_type == "F"
         else "other"
     )
-    value = finite(raw.get("standard_value"))
-    if value is None:
-        # ChEMBL JSON numeric values are decimal strings; parsing is confined
-        # to this source adapter, not the generic ranking interface.
-        try:
-            value = finite(float(raw.get("standard_value")))
-        except (ValueError, TypeError, OverflowError):
-            value = None
+    # ChEMBL JSON numbers may be decimal strings. Other types retain the
+    # generic finite-number gate; True cannot become a 1 nM measurement.
+    value = _source_number(raw.get("standard_value"))
     relation, unit, endpoint = (
         raw.get("standard_relation"),
         raw.get("standard_units"),
         raw.get("standard_type"),
     )
     comment = str(raw.get("activity_comment") or "").strip().lower()
+    not_evaluated = observation_status(raw) == "NOT_EVALUATED"
     negative = comment in {
         "inactive",
         "not active",
@@ -128,6 +131,8 @@ def measurement(raw, descriptor, assay):
         reasons.append("assay_context_not_binding_or_verified_biochemical")
     if value is None or not unit or not endpoint or relation != "=":
         reasons.append("measurement_missing_or_censored")
+    if not_evaluated:
+        reasons.append("measurement_not_evaluated")
     if (
         endpoint in {"Ki", "Kd", "IC50", "EC50", "AC50", "XC50", "Potency"}
         and value is not None
@@ -168,7 +173,7 @@ def measurement(raw, descriptor, assay):
         unit=unit,
         value=value,
         relation=relation,
-        is_measured=value is not None and not computational,
+        is_measured=value is not None and not computational and not not_evaluated,
         observation_scope="computational_prediction" if computational else "assay_record",
         higher_is_better=False if lower else None,
         action="unspecified",
@@ -191,6 +196,8 @@ def measurement(raw, descriptor, assay):
         reference_hold_reasons=reasons,
         reference_label="computational_prediction"
         if computational
+        else "not_evaluated"
+        if not_evaluated
         else "assay_reported_active"
         if comment == "active"
         else "measured_reference",

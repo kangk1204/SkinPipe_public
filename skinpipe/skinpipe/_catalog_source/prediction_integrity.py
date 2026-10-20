@@ -63,11 +63,11 @@ def validate_values(values, status, expected_endpoints):
             if value is None:
                 finite.append(False)
                 continue
-            if (
-                isinstance(value, bool)
-                or not isinstance(value, (int, float))
-                or not math.isfinite(value)
-            ):
+            try:
+                valid = type(value) in (int, float) and math.isfinite(value)
+            except OverflowError:
+                valid = False
+            if not valid:
                 raise ValueError("Invalid prediction quantity")
             finite.append(True)
         if status == "success" and not all(finite):

@@ -147,6 +147,8 @@ class Worker:
         return data
 
     def run_once(self):
+        if self.stop.is_set():
+            return False
         telemetry = self.telemetry()
         if "dock_batch" in telemetry["capabilities"] and "engine_hashes" not in self.config:
             raise ResourceDeferred("Docking claims require a verified exact engine pair")
@@ -164,6 +166,11 @@ class Worker:
         cancel = threading.Event()
         finished = threading.Event()
         self.active_cancel = cancel
+        # Shutdown may arrive while claim() is in flight, before the new
+        # cancellation handle exists. Transfer that stop to the owned attempt;
+        # later shutdowns see active_cancel and set the same event directly.
+        if self.stop.is_set():
+            cancel.set()
         base_compute = float(job.get("compute_seconds", 0))
         state = {"compute_seconds": base_compute, "progress": {**(job.get("progress") or {}), "stage": "preparing"},
                  "last_heartbeat": time.monotonic(), "lease_error": None}
@@ -219,6 +226,8 @@ class Worker:
         result = None
         cleanup_known, cleanup_ack_needed = True, False
         try:
+            if cancel.is_set():
+                raise EngineCancelled("Worker stopped before job preparation")
             if (job["kind"] == "dock_batch" and "engine_hashes" in self.config
                     and job["request"].get("engine_hashes") != self.config["engine_hashes"]):
                 raise ResourceDeferred("Worker requires its exact frozen engine cohort")

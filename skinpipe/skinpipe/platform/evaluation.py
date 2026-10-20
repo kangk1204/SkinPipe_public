@@ -94,11 +94,14 @@ def evaluate_ranked_candidates(rows: list[dict[str, Any]], *, k: int = 96,
     ids = [r.get("candidate_id") for r in rows]
     if any(not isinstance(cid, str) or not cid for cid in ids) or len(set(ids)) != len(ids):
         raise ValueError("benchmark rows require unique nonempty candidate IDs")
-    control_roles = {"control", "positive_control", "negative_control", "counter_control"}
+    control_roles = {"control", "positive_control", "negative_control", "counter_control", "reference_control"}
     def is_control(row):
         return row.get("role") in control_roles or row.get("opposing_direction") is True
     controls = [r for r in rows if is_control(r)]
     candidates = [r for r in rows if not is_control(r)]
+    control_parents = {r["parent_id"] for r in controls if r.get("parent_id")}
+    if any(r.get("parent_id") in control_parents for r in candidates):
+        raise ValueError("a known control parent cannot also count as a new candidate")
     # Parent dedup is a benchmark contract; unknown parents remain disclosed.
     parents = [r["parent_id"] for r in candidates if r.get("parent_id")]
     if len(set(parents)) != len(parents):

@@ -63,7 +63,7 @@ def select_confirmation(ranked, results, policy):
         identity = candidate_identity(row, trust_stored=True)
         return identity.get("parent_id") or row["candidate_id"]
     for row in ranked:
-        if row.get("role") in {"control", "positive_control", "negative_control", "counter_control"} or row.get("opposing_direction"):
+        if row.get("role") in {"control", "positive_control", "negative_control", "counter_control", "reference_control"} or row.get("opposing_direction"):
             controls.add(parent(row))
     seen, selected = set(controls), []
     for row in eligible:

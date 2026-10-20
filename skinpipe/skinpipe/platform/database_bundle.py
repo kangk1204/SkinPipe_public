@@ -19,10 +19,21 @@ COMPONENTS = {"scout_root", "published_prediction_cache", "similarity_index", "a
 FILTERED_COMPONENTS = {"filtered_risk", "filtered_purchase", "filtered_risk_purchase"}
 ALL_COMPONENTS = COMPONENTS | FILTERED_COMPONENTS
 SQL_LITERAL = re.compile(r"'(?:''|[^'])*'")
+SQL_QUOTED = re.compile(r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"")
 
 
 def _sql_paths(sql, *, positions=False):
     """Return complete SQL string literals; never substitute identifiers/code."""
+    # DuckDB canonicalizes FROM '/path/file.parquet' as a double-quoted
+    # identifier. Such implicit file readers bypass the explicit reader ranges
+    # below. Hold these views instead of reporting an empty dependency set or
+    # rewriting executable identifiers during package relocation.
+    for token in SQL_QUOTED.finditer(sql):
+        if not token.group().startswith('"'):
+            continue
+        identifier = token.group()[1:-1].replace('""', '"')
+        if identifier.lower().endswith(".parquet"):
+            raise ValueError("Database views require explicit local Parquet reader functions; implicit file references are unsupported")
     code = SQL_LITERAL.sub(lambda value: " " * len(value.group()), sql)
     functions = re.findall(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(", code)
     if any((f.lower().startswith("read_") or f.lower().endswith("_scan"))
@@ -396,7 +407,9 @@ def _rebind_installed(root, manifest, changes, original_identity):
 
 
 def install_database(package, destination):
-    package, destination = Path(package), Path(destination)
+    # Both DuckDB view literals and the persisted component configuration must
+    # remain valid when the app starts from a different working directory.
+    package, destination = Path(package), Path(destination).expanduser().resolve()
     destination.mkdir(parents=True, exist_ok=True)
     with tarfile.open(package, "r|gz") as archive:
         manifest = _manifest(archive)

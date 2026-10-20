@@ -27,7 +27,7 @@ CAPS = {"dimorphite": 32, "cdpl": 2000, "posebusters": 1000,
 DEPENDENCIES = {"dimorphite": ("dimorphite-dl",), "cdpl": ("CDPKit",),
                 "posebusters": ("posebusters",), "prolif": ("prolif", "MDAnalysis"),
                 "fpsim2": ("FPSim2",)}
-CONTROL_ROLES = {"control", "positive_control", "negative_control", "counter_control"}
+CONTROL_ROLES = {"control", "positive_control", "negative_control", "counter_control", "reference_control"}
 MAX_FILE_BYTES = 64 * 1024 * 1024
 MAX_LIGAND_ATOMS = 256
 
@@ -704,7 +704,8 @@ def execute_chemistry(provider: str, rows: list[dict], context: dict, *, workdir
     directory.mkdir(parents=True)
     eligible = []
     receipts = {}
-    controls = {chemical_identity(r.get("smiles"))["parent_id"] for r in rows if r.get("role") in CONTROL_ROLES}
+    controls = {chemical_identity(r.get("smiles"))["parent_id"] for r in rows
+                if r.get("role") in CONTROL_ROLES or r.get("opposing_direction") is True}
     used = set()
     for row in rows:
         identity = chemical_identity(row.get("smiles"))
@@ -712,7 +713,7 @@ def execute_chemistry(provider: str, rows: list[dict], context: dict, *, workdir
                    "input_exact_structure_id": identity["exact_structure_id"], "original_smiles": row.get("smiles")}
         receipts[row["candidate_id"]] = receipt
         parent = identity["parent_id"]
-        if row.get("role") in CONTROL_ROLES or parent in controls:
+        if row.get("role") in CONTROL_ROLES or row.get("opposing_direction") is True or parent in controls:
             receipt["reason"] = "controls_separate"
         elif identity["structure_status"] != "valid" or identity["parent_ambiguous"]:
             receipt["reason"] = "invalid_or_ambiguous_structure"

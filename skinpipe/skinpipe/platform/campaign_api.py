@@ -300,12 +300,14 @@ class CampaignAPI:
         CampaignCoordinator(self.root / "validation", self.artifacts)._validate_receptor(receptor, actual_protein)
         return receptor
 
-    def _validate_inputs(self, manifest_sha256):
+    def _validate_inputs(self, manifest_sha256, *, owner=None):
         manifest = self._json_artifact(manifest_sha256)
         if manifest.get("schema") != INPUT_SCHEMA or set(manifest) - {
                 "schema", "snapshot_id", "target_id", "prepared", "receptor", "additional_receptors", "preparation_holds"}:
             raise ValueError("Unsupported campaign input manifest schema or fields")
         snapshot_id, target_id = manifest["snapshot_id"], manifest["target_id"]
+        if owner is not None and self.catalog.snapshot_owner(snapshot_id) != owner:
+            raise PermissionError("Campaign inputs belong to another project")
         _, snapshot = self._population(snapshot_id, target_id)
         supplied = manifest.get("prepared", {})
         if not isinstance(supplied, dict) or len(supplied) > 2000:
@@ -395,7 +397,7 @@ class CampaignAPI:
     def register_inputs(self, body, *, owner="researcher"):
         if set(body) != {"manifest_sha256"}:
             raise ValueError("Register an immutable input manifest hash")
-        checked = self._validate_inputs(body["manifest_sha256"])
+        checked = self._validate_inputs(body["manifest_sha256"], owner=owner)
         input_id = digest({"owner": owner, "manifest_sha256": body["manifest_sha256"]})
         directory = self._owner_root(owner) / "inputs"
         directory.mkdir(exist_ok=True)
@@ -408,7 +410,7 @@ class CampaignAPI:
         record = _sealed_read(self._owner_root(owner) / "inputs" / (input_id + ".json"))
         if record.get("owner") != owner or digest(record) != input_id:
             raise ArtifactIntegrityError("Input registry owner or content binding changed")
-        checked = self._validate_inputs(record["manifest_sha256"])
+        checked = self._validate_inputs(record["manifest_sha256"], owner=owner)
         if checked["snapshot_id"] != snapshot_id or checked["target_id"] != target_id:
             raise ValueError("Prepared inputs belong to a different frozen snapshot or target")
         return checked
@@ -436,6 +438,8 @@ class CampaignAPI:
             "prepared": {}, "receptor": None, "context": {},
             "validation": {"status": "held", "prepared_count": 0, "held_preparations": [],
                            "receptor_reason": "verified_input_manifest_required", "scientific_validation": "NOT_ESTABLISHED"}}
+        if self.catalog.snapshot_owner(snapshot_id) != owner:
+            raise PermissionError("Campaign snapshot belongs to another project")
         if 'desired_action' in body:
             requested = validate_requested_action(body['desired_action'])
             checked['context'] = {**checked['context'], 'desired_action': requested,
@@ -690,7 +694,7 @@ class CampaignAPI:
         if len(parts) == 3 and parts[:2] == ["v2", "campaign-inputs"]:
             input_id = _identifier(parts[2])
             record = _sealed_read(self._owner_root(owner) / "inputs" / (input_id + ".json"))
-            checked = self._validate_inputs(record["manifest_sha256"])
+            checked = self._validate_inputs(record["manifest_sha256"], owner=owner)
             return {"input_id": input_id, "snapshot_id": checked["snapshot_id"], "target_id": checked["target_id"],
                     **self.target_context(input_id, snapshot_id=checked["snapshot_id"], target_id=checked["target_id"], owner=owner)}
         raise KeyError("Unknown campaign route")
