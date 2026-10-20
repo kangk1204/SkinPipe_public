@@ -1,6 +1,7 @@
 // Numeric direction is an interpretation rule, independent of sort direction.
 // pChEMBL definition: https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions
 export const columnHelp = {
+  skin_radar_reference: ['피부 물성 참고 범위', '회색 음영은 현재 SkinPipe 피부 물성 점수에서 각 항목이 최고점인 범위입니다.', 'logP 1–3.5 · 분자량 350 g/mol 이하(양수) · TPSA 90 Å² 이하 · 수소결합 공여체 3개 이하. HBA·QED는 범위 미설정입니다. 연구 목적·제형과 함께 검토하세요.'],
   discovery_rank: ['점수 순위', '현재 탐색 순위가 있으면 그 순위를, 과거 저장본에서는 당시 종합 점수 순위를 표시합니다.', '숫자가 작을수록 앞선 순위입니다. 해당 분석의 점수와 계산 조건을 함께 확인하세요.'],
   name: ['화합물 / ID', '화합물명과 원자료의 식별자입니다. 같은 이름이라도 염·입체 구조가 다를 수 있습니다.', '후보를 선택해 정확한 구조와 원자료를 확인하세요.'],
   candidate_id: ['후보 ID', '구조·계산·실험 기록을 연결하는 후보 식별자입니다.', '크기나 문자 순서는 성능과 관계없습니다.'],

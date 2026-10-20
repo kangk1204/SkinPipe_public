@@ -12,7 +12,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - run: python scripts/check-public-tree.py
+      - run: node tests/test_metric_radar.mjs
       - run: python -m unittest discover -s tests -p test_public_install.py -v
       - run: python -m compileall -q skinpipe/skinpipe
       - run: python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/skinpipe-wheel" ./skinpipe

@@ -260,6 +260,7 @@ skinpipe/skinpipe/triage.py
 skinpipe/skinpipe/types.py
 skinpipe/skinpipe/validation_contract.py
 tests/test_excel_structures.py
+tests/test_metric_radar.mjs
 tests/test_public_install.py
 web/bridge/export_images.py
 web/public/api-request.js
@@ -270,6 +271,7 @@ web/public/download-stream.js
 web/public/literature-evidence.js
 web/public/local-research-app.js
 web/public/local-research.html
+web/public/metric-radar.js
 web/public/personal-literature.js
 web/public/platform.js
 web/public/research-inputs.js

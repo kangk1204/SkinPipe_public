@@ -1,4 +1,5 @@
 import {escapeHtml as e,identityLabel,PRODUCTS,GOALS} from './research-inputs.js';
+import {metricRadarMarkup} from './metric-radar.js';
 const MODES={similarity:'비슷한 화합물 찾기',scaffold_hopping:'다른 골격 후보 찾기',assessment:'입력 화합물만 평가',protein_target_screening:'단백질 표적 탐색',bound_complex_scaffold_hopping:'결합 화합물에서 출발한 골격 탐색'};
 const COUNTS={candidate_population:'전체 후보 화합물',collected:'확보한 카탈로그 행',raw_generated_proposals:'새 구조 생성 제안',query_seeds:'출발구조',comparison_selected:'구조 비교 선택',docking_completed:'도킹 완료',query_redocking_completed:'출발구조 재도킹 완료',saved_rows:'전체 저장 행',filter_pass:'필터 통과 후보',population:'확보한 전체 후보',catalog_population:'카탈로그 후보',catalog_candidates:'카탈로그 후보',filtered:'필터를 통과한 후보',filtered_candidates:'필터를 통과한 후보',candidates:'후보 화합물',hops:'골격 비교 후보',hop_candidates:'골격 비교 후보',generated:'생성한 새 구조',generated_candidates:'생성한 새 구조',selected:'후속 계산 선택',docking_selected:'도킹 선택',docked:'도킹 완료',measured_references:'측정 자료가 있는 참조',computational_seeds:'출발구조',controls:'대조군'};
 const STATUS={complete:'처리 완료',partial:'일부 처리 완료',queued:'실행 대기',running:'처리 중',held:'추가 확인 필요',failed:'처리 실패',cancelled:'취소됨',cancelling:'취소 요청됨 · 종료 확인 중',cleanup_unverified:'작업 자원 정리 확인 필요'};
@@ -82,6 +83,12 @@ function cachedDefinitions(prediction){
  }
  return definitions;
 }
+function validatedRadarMarkup({values,properties,definitions,source,usable,blockedKeys=[]}){
+ if(!usable||!definitions.size)return'';
+ const allowedProperties=[...definitions].filter(([,d])=>d.category==='Physicochemical').map(([key])=>key);
+ const allowedToxicity=[...definitions].filter(([,d])=>d.category!=='Physicochemical'&&d.task_type==='classification').map(([key])=>key);
+ return`<div class="metric-radar-grid">${metricRadarMarkup({kind:'properties',values:properties,source,allowedKeys:allowedProperties,blockedKeys})}${metricRadarMarkup({kind:'toxicity',values,source,allowedKeys:allowedToxicity,blockedKeys})}</div>`;
+}
 export function cachedToxicityMarkup(predictions,{candidateId=''}={}){
  const records=Array.isArray(predictions)?predictions:predictions&&typeof predictions==='object'?[predictions]:[];
  if(!records.length)return'<section class="research-options research-evaluation-channel"><h4>기존 DB 독성·ADMET 예측</h4><p>기존 DB의 독성·ADMET 예측이 없습니다. 추가 모델 예측은 아래의 별도 채널에서 확인하세요.</p></section>';
@@ -92,7 +99,7 @@ export function cachedToxicityMarkup(predictions,{candidateId=''}={}){
   const statusText=unsupported?'기존 DB 모델에서 미지원으로 기록된 구조입니다. 사유: '+unsupportedReason+'. 추가 모델의 평가는 아래 별도 채널에서 확인하세요.':failed?'기존 예측이 실패했거나 처리 상태가 미확인입니다.':state==='partial_nonfinite'?'기존 예측의 일부 값만 유효합니다.':'기존 DB에 저장된 모델 예측 기록입니다.';
   const learned=Object.fromEntries(Object.entries(values&&typeof values==='object'&&!Array.isArray(values)?values:{}).filter(([key])=>definitions.get(key)?.category!=='Physicochemical'));
   const derived=Object.fromEntries(Object.entries(values&&typeof values==='object'&&!Array.isArray(values)?values:{}).filter(([key])=>definitions.get(key)?.category==='Physicochemical'));
-  return`<p>${e(statusText)}</p>${model.name||model.version?`<p>원모델: ${e(model.name||'이름 미기록')} · 버전 ${e(model.version||'미기록')}</p>`:''}${qualityFlagged.size?'<p>저장된 출력에 품질 경고가 있습니다. 해당 지표의 원출력을 확인하고 유효한 평가로 단정하지 마세요.</p>':''}${definitions.size?'':'<p>원모델·지표 정의의 연결 근거를 확인하지 못해 수치를 기본 표에 표시하지 않습니다. 원출력은 상세 기록에 보존됩니다.</p>'}${toxicityValuesMarkup(learned,{definitions,strictDefinitions:true,failed,channel:'cached',candidateId,qualityFlagged})}${toxicityValuesMarkup(derived,{definitions,strictDefinitions:true,derived:true,failed,channel:'cached',candidateId,qualityFlagged})}<details><summary>기존 DB 예측의 모델·입력·품질 경고·원자료</summary><pre>${e(JSON.stringify(prediction,null,2))}</pre></details>`;
+  return`<p>${e(statusText)}</p>${model.name||model.version?`<p>원모델: ${e(model.name||'이름 미기록')} · 버전 ${e(model.version||'미기록')}</p>`:''}${qualityFlagged.size?'<p>저장된 출력에 품질 경고가 있습니다. 해당 지표의 원출력을 확인하고 유효한 평가로 단정하지 마세요.</p>':''}${definitions.size?'':'<p>원모델·지표 정의의 연결 근거를 확인하지 못해 수치를 기본 표에 표시하지 않습니다. 원출력은 상세 기록에 보존됩니다.</p>'}${validatedRadarMarkup({values:learned,properties:derived,definitions,source:'기존 DB · '+(prediction.model_id||model.name||'모델 미기록'),usable:!failed,blockedKeys:[...qualityFlagged]})}${toxicityValuesMarkup(learned,{definitions,strictDefinitions:true,failed,channel:'cached',candidateId,qualityFlagged})}${toxicityValuesMarkup(derived,{definitions,strictDefinitions:true,derived:true,failed,channel:'cached',candidateId,qualityFlagged})}<details><summary>기존 DB 예측의 모델·입력·품질 경고·원자료</summary><pre>${e(JSON.stringify(prediction,null,2))}</pre></details>`;
  }).join('')}<p>모델 출력은 6개 유효숫자로 표시합니다. 분류 지표는 0–1 점수이며, 전체 자릿수·지표 정의·단위는 원자료와 Excel에 있습니다.</p></section>`;
 }
 export function additionalToxicityMarkup(prediction,{candidateId=prediction?.candidate_id||''}={}){
@@ -100,7 +107,7 @@ export function additionalToxicityMarkup(prediction,{candidateId=prediction?.can
  const status=prediction&&Object.hasOwn(TOXICITY_STATUS,state)?TOXICITY_STATUS[state]:prediction?'처리 상태 확인 필요':'추가 모델 결과 미기록';
  const failed=['failed','failed_invalid_probability'].includes(state),usable=['success','partial_nonfinite'].includes(state),definitions=toxicityDefinitions(prediction);
  const version=typeof model.version==='string'&&model.version?`<p>모델: ${e(model.provider==='admet_ai'?'ADMET-AI':model.provider||'이름 미기록')} · 버전 ${e(model.version)}</p>`:'';
- return`<section class="research-options research-evaluation-channel"><h4>추가 CPU 모델의 독성·ADMET 예측</h4><p>${e(status)}</p>${version}${failed?'<p>실패한 원출력은 성공한 평가나 안전성 판단에 사용하지 않습니다.</p>':''}${usable&&!definitions.size?'<p>지표 정의를 확인하지 못해 수치를 기본 표에 표시하지 않습니다. 원출력은 상세 기록에 보존됩니다.</p>':''}${toxicityValuesMarkup(prediction?.values,{failed,usable,definitions,strictDefinitions:true,channel:'additional',candidateId})}${toxicityValuesMarkup(prediction?.physicochemical_values,{derived:true,failed,usable,definitions,strictDefinitions:true,channel:'additional',candidateId})}<p>모델 출력은 6개 유효숫자로 표시합니다. 분류 지표는 0–1 점수이며, 전체 자릿수·지표 정의·단위는 원자료와 Excel에 있습니다.</p><p>추가 모델 결과는 순위·제외 조건을 자동으로 바꾸지 않습니다. 이 화합물에 대한 모델 적용 범위는 확인되지 않았습니다. 구조 경보·기존 DB 예측과 구분해 검토합니다.</p></section>`;
+ return`<section class="research-options research-evaluation-channel"><h4>추가 CPU 모델의 독성·ADMET 예측</h4><p>${e(status)}</p>${version}${failed?'<p>실패한 원출력은 성공한 평가나 안전성 판단에 사용하지 않습니다.</p>':''}${usable&&!definitions.size?'<p>지표 정의를 확인하지 못해 수치를 기본 표에 표시하지 않습니다. 원출력은 상세 기록에 보존됩니다.</p>':''}${validatedRadarMarkup({values:prediction?.values,properties:prediction?.physicochemical_values,definitions,source:'추가 모델 · '+(model.provider||'모델 미기록')+' · '+(model.version||'버전 미기록'),usable})}${toxicityValuesMarkup(prediction?.values,{failed,usable,definitions,strictDefinitions:true,channel:'additional',candidateId})}${toxicityValuesMarkup(prediction?.physicochemical_values,{derived:true,failed,usable,definitions,strictDefinitions:true,channel:'additional',candidateId})}<p>모델 출력은 6개 유효숫자로 표시합니다. 분류 지표는 0–1 점수이며, 전체 자릿수·지표 정의·단위는 원자료와 Excel에 있습니다.</p><p>추가 모델 결과는 순위·제외 조건을 자동으로 바꾸지 않습니다. 이 화합물에 대한 모델 적용 범위는 확인되지 않았습니다. 구조 경보·기존 DB 예측과 구분해 검토합니다.</p></section>`;
 }
 function structureImageMarkup(row,label){
  const png=row?.structure_image;

@@ -98,6 +98,28 @@ class PublicSourceTests(unittest.TestCase):
         self.assertIn('"0.3.0rc1"', init)
         self.assertIn('version = "0.3.0rc1"', project)
 
+    def test_radar_reference_tracks_skin_scoring_policy(self):
+        import ast
+        import re
+        module = (ROOT / "web/public/metric-radar.js").read_text()
+        reference = json.loads(re.search(r"export const SKIN_REFERENCE = (\{.*?\});", module, re.S).group(1))
+        policy = ast.parse((ROOT / "skinpipe/skinpipe/filters/topical.py").read_text())
+        constants = {}
+        for node in policy.body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1:
+                target = node.targets[0]
+                if isinstance(target, ast.Tuple) and all(isinstance(n, ast.Name) for n in target.elts):
+                    constants.update(zip([n.id for n in target.elts], ast.literal_eval(node.value)))
+        self.assertEqual(reference["molecular_weight"]["max"], constants["_MW_IDEAL"])
+        self.assertEqual([reference["logP"]["min"], reference["logP"]["max"]], [constants["_LOGP_LO"], constants["_LOGP_HI"]])
+        scoring = next(node for node in policy.body if isinstance(node, ast.FunctionDef) and node.name == "topical_score")
+        for variable, field in [("s_hbd", "hydrogen_bond_donors"), ("s_tpsa", "tpsa")]:
+            value = next(node.value for node in scoring.body if isinstance(node, ast.Assign) and node.targets[0].id == variable)
+            self.assertEqual(ast.literal_eval(value.body), 10.0)
+            self.assertEqual(reference[field]["max"], ast.literal_eval(value.test.comparators[0]))
+        self.assertNotIn("QED", reference)
+        self.assertNotIn("hydrogen_bond_acceptors", reference)
+
 
 class InstallerTests(unittest.TestCase):
     def test_unknown_prefix_is_preserved(self):
