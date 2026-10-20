@@ -98,3 +98,11 @@ and model-profile hashes were unchanged. New labelled checks and their original
 cancellation/retry/export records remain available. The operating Site access
 policy was unchanged, and only the intended UI/test/build source files changed;
 its existing stored research assets were preserved.
+
+The first public Python 3.12 CI attempt and its retry could not start tests
+because the PostgreSQL image mirror returned `Data limit exceeded`. The CI
+launcher now tries the official mirror and Docker Hub with the identical pinned
+PostgreSQL image digest, retaining the same database version and health gate.
+Private GitHub Actions remained unable to start because of the account billing/
+spending restriction; local checks and actual operating runs are reported
+separately from that unavailable CI execution.
