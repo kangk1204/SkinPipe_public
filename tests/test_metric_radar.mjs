@@ -16,7 +16,11 @@ assert.equal(SKIN_REFERENCE.logP.min,1);assert.equal(SKIN_REFERENCE.logP.max,3.5
 assert.equal(SKIN_REFERENCE.QED,undefined);assert.equal(SKIN_REFERENCE.hydrogen_bond_acceptors,undefined);
 const shaded=metricRadarMarkup({kind:'properties',values:physical});
 assert.equal(shaded.match(/<polygon class="radar-reference-band"/g).length,3);
-assert.match(shaded,/fill-opacity:\.25/);assert.match(shaded,/HBA·QED의 참고 범위는 미설정/);
+assert.equal(shaded.match(/data-reference-key=/g).length,4);
+assert.equal(shaded.match(/class="radar-axis-reference"/g).length,4);
+assert.match(shaded,/참고 범위 · 주황색 영역·점선/);
+assert.match(shaded,/후보값 · 초록색 실선·점/);
+assert.match(shaded,/fill-opacity:\.4/);assert.match(shaded,/HBA·QED의 참고 범위는 미설정/);
 assert.equal(radarProfile('toxicity',toxic,{blockedKeys:['AMES']})[1].value,null);
 assert.equal(radarProfile('toxicity',toxic,{allowedKeys:['AMES']})[0].reason,'지표 정의 미확인');
 const html=metricRadarMarkup({kind:'toxicity',values:toxic,source:'Synthetic <model>'});

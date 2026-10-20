@@ -84,7 +84,7 @@ Hover over **?** beside a browser score heading to see its meaning, reading dire
 
 The prediction section includes two six-axis radar charts: molecular properties and toxicity outputs. Each chart retains its model/source and shows raw values and units. Outer points mean larger values; property ranges are reviewed against your research goal. Missing or flagged values leave gaps. Open **원값·단위·표시 범위** for the original numbers and axis scales, or **그래프 SVG 저장** to save a graph. Display scales do not change scores or filters.
 
-The translucent gray background marks the highest component-score ranges in SkinPipe's skin-property policy: logP 1–3.5, molecular weight up to 350 g/mol, TPSA up to 90 Å² and HBD up to 3. HBA and QED have no reference band. The **?** beside the gray legend explains these ranges; the table lists them separately from the chart's display limits.
+The translucent amber area with a bold dashed outline marks the highest component-score ranges in SkinPipe's skin-property policy: logP 1–3.5, molecular weight up to 350 g/mol, TPSA up to 90 Å² and HBD up to 3. HBA and QED have no reference band. The **?** beside the amber legend explains these ranges; the table lists them separately from the chart's display limits.
 
 Excel column headings explain how to read each value: **↑ higher first**, **↓ lower first**, or **range/research-goal dependent**. The **지표 읽는 법** (*Reading the metrics*) sheet gives units, examples and comparison conditions. A more negative docking score is compared only within the same docking setup. Permeability, logP and molecular size are reviewed against the research goal. Compound tabs show the reading direction beside each metric.
 
