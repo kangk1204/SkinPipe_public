@@ -286,7 +286,7 @@ export async function showCorrespondence({title,result}) {
 
 export function showPlatformDocking({title,candidate,api,context}) {
  const entries=(candidate.docking||[]).map((row,index)=>({...row,observation_index:index,pose_index:index+1,kind:'accepted',renderable:true,
-  label:`${row.engine||'엔진'} · ${{broad_docking:'넓은 도킹',confirmation:'재확인',receptor_sensitivity:'수용체 민감성'}[row.source_stage||row.stage]||row.source_stage||row.stage||'도킹'} · 시드 ${row.source_seed??row.seed??'미기록'} · ${Number.isFinite(row.score)?row.score.toFixed(3):'미기록'} kcal/mol`})).filter(r=>r.artifact_valid&&r.pose_sha256);
+  label:`${row.engine||'엔진'} · ${{broad_docking:'넓은 도킹',confirmation:'재확인',receptor_sensitivity:'수용체 민감성'}[row.source_stage||row.stage]||row.source_stage||row.stage||'도킹'} · 시드 ${row.source_seed??row.seed??row.protocol?.seed??'미기록'} · ${Number.isFinite(row.score)?row.score.toFixed(3):'미기록'} kcal/mol`})).filter(r=>r.artifact_valid&&r.pose_sha256);
  if(!entries.length)throw Error('검증된 도킹 포즈가 없습니다.');
  open({title,subtitle:`${candidate.target_id} · 내용 해시 검증 포즈 · MolStar`,entries,complex:true,
   methods:{scope:'수용체·포즈·프로토콜은 선택한 불변 스냅샷에 연결됩니다. 구조 계산 결과이며 실험적 결합 검증은 아닙니다.',record:{snapshot_id:context.snapshot,target_id:context.target}},

@@ -300,3 +300,4 @@ tests/test_research_submission_timeout.mjs
 docs/candidate-docking-20261021.md
 tests/test_snapshot_summary.py
 tests/test_snapshot_summary_ui.mjs
+tests/test_structure_viewer_seed.mjs

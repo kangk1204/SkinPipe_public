@@ -74,7 +74,7 @@ ligand sources retried. The browser previously timed out after 20 seconds even
 though the server later accepted the study. The exact submission route now
 uses the same bounded 600-second allowance as input resolution; automatic POST
 retry remains disabled. Other status/result-read deadlines stay unchanged.
-Opening a verified saved result also clears an obsolete lost-submission notice.
+Opening a verified saved result also clears an obsolete lost-submission notice. The 3D viewer also reads a routine calculation's recorded protocol seed when a legacy top-level seed is absent, preserving legacy precedence and a recorded zero.
 
 The actual candidate-table walkthrough exposed a second delay: its snapshot
 list transferred 52,626,939 bytes before rendering. An optional
