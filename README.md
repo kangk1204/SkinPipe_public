@@ -162,6 +162,8 @@ In a second terminal, to stop your local app and its managed jobs:
 bash ~/SkinPipe/runtime/Stop-SkinPipe.sh
 ```
 
+`stop_requested` confirms the shutdown request. Wait for the original Start terminal to finish resource cleanup and return to its prompt before starting again. Starting during cleanup is intentionally blocked; saved studies remain on disk.
+
 After dependency and model installation creates `Catalog-Status.sh`, inspect first-time catalog preparation:
 
 ```sh

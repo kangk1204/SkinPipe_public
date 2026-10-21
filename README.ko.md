@@ -162,6 +162,8 @@ bash ~/SkinPipe/runtime/Start-SkinPipe.sh
 bash ~/SkinPipe/runtime/Stop-SkinPipe.sh
 ```
 
+`stop_requested`는 종료 요청 접수입니다. 원래 Start 터미널에서 자원 정리가 끝나고 명령 프롬프트가 돌아온 뒤 다시 시작하세요. 정리 중 재시작은 차단되며 저장된 연구는 유지됩니다.
+
 패키지·모델 환경 준비가 끝나 `Catalog-Status.sh`가 생성된 뒤 최초 DB 구축 진행 확인:
 
 ```sh
