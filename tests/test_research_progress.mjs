@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {researchProgressMarkup} from '../web/public/research-results.js';
 import fs from 'node:fs';
 import {researchProgressView,applyResearchProgressState,RESEARCH_PROGRESS_STALE_MS} from '../web/public/research-progress.js';
 import {renderDiscovery} from '../web/public/discovery.js';
@@ -41,8 +42,8 @@ test('actual discovery renderer transitions running → lost/stale → recovered
  globalThis.setTimeout=(callback,delay)=>{const token={callback,delay,cancelled:false,unref(){}};timers.push(token);return token};
  globalThis.clearTimeout=token=>{token.cancelled=true};
  const next=delay=>{const token=timers.findLast(item=>!item.cancelled&&item.delay===delay);assert.ok(token,'Expected live timer '+delay);token.cancelled=true;return token.callback()};
- const fixture=harness(),calls=[];let fail=false,state='running';
- const record=()=>({run_id:'fixture',status:state,input:{value:'Synthetic public input'},counts:{},candidates:[],progress:{stage:'catalog_acquisition',processed:2,total:5},...(state==='complete'?{snapshot_id:'synthetic-snapshot'}:{})});
+ const fixture=harness(),calls=[];let fail=false,state='running',progressPayload={stage:'catalog_acquisition',acquired:2,processed:99,total:5};
+ const record=()=>({run_id:'fixture',status:state,input:{value:'Synthetic public input'},counts:{},candidates:[],progress:progressPayload,...(state==='complete'?{snapshot_id:'synthetic-snapshot'}:{})});
  const api=async(path,options)=>{
   calls.push({path,method:options?.method||'GET'});
   if(path==='/v2/snapshots?view=summary')return{snapshots:[]};
@@ -54,11 +55,64 @@ test('actual discovery renderer transitions running → lost/stale → recovered
  };
  try{
   await renderDiscovery(fixture.main,api);fixture.get('#view').dataset.viewRun='0';await fixture.get('#view').onclick();
-  const panel=fixture.get('#research-live-status');assert.equal(panel.attributes['data-state'],'running');assert.equal(panel.attributes['data-active'],'true');assert.match(panel.innerHTML,/카탈로그 후보 확보.*2개 \/ 5개/);
+  const panel=fixture.get('#research-live-status');assert.equal(panel.attributes['data-state'],'running');assert.equal(panel.attributes['data-active'],'true');assert.match(panel.innerHTML,/카탈로그 후보 확보.*카탈로그 행 2개 확보/);
+  progressPayload={stage:'routine_docking',completed:9,total:32,processed:8,selected:14,qualified:11,target:200};await next(5000);assert.match(panel.innerHTML,/현재 도킹 묶음 9개 \/ 32개 처리 완료/);
+  progressPayload={...progressPayload,completed:24};await next(5000);assert.match(panel.innerHTML,/현재 도킹 묶음 24개 \/ 32개 처리 완료/);assert.doesNotMatch(panel.innerHTML,/이 단계에서 8개|선택 14개/);
   fail=true;await next(5000);assert.equal(panel.attributes['data-state'],'unknown');assert.equal(panel.attributes['aria-busy'],'false');assert.match(panel.textContent,/마지막으로 확인한 상태/);assert.doesNotMatch(panel.innerHTML,/현재 단계|research-progress-icon/);
   fail=false;await next(10000);assert.equal(panel.attributes['data-active'],'true');await next(RESEARCH_PROGRESS_STALE_MS);assert.equal(panel.attributes['data-active'],'false');assert.match(panel.textContent,/최근 20초/);
   await next(5000);assert.equal(panel.attributes['data-active'],'true');
   state='complete';await next(5000);assert.equal(panel.attributes['data-state'],'complete');assert.equal(panel.attributes['aria-busy'],'false');assert.match(panel.innerHTML,/✓.*연구 완료/);assert.doesNotMatch(panel.innerHTML,/현재 단계|2개 \/ 5개/);assert.match(fixture.get('#research-result-actions').innerHTML,/Excel/);
   assert.equal(timers.filter(token=>!token.cancelled).length,0);assert.ok(calls.every(call=>call.method==='GET'),'Progress never submits or restarts a study');
  }finally{globalThis.setTimeout=originalTimer;globalThis.clearTimeout=originalClear}
+});
+
+// Stage payloads are merged by the worker; old fields must not acquire a new meaning.
+test('current docking batch advances using completed and never previous QC processed or toxicity selected',()=>{
+ for(const stage of ['docking','routine_docking','bound_complex_docking','cpu_fallback'])for(const completed of [0,9,24,32]){
+  const progress={stage,completed,total:32,processed:8,selected:14,acquired:1000,qualified:11,target:200},before=JSON.stringify(progress),html=researchProgressMarkup(progress);
+  assert.match(html,new RegExp('현재 도킹 묶음 '+completed+'개 / 32개 처리 완료 · 자세 QC 전'));
+  assert.doesNotMatch(html,/이 단계에서 8개|선택 14개|1,000|대표 후보|QC 통과|도킹 성공|%|완료 예정/);
+  assert.equal(JSON.stringify(progress),before);
+ }
+});
+test('pose quality reports cumulative attempts and its own qualified goal without a stale batch denominator',()=>{
+ const html=researchProgressMarkup({stage:'routine_pose_quality',processed:40,qualified:30,target:200,total:32,completed:32,selected:14,acquired:1000});
+ assert.match(html,/누적 도킹 시도 40개/);assert.match(html,/최근 QC 후 대표 후보 30개 \/ 목표 200개/);
+ assert.doesNotMatch(html,/40개 \/ 32개|현재 도킹 묶음|선택 14개|1,000|40개.*계산 완료/);
+});
+test('additional toxicity selection is not a completion counter and ignores merged earlier counters',()=>{
+ const html=researchProgressMarkup({stage:'additional_toxicity',selected:14,processed:1001,total:1001,completed:32,qualified:11,target:200});
+ assert.match(html,/이번 단계 선택 14개 · 완료 수는 아직 확정하지 않았습니다/);assert.doesNotMatch(html,/1,001|32개|대표 후보|14개 처리|100%/);
+});
+test('catalog acquisition owns acquired and never uses a prior processed or total',()=>{
+ const html=researchProgressMarkup({stage:'catalog_acquisition',acquired:1000,processed:8,total:32,selected:14,completed:24,qualified:11,target:200});
+ assert.match(html,/카탈로그 행 1,000개 확보/);assert.doesNotMatch(html,/8개|32개|14개|24개|대표 후보| \/ /);
+});
+test('shape comparison and ligand preparation use requested while cheap assessment owns total',()=>{
+ for(const stage of ['reference_shape','ligand_preparation']){
+  const html=researchProgressMarkup({stage,processed:2,requested:3,total:1001,complete:1,acquired:1000});assert.match(html,/이 단계에서 2개 \/ 3개 처리/);assert.doesNotMatch(html,/1,001|1,000/);
+ }
+ const html=researchProgressMarkup({stage:'cheap_structure_assessment',processed:101,total:1001,requested:3,selected:14,qualified:11,target:200});
+ assert.match(html,/이 단계에서 101개 \/ 1,001개 처리/);assert.doesNotMatch(html,/ \/ 3개|선택 14개|대표 후보/);
+});
+test('population freeze only reports its catalog count and never old stage completion',()=>{
+ const html=researchProgressMarkup({stage:'candidate_population_frozen',catalog_count:1000,processed:40,total:32,completed:32,qualified:30,target:200});
+ assert.match(html,/확보한 카탈로그 행 1,000개/);assert.doesNotMatch(html,/40개|32개|대표 후보/);
+});
+test('counter-free and unknown stages cannot inherit old counts or qualified totals',()=>{
+ for(const stage of ['identity_resolution','query_seed_frozen','reference_acquisition','literature_evidence','resource_wait','budget_deferred','failed','future-stage','__proto__','constructor']){
+  const html=researchProgressMarkup({stage,processed:8,total:32,completed:24,requested:50,acquired:1000,selected:14,qualified:11,target:200,catalog_count:1000});
+  assert.doesNotMatch(html,/\d|\[object Object\]|function Object/);
+ }
+});
+test('invalid or missing counters never fall back to merged numbers; valid zero stays zero',()=>{
+ const invalid=[undefined,null,'24',true,-1,0.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1];
+ for(const completed of invalid){const html=researchProgressMarkup({stage:'routine_docking',completed,total:32,processed:8,acquired:1000});assert.doesNotMatch(html,/\d/);assert.match(html,/처리 수 확인 필요/)}
+ for(const selected of invalid)assert.doesNotMatch(researchProgressMarkup({stage:'additional_toxicity',selected,processed:8,total:32}),/\d/);
+ assert.match(researchProgressMarkup({stage:'routine_docking',completed:0,total:32}),/0개 \/ 32개 처리 완료/);
+ assert.match(researchProgressMarkup({stage:'routine_docking',completed:9}),/현재 도킹 묶음 9개 처리 완료/);
+ assert.doesNotMatch(researchProgressMarkup({stage:'routine_docking',completed:40,total:32}),/\d/);
+ assert.doesNotMatch(researchProgressMarkup({stage:'routine_pose_quality',qualified:201,target:200}),/최근 QC 후 대표 후보/);
+ assert.doesNotMatch(researchProgressMarkup({stage:'routine_pose_quality',qualified:0,target:0}),/최근 QC 후 대표 후보/);
+ for(const value of [null,[],true,'stage'])assert.equal(researchProgressMarkup(value),'');
 });

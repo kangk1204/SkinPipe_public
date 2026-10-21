@@ -11,12 +11,30 @@ export function researchRunCounts(counts={}){
 export function researchProgressMarkup(progress,{state='running'}={}){
  // Progress is a throttled intermediate record, not a final completion census.
  // Only an actively processing run can describe it as its current calculation.
- if(!['running','preparing'].includes(state)||!progress||typeof progress!=='object')return'';
- const stages={identity_resolution:'입력이 무엇인지 확인',query_seed_frozen:'출발 화합물 구조 보존',reference_acquisition:'비교할 참조 자료 확보',literature_evidence:'공개 문헌 근거 확인',catalog_acquisition:'카탈로그 후보 확보',cheap_structure_assessment:'피부 관련 구조 지표와 경보 평가',additional_toxicity:'DB에 예측이 없는 화합물의 추가 독성 계산',reference_shape:'후보의 구조·형태 비교',bound_complex_docking:'선택한 결합 구조로 도킹',candidate_population_frozen:'전체 후보와 평가 근거 저장',ligand_preparation:'계산용 화합물 구조 준비',resource_wait:'계산 자원을 기다리는 중',budget_deferred:'처리 시간 한도로 보류',failed:'처리 오류 확인'};
- const label=({routine_docking:'후보를 나누어 도킹',routine_pose_quality:'도킹 자세 QC와 대표 후보 선정'})[progress.stage]||stages[progress.stage]||'처리 단계 확인';
- const processed=progress.processed??progress.acquired,total=progress.total;
- const selection=progress.stage==='additional_toxicity'&&Number.isInteger(progress.selected)&&progress.selected>=0?` · 이번 단계 선택 ${number(progress.selected)}개 · 완료 수는 아직 확정하지 않았습니다.`:'';
- return`<p class="research-muted">현재 단계: ${e(label)}${typeof processed==='number'&&Number.isFinite(processed)?` · 이 단계에서 ${number(processed)}개${typeof total==='number'&&Number.isFinite(total)?' / '+number(total)+'개':''} 처리`:selection}${Number.isInteger(progress.qualified)&&Number.isInteger(progress.target)?` · 대표 후보 ${number(progress.qualified)} / 목표 ${number(progress.target)}개`:''}</p>`;
+ if(!['running','preparing'].includes(state)||!progress||typeof progress!=='object'||Array.isArray(progress))return'';
+ const stages={identity_resolution:'입력이 무엇인지 확인',query_seed_frozen:'출발 화합물 구조 보존',reference_acquisition:'비교할 참조 자료 확보',literature_evidence:'공개 문헌 근거 확인',catalog_acquisition:'카탈로그 후보 확보',cheap_structure_assessment:'피부 관련 구조 지표와 경보 평가',additional_toxicity:'DB에 예측이 없는 화합물의 추가 독성 계산',reference_shape:'후보의 구조·형태 비교',bound_complex_docking:'선택한 결합 구조로 도킹',docking:'도킹 계산',cpu_fallback:'CPU 도킹 계산',routine_docking:'후보를 나누어 도킹',routine_pose_quality:'도킹 자세 QC와 대표 후보 선정',candidate_population_frozen:'전체 후보와 평가 근거 저장',ligand_preparation:'계산용 화합물 구조 준비',resource_wait:'계산 자원을 기다리는 중',budget_deferred:'처리 시간 한도로 보류',failed:'처리 오류 확인'};
+ const stage=progress.stage,label=Object.hasOwn(stages,stage)?stages[stage]:'처리 단계 확인',valid=value=>Number.isSafeInteger(value)&&value>=0;
+ // Worker events merge across stages. Read only counters owned by this emitter;
+ // batch totals, cumulative attempts and selected model inputs are different units.
+ const pair=(done,total)=>!valid(done)||(valid(total)&&done>total)?'':number(done)+'개'+(valid(total)?' / '+number(total)+'개':'');
+ let detail='';
+ if(['docking','routine_docking','bound_complex_docking','cpu_fallback'].includes(stage)){
+  const current=pair(progress.completed,progress.total);
+  detail=current?' · 현재 도킹 묶음 '+current+' 처리 완료 · 자세 QC 전':' · 현재 도킹 묶음의 처리 수 확인 필요 · 자세 QC 전';
+ }else if(stage==='routine_pose_quality'){
+  if(valid(progress.processed))detail+=' · 누적 도킹 시도 '+number(progress.processed)+'개';
+  if(valid(progress.qualified)&&valid(progress.target)&&progress.target>0&&progress.qualified<=progress.target)detail+=' · 최근 QC 후 대표 후보 '+number(progress.qualified)+'개 / 목표 '+number(progress.target)+'개';
+ }else if(stage==='additional_toxicity'){
+  detail=(valid(progress.selected)?' · 이번 단계 선택 '+number(progress.selected)+'개':'')+' · 완료 수는 아직 확정하지 않았습니다.';
+ }else if(stage==='catalog_acquisition'){
+  if(valid(progress.acquired))detail=' · 카탈로그 행 '+number(progress.acquired)+'개 확보';
+ }else if(['cheap_structure_assessment','reference_shape','ligand_preparation'].includes(stage)){
+  const current=pair(progress.processed,stage==='cheap_structure_assessment'?progress.total:progress.requested);
+  if(current)detail=' · 이 단계에서 '+current+' 처리';
+ }else if(stage==='candidate_population_frozen'&&valid(progress.catalog_count)){
+  detail=' · 확보한 카탈로그 행 '+number(progress.catalog_count)+'개';
+ }
+ return`<p class="research-muted">현재 단계: ${e(label)}${detail}</p>`;
 }
 export function routineSelectionMarkup(selection,previewCount=0){
  if(!selection?.policy||!Number.isInteger(selection.selected_count))return'';
