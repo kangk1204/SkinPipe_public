@@ -48,9 +48,9 @@ test('actual discovery renderer transitions running → lost/stale → recovered
   calls.push({path,method:options?.method||'GET'});
   if(path==='/v2/snapshots?view=summary')return{snapshots:[]};
   if(path==='/v2/research-capabilities')return{};
-  if(path==='/v2/discovery-runs')return{runs:[record()]};
+  if(path==='/v2/discovery-runs?view=status')return{runs:[record()]};
   if(path.endsWith('/summary'))return record();
-  if(path==='/v2/discovery-runs/fixture'){if(fail)throw Error('synthetic connection loss');return record()}
+  if(path==='/v2/discovery-runs/fixture?view=status'){if(fail)throw Error('synthetic connection loss');return record()}
   throw Error('Unexpected fixture request '+path);
  };
  try{
@@ -139,7 +139,7 @@ test('historical QC figures require a valid recorded pair without inventing miss
 
 for(const published of [false,true])test('budget-deferred guidance preserves records and only opens a separate input flow; published='+published,async()=>{
  const h=harness(),calls=[],record={run_id:'budget-fixture',status:'budget_deferred',input:{kind:'protein',value:'Synthetic target'},execution:{compute_budget_seconds:7200},progress:{stage:'budget_deferred',processed:72,qualified:199,target:200},counts:{representative_selected:199},candidates:[],...(published?{snapshot_id:'synthetic-published'}:{})},saved=JSON.stringify(record);
- const api=async(path,options)=>{calls.push({path,method:options?.method||'GET'});if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs')return{runs:[record]};if(path.endsWith('/summary'))return record;throw Error('Unexpected request '+path)};
+ const api=async(path,options)=>{calls.push({path,method:options?.method||'GET'});if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs?view=status')return{runs:[record]};if(path.endsWith('/summary'))return record;throw Error('Unexpected request '+path)};
  await renderDiscovery(h.main,api);h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();
  const controls=h.get('#research-run-controls').innerHTML;
  assert.match(controls,/저장된 계산·체크포인트와 입력·조건은 보존/);assert.match(controls,/완료된 상태가 아닙니다/);assert.match(controls,/기존 연구의 시간 한도를 늘리거나 이어서 실행하지 않습니다/);
@@ -156,7 +156,7 @@ for(const published of [false,true])test('budget-deferred guidance preserves rec
 test('budget guidance is removed after switching studies and an obsolete button cannot navigate',async()=>{
  const h=harness(),calls=[];let state='budget_deferred';
  const record=()=>({run_id:'budget-switch',status:state,input:{value:'Synthetic'},counts:{},candidates:[],...(state==='complete'?{snapshot_id:'synthetic-published'}:{})});
- await renderDiscovery(h.main,async(path,options)=>{calls.push(options?.method||'GET');if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs')return{runs:[record()]};if(path.endsWith('/summary'))return record();throw Error('Unexpected request '+path)});
+ await renderDiscovery(h.main,async(path,options)=>{calls.push(options?.method||'GET');if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs?view=status')return{runs:[record()]};if(path.endsWith('/summary'))return record();throw Error('Unexpected request '+path)});
  h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();const obsolete=h.get('#research-budget-new').onclick;
  state='complete';await h.get('#research-result-refresh').onclick();assert.doesNotMatch(h.get('#research-run-controls').innerHTML,/research-budget-new|시간 한도|체크포인트/);assert.match(h.get('#research-result-actions').innerHTML,/research-result-excel/);
  obsolete();assert.equal(h.get('#research-step-4').hidden,false);assert.ok(calls.every(method=>method==='GET'));
@@ -164,7 +164,7 @@ test('budget guidance is removed after switching studies and an obsolete button 
 
 test('cleanup quarantine is an explicit hold even after a native checkpoint reaches its goal',async()=>{
  const h=harness(),calls=[],record={run_id:'quarantine-fixture',status:'needs_data',progress:{stage:'routine_pose_quality',qualified:200,target:200,resource_quarantine:{active:true,reason:'owned_resource_cleanup_unverified'}},counts:{},candidates:[]},saved=JSON.stringify(record);
- await renderDiscovery(h.main,async(path,options)=>{calls.push(options?.method||'GET');if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs')return{runs:[record]};if(path.endsWith('/summary'))return record;throw Error('Unexpected fixture request '+path)});
+ await renderDiscovery(h.main,async(path,options)=>{calls.push(options?.method||'GET');if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs?view=status')return{runs:[record]};if(path.endsWith('/summary'))return record;throw Error('Unexpected fixture request '+path)});
  h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();
  const panel=h.get('#research-live-status'),controls=h.get('#research-run-controls').innerHTML;
  assert.equal(panel.attributes['data-state'],'attention');assert.equal(panel.attributes['aria-busy'],'false');assert.equal(panel.attributes['data-active'],'false');assert.match(panel.innerHTML,/자원 정리 확인 필요/);assert.doesNotMatch(panel.innerHTML,/연구 완료|현재 단계|needs_data/);

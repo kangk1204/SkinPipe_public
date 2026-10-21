@@ -345,7 +345,7 @@ export async function renderDiscovery(main,api,role='researcher',{isCurrent:isAc
   const delay=Math.min(30000,pollInterval*2**failures);
   pollTimer=setTimeout(async()=>{
    pollTimer=null;if(!resultIsCurrent(runId,sequence))return;
-   try{const run=await api('/v2/discovery-runs/'+encodeURIComponent(runId));if(!resultIsCurrent(runId,sequence))return;
+   try{const run=await api('/v2/discovery-runs/'+encodeURIComponent(runId)+'?view=status');if(!resultIsCurrent(runId,sequence))return;
     if(!pendingRun(run)){await showRun(runId,{pollState:{attempt:attempt+1,startedAt}});if(isCurrent()&&activeRun===runId)await refresh();return}
     liveStatus(run,runState(run)==='cancelling'?'5초마다 계산 종료·작업 자원 정리 상태를 확인합니다.':'5초마다 상태를 확인합니다. 완료되면 결과와 Excel 버튼이 자동으로 표시됩니다.');renderRunControls(runId,sequence,run);monitorRun(runId,sequence,{attempt:attempt+1,startedAt,failures:0});
    }catch{if(resultIsCurrent(runId,sequence)){const count=failures+1;if(count>=3){liveUnknown('상태 연결을 연속 3회 확인하지 못해 자동 조회를 멈췄습니다. 현재 계산 상태는 미확인입니다. 저장한 연구는 보존됩니다. 결과 갱신 또는 실행 기록의 상태 갱신을 눌러 다시 확인해 주세요.')}else{liveUnknown('상태 연결을 확인하지 못했습니다 ('+count+'/3회). '+Math.min(30000,pollInterval*2**count)/1000+'초 뒤 다시 조회합니다. 계산 요청을 다시 보내지는 않습니다. 화면을 이동해도 접수된 연구는 유지됩니다.');monitorRun(runId,sequence,{attempt:attempt+1,startedAt,failures:count})}}}
@@ -369,7 +369,7 @@ export async function renderDiscovery(main,api,role='researcher',{isCurrent:isAc
    for(const [id,task]of[['research-explain-result','result_explanation'],['research-followup','followup']])$(id).onclick=()=>assist($(id),'research-result-assistance',{run_id:runId,task,permissions:{research_data:allowed&&privateBox.checked,public_literature:summary.ai_permissions?.public_literature===true}},()=>activeRun===runId);
    let live=summary,pending=pendingRun(summary),summaryNotice='',liveConnection='current';
    if(pending)try{
-    const run=await api('/v2/discovery-runs/'+encodeURIComponent(runId));if(!resultIsCurrent(runId,sequence))return;live=run;pending=pendingRun(run);
+    const run=await api('/v2/discovery-runs/'+encodeURIComponent(runId)+'?view=status');if(!resultIsCurrent(runId,sequence))return;live=run;pending=pendingRun(run);
     if(!pending)try{
      const fresh=await api('/v2/discovery-runs/'+encodeURIComponent(runId)+'/summary');if(!resultIsCurrent(runId,sequence))return;
      if(!pendingRun(fresh)){await showRun(runId,{navigate,pollState});return}
@@ -382,12 +382,12 @@ export async function renderDiscovery(main,api,role='researcher',{isCurrent:isAc
    if(summaryNotice)$('research-result-summary').innerHTML='<div class="notice" role="status"><p>'+esc(summaryNotice)+'</p></div>'+$('research-result-summary').innerHTML;
    if(navigate){syncResearchRunRoute(runId);reveal($('research-result-summary').querySelector('h2')||$('research-step-4'),$('research-step-4'))}
    if(pending)monitorRun(runId,sequence,pollState);
-  }catch(err){if(isCurrent()&&activeRun===runId&&sequence===resultRequest){$('research-run-controls').setAttribute('aria-busy','false');$('research-run-controls').innerHTML=controlRequests.get(runId)?.notice?'<p role="status">'+esc(controlRequests.get(runId).notice)+'</p>':'';liveUnknown('결과 요약을 불러오지 못했습니다. 연구가 취소되거나 실패했다는 뜻은 아닙니다. 저장한 연구는 보존됩니다. 결과 갱신을 눌러 이 연구의 요약을 다시 확인해 주세요.');$('research-result-summary').innerHTML='<p role="status">이 연구의 결과 요약을 아직 확인하지 못했습니다. 이전 연구의 결과를 대신 표시하지 않습니다.</p>';error(err);try{const run=await api('/v2/discovery-runs/'+encodeURIComponent(runId));if(!resultIsCurrent(runId,sequence))return;renderRunControls(runId,sequence,run);if(pendingRun(run))monitorRun(runId,sequence,pollState)}catch{if(resultIsCurrent(runId,sequence))$('research-run-controls').innerHTML+='<p role="status">실행 상태도 조회하지 못했습니다. 결과 갱신으로 이 연구의 취소·자원 정리 상태를 먼저 확인하세요.</p>'}}}
+  }catch(err){if(isCurrent()&&activeRun===runId&&sequence===resultRequest){$('research-run-controls').setAttribute('aria-busy','false');$('research-run-controls').innerHTML=controlRequests.get(runId)?.notice?'<p role="status">'+esc(controlRequests.get(runId).notice)+'</p>':'';liveUnknown('결과 요약을 불러오지 못했습니다. 연구가 취소되거나 실패했다는 뜻은 아닙니다. 저장한 연구는 보존됩니다. 결과 갱신을 눌러 이 연구의 요약을 다시 확인해 주세요.');$('research-result-summary').innerHTML='<p role="status">이 연구의 결과 요약을 아직 확인하지 못했습니다. 이전 연구의 결과를 대신 표시하지 않습니다.</p>';error(err);try{const run=await api('/v2/discovery-runs/'+encodeURIComponent(runId)+'?view=status');if(!resultIsCurrent(runId,sequence))return;renderRunControls(runId,sequence,run);if(pendingRun(run))monitorRun(runId,sequence,pollState)}catch{if(resultIsCurrent(runId,sequence))$('research-run-controls').innerHTML+='<p role="status">실행 상태도 조회하지 못했습니다. 결과 갱신으로 이 연구의 취소·자원 정리 상태를 먼저 확인하세요.</p>'}}}
  }
  async function refreshRun(runId){await showRun(runId);if(isCurrent()&&activeRun===runId&&!$('research-step-4').hidden)await refresh()}
  async function refresh(){
   try{
-   const result=await api('/v2/discovery-runs');if(!isCurrent())return;
+   const result=await api('/v2/discovery-runs?view=status');if(!isCurrent())return;
    $('discovery-list').innerHTML=(result.runs||[]).map((run,index)=>{
     const descriptor=run.input_descriptor||run.target_descriptor||run.research_input||run.request?.input||{},available=Boolean(run.snapshot_id);
     return`<article class="research-run"><label><input type="checkbox" data-select-run="${index}" ${selectedRuns.has(run.run_id)?'checked':''} ${available?'':'disabled'}>Excel에 포함</label><div><h3>${esc(runHeading(run,descriptor))}</h3><p>${esc(runStatus(run))} · ${esc(researchRunCounts(run.counts))}</p>${researchProgressMarkup(run.progress,{state:runState(run)})}${runLiteratureMarkup(run.literature_evidence)}${discoveryLiteratureLinkMarkup(run)}<div class="form-actions"><button data-view-run="${index}" class="button">진행·결과 보기</button>${available?`<button data-export-run="${index}" class="button">Excel 받기</button>`:''}<button data-events="${index}" class="button">처리 기록</button></div><p data-run-export-status class="research-export-status" role="status" aria-live="polite"></p><pre id="run-events-${index}"></pre></div></article>`;

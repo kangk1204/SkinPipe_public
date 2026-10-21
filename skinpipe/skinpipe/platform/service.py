@@ -1532,11 +1532,15 @@ class PlatformService:
                 "last_limit_error": None,
             }
         if parts == ["v2", "discovery-runs"]:
+            if query.get("view") == "status":
+                return self.discovery.list_status(owner=owner)
             return self.discovery.list(owner=owner)
         if len(parts) == 4 and parts[:2] == ["v2", "discovery-runs"] and parts[3] == "summary":
             return self.research_assistance.summary(parts[2], owner=owner)
         if len(parts) in {3, 4} and parts[:2] == ["v2", "discovery-runs"]:
             if len(parts) == 3:
+                if query.get("view") == "status":
+                    return self.discovery.status(parts[2], owner=owner)
                 return self.discovery.get(parts[2], owner=owner)
             if parts[3] == "events":
                 return self.discovery.events(

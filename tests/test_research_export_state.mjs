@@ -52,7 +52,7 @@ async function fixture(exportResponse=()=>ready(),{native=true,download,status}=
   const body=options?.body?JSON.parse(options.body):null;calls.push({path,body});
   if(path==='/v2/snapshots?view=summary')return{snapshots:[]};
   if(path==='/v2/research-capabilities')return{};
-  if(path==='/v2/discovery-runs')return{runs:['A','B'].map(record)};
+  if(path==='/v2/discovery-runs?view=status')return{runs:['A','B'].map(record)};
   if(path.endsWith('/summary'))return record(path.split('/')[3]);
   if(path==='/v2/exports')return exportResponse(body);
   if(path.endsWith('/download'))return download();

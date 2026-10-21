@@ -30,7 +30,7 @@ async function platform({snapshots=[compact()],selection={snapshot:'synthetic-su
  const h=harness(),calls=[],api=async(path,options)=>{
   const body=options?.body?JSON.parse(options.body):null;calls.push({path,body});
   if(path==='/v2/snapshots?view=summary')return{snapshots};
-  if(path==='/v2/discovery-runs')return{runs};
+  if(path==='/v2/discovery-runs?view=status')return{runs};
   if(path==='/v2/catalog-status')return{compound_count:100,prediction_admitted_partitions:0};
   if(path==='/v2/candidate-queries')return{snapshot_id:body.snapshot_id,target_id:body.target_id,rows:[],next_offset:null,
    counts:{population:52,filtered:0,displayed:0,population_calculated:3,reasons:{critical:0,opposing:0},missing:{purchase:0,pchembl:0}}};
@@ -72,7 +72,7 @@ test('generalized comparison retains stored study name, count and exact result l
  const h=await platform({namespace:'generalized',runs:[{run_id:'synthetic-run',snapshot_id:'synthetic-summary',
   input_descriptor:{kind:'compound',name:'Synthetic <compound>',input:{kind:'compound',format:'name',value:'Synthetic compound'}},
   search_mode:'similarity',created_at:'2026-10-20T00:00:00Z'}]});
- assert.deepEqual(h.calls.map(call=>call.path),['/v2/snapshots?view=summary','/v2/discovery-runs','/v2/candidate-queries']);
+ assert.deepEqual(h.calls.map(call=>call.path),['/v2/snapshots?view=summary','/v2/discovery-runs?view=status','/v2/candidate-queries']);
  assert.match(h.body.innerHTML,/Synthetic &lt;compound&gt;.*저장 관측 52개/);
  assert.match(h.get('#platform-study-context').innerHTML,/#discovery\?run=synthetic-run/);
 });
@@ -87,11 +87,11 @@ test('discovery source choices use compact verified target counts without a full
  await renderDiscovery(h.main,async path=>{
   calls.push(path);
   if(path==='/v2/snapshots?view=summary')return{snapshots};
-  if(path==='/v2/discovery-runs')return{runs:[]};
+  if(path==='/v2/discovery-runs?view=status')return{runs:[]};
   if(path==='/v2/research-capabilities')return{};
   throw Error('Unexpected discovery request '+path);
  });
- assert.deepEqual(calls,['/v2/snapshots?view=summary','/v2/discovery-runs','/v2/research-capabilities']);
+ assert.deepEqual(calls,['/v2/snapshots?view=summary','/v2/discovery-runs?view=status','/v2/research-capabilities']);
  assert.match(h.main.innerHTML,/value="synthetic-summary\|uniprot:SYNTHETIC">Synthetic &lt;target&gt; · 52개/);
  assert.doesNotMatch(h.main.innerHTML,/held-summary/);
  assert.equal(typeof h.get('#research-input-form').onsubmit,'function');

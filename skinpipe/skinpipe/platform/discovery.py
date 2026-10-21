@@ -517,6 +517,33 @@ class DiscoveryRuns:
                 "active_job_ids": [], "resume_allowed": False}
         return result
 
+    @staticmethod
+    def _status_view(run):
+        # A history card/poll must not repeatedly transfer seed assessments,
+        # candidate evidence or raw model output. Full get/export is unchanged.
+        keys = {"run_id", "job_id", "status", "pipeline_status", "lifecycle_state",
+                "preparation_status", "compute_seconds", "compute_budget_seconds",
+                "counts", "snapshot_id", "result_snapshot_id", "campaign_id",
+                "scientific_validation", "cancellation", "literature_evidence",
+                "research_input", "input_descriptor", "target_descriptor"}
+        result = {key: deepcopy(value) for key, value in run.items() if key in keys}
+        progress = run.get("progress")
+        if isinstance(progress, dict):
+            fields = {"stage", "target_id", "gateway_status", "gateway_query_id",
+                      "acquired", "processed", "total", "completed", "selected",
+                      "qualified", "target", "requested", "catalog_count",
+                      "resource_quarantine", "resource_cleanup"}
+            result["progress"] = {key: deepcopy(value) for key, value in progress.items() if key in fields}
+        else:
+            result["progress"] = deepcopy(progress)
+        return result
+
+    def status(self, run_id, *, owner="researcher"):
+        return self._status_view(self.get(run_id, owner=owner))
+
+    def list_status(self, *, owner="researcher"):
+        return {"runs": [self._status_view(run) for run in self.list(owner=owner)["runs"]]}
+
     def list(self, *, owner="researcher"):
         with self.queue.connection() as conn:
             ids = [

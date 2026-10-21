@@ -52,7 +52,7 @@ export async function renderPlatform({main,api,route='research',screens=[],selec
   if(epoch!==state.epoch)return;
   const valid=snapshots.filter(s=>s.status==='verified');
   const failed=snapshots.filter(s=>s.status!=='verified');
-  let researchRuns=[];if(namespace==='generalized'){try{researchRuns=(await api('/v2/discovery-runs')).runs||[]}catch{}}
+  let researchRuns=[];if(namespace==='generalized'){try{researchRuns=(await api('/v2/discovery-runs?view=status')).runs||[]}catch{}}
   if(epoch!==state.epoch)return;
   const runFor=s=>researchRuns.find(run=>run.snapshot_id===s.snapshot_id);
   if(explicitSelection){validateResearchSelection(snapshots,explicitSelection);state.snapshot=explicitSelection.snapshot;state.target=explicitSelection.target;state.offset=0;
