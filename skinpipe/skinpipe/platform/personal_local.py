@@ -181,6 +181,7 @@ class PersonalServer(ThreadingHTTPServer):
         self.callback_base = None
         self.stopping = threading.Event()
         self.coordinator_error = None
+        self.export_coordinator_error = None
         from .research_toxicity import toxicity_profile_status
         self.additional_toxicity = toxicity_profile_status(config.get("discovery", {}).get("toxicity_profile"))
         super().__init__(("127.0.0.1", port), PersonalHandler)
@@ -224,15 +225,15 @@ class PersonalServer(ThreadingHTTPServer):
         ready.wait(10)
         return dict(self.signin)
 
-    def coordinate(self):
+    def coordinate(self, *, export_only=False):
         while not self.stopping.is_set():
             try:
-                worked = self.service.discovery.run_once(shutdown_event=self.stopping)
-                if not self.stopping.is_set():
+                worked = self.service.discovery.run_once(shutdown_event=self.stopping, export_only=export_only)
+                if not export_only and not self.stopping.is_set():
                     self.service.discovery.reconcile()
-                self.coordinator_error = None
+                setattr(self, "export_coordinator_error" if export_only else "coordinator_error", None)
             except Exception as error:
-                self.coordinator_error = type(error).__name__
+                setattr(self, "export_coordinator_error" if export_only else "coordinator_error", type(error).__name__)
                 worked = False
             self.stopping.wait(0.2 if worked else 1)
 
@@ -306,6 +307,7 @@ class PersonalHandler(BaseHTTPRequestHandler):
                     return self._json({"status": "ready", "database": "PostgreSQL 연결됨", "legacy_available": False,
                         "catalog": catalog, "docking": self.server.config["discovery"].get("research_docking", {"status": "not_configured"}),
                         "chatgpt": self.server.connection_status(), "coordinator_error": self.server.coordinator_error,
+                        "export_coordinator_error": self.server.export_coordinator_error,
                         "next_actions": [] if catalog.get("configured", True) else ["로컬 DB를 설치하면 전체 후보 탐색과 기존 독성 예측을 사용할 수 있습니다."]})
                 if path == "/v2/me":
                     return self._json({"owner_id": OWNER, "role": "researcher"})
@@ -381,7 +383,8 @@ def serve(root, *, port=4317):
     except BaseException:
         lock.close()
         raise
-    service = server = thread = None
+    service = server = None
+    threads = []
     database_attempted = False
     stopping_requested = False
 
@@ -404,8 +407,10 @@ def serve(root, *, port=4317):
         _start_database(root, config)
         service = service_from_config(config)
         server = PersonalServer(service, config, port=port)
-        thread = threading.Thread(target=server.coordinate, daemon=True, name="personal-research-coordinator")
-        thread.start()
+        for name, export_only in [("personal-research-coordinator", False), ("personal-export-coordinator", True)]:
+            thread = threading.Thread(target=server.coordinate, kwargs={"export_only": export_only}, daemon=True, name=name)
+            threads.append(thread)
+            thread.start()
         atomic_bytes(root / "server.json", canonical_json({"pid": os.getpid(), "port": server.server_port,
                                                            "local_session": server.session}))
         print(f"SkinPipe: http://127.0.0.1:{server.server_port}", flush=True)
@@ -429,8 +434,9 @@ def serve(root, *, port=4317):
                         finally:
                             # Native loops finish their owned process groups before
                             # the private ledger can be closed.
-                            if thread is not None:
-                                thread.join()
+                            for thread in threads:
+                                if thread.ident is not None:
+                                    thread.join()
             finally:
                 if service is not None:
                     service.close_catalog_sources()

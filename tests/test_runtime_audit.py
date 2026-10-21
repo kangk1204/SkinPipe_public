@@ -183,5 +183,66 @@ class CampaignInputOwnershipTests(unittest.TestCase):
                 api.get("/v2/campaign-inputs/" + identity, owner="different-owner")
 
 
+@unittest.skipUnless(os.environ.get("SKINPIPE_RUNTIME_AUDIT_DSN"),
+                     "Explicit isolated PostgreSQL audit DSN required")
+class ConcurrentExportTests(unittest.TestCase):
+    def test_export_completes_while_analysis_remains_owned(self):
+        import threading
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        import psycopg
+        from psycopg import sql
+        from psycopg.conninfo import make_conninfo
+        from skinpipe.platform.discovery import DiscoveryRuns
+        dsn = os.environ["SKINPIPE_RUNTIME_AUDIT_DSN"]
+        namespace = "export_" + uuid.uuid4().hex + "_test"
+        with psycopg.connect(dsn, autocommit=True) as conn:
+            self.assertTrue(conn.execute("SELECT current_database()").fetchone()[0].endswith("_test"))
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(namespace)))
+        entered, release = threading.Event(), threading.Event()
+        thread = None
+        try:
+            queue = Queue(make_conninfo(dsn, dbname=namespace))
+            first = queue.enqueue("discovery_prepare", {}, owner="synthetic", project="synthetic",
+                                  idempotency_key="first", budget_scope="first", budget_seconds=60)
+            second = queue.enqueue("discovery_prepare", {}, owner="synthetic", project="synthetic",
+                                   idempotency_key="second", budget_scope="second", budget_seconds=60)
+            export = queue.enqueue("result_export", {}, owner="synthetic", project="synthetic",
+                                   idempotency_key="export", budget_scope="export", budget_seconds=60)
+            with tempfile.TemporaryDirectory() as directory:
+                runs = DiscoveryRuns.__new__(DiscoveryRuns)
+                runs.queue = queue
+                def analysis(*args, **kwargs):
+                    entered.set()
+                    if not release.wait(10):
+                        raise TimeoutError("Synthetic analysis release timed out")
+                    return {"fixture": "analysis"}
+                runs.execute = analysis
+                runs.service = SimpleNamespace(root=Path(directory), exports=SimpleNamespace(
+                    execute=lambda *args, **kwargs: {"fixture": "export"}))
+                telemetry = {"physical_host_id": namespace, "cpu_count": 16, "cpu_available": 16, "cpu_limit": 4}
+                with patch("skinpipe.platform.resources.probe", return_value=telemetry):
+                    thread = threading.Thread(target=runs.run_once)
+                    thread.start()
+                    self.assertTrue(entered.wait(5))
+                    result = runs.run_once(export_only=True)
+                    self.assertIsNotNone(result, queue.get(export["id"]))
+                    self.assertEqual(queue.get(export["id"])["status"], "complete")
+                    self.assertEqual(queue.get(first["id"])["status"], "running")
+                    self.assertEqual(queue.get(second["id"])["status"], "queued")
+                    self.assertIsNone(runs.run_once(export_only=True))
+                    release.set()
+                    thread.join(5)
+                    self.assertFalse(thread.is_alive())
+                    self.assertEqual(queue.get(first["id"])["status"], "complete")
+        finally:
+            release.set()
+            if thread is not None:
+                thread.join(10)
+                self.assertFalse(thread.is_alive())
+            with psycopg.connect(dsn, autocommit=True) as conn:
+                conn.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(namespace)))
+
+
 if __name__ == "__main__":
     unittest.main()

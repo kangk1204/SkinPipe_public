@@ -1783,17 +1783,18 @@ class DiscoveryRuns:
                 WHERE platform_discovery_controls.owner_id=EXCLUDED.owner_id""", (run_id, owner, state))
         return self._record(run_id, owner)
 
-    def run_once(self, *, shutdown_event=None):
+    def run_once(self, *, shutdown_event=None, export_only=False):
         from .resources import probe
 
         telemetry = probe(directory=self.service.root)
-        capabilities = ["discovery_prepare", "result_export"]
-        if getattr(getattr(self.service, "personal_literature", None), "configured", False):
+        worker = "export-coordinator" if export_only else "discovery-coordinator"
+        capabilities = ["result_export"] if export_only else ["discovery_prepare", "result_export"]
+        if not export_only and getattr(getattr(self.service, "personal_literature", None), "configured", False):
             capabilities.append("literature_review")
         telemetry["capabilities"] = capabilities
-        self.queue.register_node("discovery-coordinator", telemetry)
+        self.queue.register_node(worker, telemetry)
         job = self.queue.claim(
-            "discovery-coordinator", capabilities
+            worker, capabilities
         )
         if not job:
             return None
@@ -1809,7 +1810,7 @@ class DiscoveryRuns:
             try:
                 record = getattr(self.queue, 'record_cleanup_diagnostic', None)
                 if record is not None:
-                    record(job['id'], job['lease_token'], worker='discovery-coordinator',
+                    record(job['id'], job['lease_token'], worker=worker,
                            stage=stage, error_type=error_type)
             except Exception:
                 pass
@@ -1984,7 +1985,7 @@ class DiscoveryRuns:
                 if stopped_error is not None:
                     release_stopped_exception_frames(stopped_error)
                 try:
-                    acknowledge(job['id'], job['lease_token'], worker='discovery-coordinator', cleanup=cleanup_receipt())
+                    acknowledge(job['id'], job['lease_token'], worker=worker, cleanup=cleanup_receipt())
                 except (LeaseLost, ValueError) as error:
                     cleanup_diagnostic('cleanup_ack', 'LeaseLost' if isinstance(error, LeaseLost) else 'ValueError')
 
@@ -2112,6 +2113,7 @@ def main():
     )
     parser.add_argument("--config", required=True)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--exports-only", action="store_true", help="Process saved-result exports independently of long analyses")
     args = parser.parse_args()
     service = service_from_config(read_config(args.config))
     end = threading.Event()
@@ -2119,8 +2121,9 @@ def main():
         signal.signal(sig, lambda *_: end.set())
     while not end.is_set():
         try:
-            service.discovery.run_once()
-            service.discovery.reconcile()
+            service.discovery.run_once(shutdown_event=end, export_only=args.exports_only)
+            if not args.exports_only:
+                service.discovery.reconcile()
         except Exception as error:
             print(
                 json.dumps(
