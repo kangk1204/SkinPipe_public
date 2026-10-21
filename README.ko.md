@@ -16,7 +16,7 @@ SkinPipe는 피부 연구용 화합물 스크리닝 플랫폼입니다. 화합�
 
 | 분자 물성 | 독성 모델 출력 |
 |---|---|
-| [![Nicotinamide의 분자 물성 6축과 SkinPipe 참고 범위](docs/images/23-nicotinamide-properties.svg)](docs/images/23-nicotinamide-properties.svg) | [![Nicotinamide의 독성 모델 출력 6항목](docs/images/24-nicotinamide-toxicity.svg)](docs/images/24-nicotinamide-toxicity.svg) |
+| [<img src="docs/images/23-nicotinamide-properties.svg" alt="Nicotinamide의 분자 물성 6축과 SkinPipe 참고 범위" width="460" height="370">](docs/images/23-nicotinamide-properties.svg) | [<img src="docs/images/24-nicotinamide-toxicity.svg" alt="Nicotinamide의 독성 모델 출력 6항목" width="460" height="370">](docs/images/24-nicotinamide-toxicity.svg) |
 
 3D는 **3840 × 2160 PNG 원본**, 그래프는 확대해도 선명한 **SVG 벡터**입니다. 이미지를 누르면 원본을 엽니다. 앱의 **원값·단위·표시 범위**에서 수치를 확인하고 **그래프 SVG 저장**으로 내려받을 수 있습니다. 아래 [첫 연구 사용 순서](#화면을-보며-첫-연구-진행하기)와 [3D 사용 순서](docs/browser.ko.md#결합-구조-예제)를 따라 하세요. [이미지 출처·촬영 범위](docs/images/README.md).
 

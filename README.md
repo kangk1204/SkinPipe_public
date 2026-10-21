@@ -16,7 +16,7 @@ This repository contains the software and installation instructions. Research in
 
 | Molecular properties | Toxicity model outputs |
 |---|---|
-| [![Nicotinamide molecular-property radar with SkinPipe reference ranges](docs/images/23-nicotinamide-properties.svg)](docs/images/23-nicotinamide-properties.svg) | [![Nicotinamide six-endpoint toxicity radar](docs/images/24-nicotinamide-toxicity.svg)](docs/images/24-nicotinamide-toxicity.svg) |
+| [<img src="docs/images/23-nicotinamide-properties.svg" alt="Nicotinamide molecular-property radar with SkinPipe reference ranges" width="460" height="370">](docs/images/23-nicotinamide-properties.svg) | [<img src="docs/images/24-nicotinamide-toxicity.svg" alt="Nicotinamide six-endpoint toxicity radar" width="460" height="370">](docs/images/24-nicotinamide-toxicity.svg) |
 
 The 3D images are native **3840 × 2160 PNGs**; the plots are **SVG vectors**, which stay sharp when enlarged. Click an image for its original. In the app, use **원값·단위·표시 범위** (*Raw values, units and display ranges*) and **그래프 SVG 저장** (*Save graph SVG*). Follow the [illustrated study workflow](#your-first-study-in-pictures) below and the [3D walkthrough](docs/browser.en.md#bound-structure-example). [Image sources and capture details](docs/images/README.md).
 
