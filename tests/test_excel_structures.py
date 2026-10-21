@@ -23,6 +23,34 @@ from skinpipe.platform.exports import RunExports, METRIC_GUIDE
 
 
 class ExcelStructureTests(unittest.TestCase):
+    def test_singleton_prediction_and_score_scope_survive_actual_workbook_export(self):
+        row = self.row("synthetic", "CCO")
+        row.update(role="query_seed", priority_score_v2=60.269, priority_score_observed_channels=84.23,
+                   priority_imputed_weight=0.7, priority_missing_channels=["measured", "structural"],
+                   discovery_terms={"topical": 50}, skin_goal_assessment={"permeability_ranking": "neutral"},
+                   offers=[{"product_url": "https://example.org/compound/synthetic", "supplier": "Synthetic"}],
+                   admet={"model_id": "admet-ai-synthetic", "status": "success", "values": {"AMES": 0.2}})
+        with tempfile.TemporaryDirectory() as temporary:
+            output, result, saved = self.export(Path(temporary), [row])
+            self.assertEqual(saved[0]["admet"], row["admet"])
+            self.assertEqual(saved[0]["priority_score_v2"], 60.269)
+            book = load_workbook(output / result["workbooks"][0])
+            try:
+                table = book["후보 검토"]
+                columns = {cell.value.split(" · ")[0]: table.cell(2, cell.column).value for cell in table[1]}
+                for title, expected in (("역할 구분", "출발구조"), ("결측 중립값 비중 (%)", 70),
+                                        ("관측 채널만의 점수 (0–100점)", 84.23)):
+                    self.assertEqual(columns[title], expected)
+                self.assertEqual(next(value for title, value in columns.items() if title.startswith("AMES 예측")), 0.2)
+                self.assertIn("중립 50", columns["탐색 점수에 반영한 피부 항목"])
+                self.assertIn("neutral_imputation", columns["우선순위 계산 범위"])
+                purchase = next(cell for cell in table[2] if cell.value == "https://example.org/compound/synthetic")
+                self.assertEqual(purchase.hyperlink.target, purchase.value)
+                links = [cell.hyperlink.target for cells in book["C000001"] for cell in cells if cell.hyperlink]
+                self.assertIn("https://example.org/compound/synthetic", links)
+            finally:
+                book.close()
+
     def export(self, root, rows, *, details=True):
         catalog = Catalog(root / "catalog")
         store = ArtifactStore(root / "artifacts")
@@ -69,7 +97,7 @@ class ExcelStructureTests(unittest.TestCase):
                 self.assertEqual(table._images[0].anchor._from.col, 2)
                 self.assertEqual(table._images[0].anchor._from.row, 1)
                 self.assertEqual(len(detail._images), 2)
-                self.assertEqual(detail["D3"].value, "2D 구조 · 입력 SMILES")
+                self.assertEqual(detail["D3"].value, "2D 구조 · 확인·저장한 SMILES")
                 self.assertEqual(detail["D12"].value, "저장 도킹 포즈 · 좌표 투영")
                 fields = {r[0].value: r[1].value for r in detail}
                 self.assertEqual(fields["SMILES · 원래 입력 구조"], smiles)

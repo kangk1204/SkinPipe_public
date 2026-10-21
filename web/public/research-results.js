@@ -1,7 +1,22 @@
 import {escapeHtml as e,identityLabel,PRODUCTS,GOALS} from './research-inputs.js';
 import {metricRadarMarkup} from './metric-radar.js';
+export function candidateRole(row={}){
+ if(row.redock_reference===true)return '관측 리간드 재도킹 대조';
+ if(row.control_kind==='measured_reference')return '측정 자료 참조';
+ return({query_seed:'출발구조',candidate:'탐색 후보',control:'대조물질',counter_control:'반대 방향 대조물질',reference:'참조물질',positive_control:'양성 대조물질',negative_control:'음성 대조물질'})[row.role]||row.role||'역할 미기록';
+}
+export function priorityExplanationMarkup(row={}){
+ const neutral=row.priority_imputed_weight,valid=typeof neutral==='number'&&Number.isFinite(neutral)&&neutral>=0&&neutral<=1;
+ return '<small>값이 있는 채널만의 점수: '+e(number(row.priority_score_observed_channels))+'</small><small>'+(valid?(neutral>0?'결측에 중립값 50 적용 · 비중 '+e(number(neutral*100))+'%':'세 우선순위 채널 값 기록됨'):'점수 계산 범위 미기록')+'</small>';
+}
+export function topicalContributionMarkup(row={}){
+ const value=row.discovery_terms?.topical;
+ if(value===50&&row.skin_goal_assessment?.permeability_ranking==='neutral')return '<small>탐색 반영: 연구 목적에 따라 중립 50 · 피부 점수는 별도 참고값</small>';
+ if(value===50&&Array.isArray(row.discovery_missing)&&row.discovery_missing.includes('topical'))return '<small>탐색 반영: 미평가 항목에 중립 50</small>';
+ return typeof value==='number'&&Number.isFinite(value)?'<small>탐색 반영값: '+e(number(value))+' / 100</small>':'<small>탐색 반영 근거 미기록</small>';
+}
 const MODES={similarity:'비슷한 화합물 찾기',scaffold_hopping:'다른 골격 후보 찾기',assessment:'입력 화합물만 평가',protein_target_screening:'단백질 표적 탐색',bound_complex_scaffold_hopping:'결합 화합물에서 출발한 골격 탐색'};
-const COUNTS={candidate_population:'전체 후보 화합물',collected:'확보한 카탈로그 행',raw_generated_proposals:'새 구조 생성 제안',query_seeds:'출발구조',comparison_selected:'구조 비교 선택',docking_completed:'후보 도킹 계산 완료',query_redocking_completed:'관측 리간드 재도킹 계산 완료',saved_rows:'전체 저장 행',filter_pass:'필터 통과 후보',population:'확보한 전체 후보',catalog_population:'카탈로그 후보',catalog_candidates:'카탈로그 후보',filtered:'필터를 통과한 후보',filtered_candidates:'필터를 통과한 후보',candidates:'후보 화합물',hops:'골격 비교 후보',hop_candidates:'골격 비교 후보',generated:'생성한 새 구조',generated_candidates:'생성한 새 구조',selected:'후속 계산 선택',docking_selected:'후보 도킹 선택',docked:'후보 도킹 계산 완료',measured_references:'측정 자료가 있는 참조',computational_seeds:'출발구조',controls:'대조군'};
+const COUNTS={documented_procurement:'구매 근거 확인',new_unique_candidates:'새 고유 후보',observed_redock_controls:'관측 재도킹 대조',prepared:'구조 준비 완료',purchase_record:'구매 기록',reference_controls:'참조 대조물질',reference_seeds:'비교 출발구조',references:'참조 자료',severe_predicted_admet:'강한 독성 예측',candidate_population:'전체 후보 화합물',collected:'확보한 카탈로그 행',raw_generated_proposals:'새 구조 생성 제안',query_seeds:'출발구조',comparison_selected:'구조 비교 선택',docking_completed:'후보 도킹 계산 완료',query_redocking_completed:'관측 리간드 재도킹 계산 완료',saved_rows:'전체 저장 행',filter_pass:'필터 통과 후보',population:'확보한 전체 후보',catalog_population:'카탈로그 후보',catalog_candidates:'카탈로그 후보',filtered:'필터를 통과한 후보',filtered_candidates:'필터를 통과한 후보',candidates:'후보 화합물',hops:'골격 비교 후보',hop_candidates:'골격 비교 후보',generated:'생성한 새 구조',generated_candidates:'생성한 새 구조',selected:'후속 계산 선택',docking_selected:'후보 도킹 선택',docked:'후보 도킹 계산 완료',measured_references:'측정 자료가 있는 참조',computational_seeds:'출발구조',controls:'대조군'};
 const STATUS={complete:'처리 완료',partial:'일부 처리 완료',queued:'실행 대기',running:'처리 중',held:'추가 확인 필요',needs_data:'추가 확인으로 보류',failed:'처리 실패',cancelled:'취소됨',cancelling:'취소 요청됨 · 종료 확인 중',cleanup_unverified:'작업 자원 정리 확인 필요'};
 export function researchRunStatus(status){return STATUS[status]||({budget_deferred:'처리 시간 한도로 보류',resource_wait:'계산 자원을 기다리는 중',preparing:'입력과 계산 자료 준비 중',completed:'처리 완료'})[status]||'처리 상태 확인 필요 · '+String(status||'미기록')}
 export function researchRunCounts(counts={}){

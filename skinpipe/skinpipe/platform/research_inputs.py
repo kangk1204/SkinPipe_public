@@ -226,14 +226,18 @@ def _compound(spec, artifacts, source_get):
         ids = sorted(set(ids))
         if not ids:
             return {**result, "reason": "identity_not_found", "source_receipts": client.receipts}
-        if len(ids) > MAX_NAME_MATCHES:
+        selected = spec.get("pubchem_cid")
+        if len(ids) > MAX_NAME_MATCHES and selected is None:
             return {**result, "reason": "name_match_limit_requires_exact_structure",
                     "choices": [{"pubchem_cid": cid} for cid in ids[:MAX_NAME_MATCHES]],
                     "name_match_count": len(ids), "source_receipts": client.receipts}
-        selected = spec.get("pubchem_cid")
         if selected is not None and selected not in ids:
             return {**result, "reason": "selected_cid_not_in_name_results",
-                    "choices": [{"pubchem_cid": cid} for cid in ids], "source_receipts": client.receipts}
+                    "choices": [{"pubchem_cid": cid} for cid in ids[:MAX_NAME_MATCHES]], "source_receipts": client.receipts}
+        # Check membership against the complete exact-name result, then fetch
+        # only the user's chosen CID. Do not repeatedly offer an unusable list.
+        if selected is not None and len(ids) > MAX_NAME_MATCHES:
+            ids = [selected]
         response = client.request(PUBCHEM + "/compound/cid/" + ",".join(map(str, ids)) + "/property/Title,SMILES,InChIKey/JSON")
         table = response.get("PropertyTable")
         records = table.get("Properties") if isinstance(table, dict) else None

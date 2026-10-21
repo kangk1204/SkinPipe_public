@@ -36,6 +36,7 @@ docs/images/23-nicotinamide-properties.svg
 docs/images/24-nicotinamide-toxicity.svg
 docs/images/README.md
 docs/images/manifest.json
+docs/review-fixes-20261021.md
 docs/validation-20261020.md
 docs/validation-modes-20261021.md
 install.py
@@ -272,6 +273,7 @@ tests/test_catalog_materialization_batches.py
 tests/test_catalog_query_early_release.py
 tests/test_cleanup_diagnostics.py
 tests/test_data_audit.py
+tests/test_detail_dialog.mjs
 tests/test_excel_structures.py
 tests/test_export_raw_evidence.py
 tests/test_metric_radar.mjs
@@ -281,6 +283,7 @@ tests/test_research_execution_scope.mjs
 tests/test_research_export_state.mjs
 tests/test_research_progress.mjs
 tests/test_research_submission_timeout.mjs
+tests/test_review_regressions.py
 tests/test_runtime_audit.py
 tests/test_scientific_audit.py
 tests/test_snapshot_summary.py

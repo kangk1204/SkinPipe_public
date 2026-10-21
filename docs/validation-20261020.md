@@ -12,12 +12,12 @@ set. Original scientific assertions and acceptance thresholds were unchanged.
 | Originally omitted cases | 35 skipped + 32 excluded → 67 executed and passed |
 | Full development-suite selection | 6,027 distinct cases passed across the required environments and exact reruns |
 | Full selection plus the 32 excluded cases | 6,059 distinct cases with final passing results |
-| Public Python regression | 61 passed, including 22 passing subtests, on Ubuntu with isolated PostgreSQL |
+| Public Python regression at the dated verification | 61 passed, including 22 passing subtests, on Ubuntu with isolated PostgreSQL; this is a historical count, not the current tree's count |
 | New browser progress tests | 18 passed in each source tree, including actual renderer state transitions |
 | Development web checks | Passed, including 144 Python bridge tests; offline bundle and module graph rebuilt and checked |
 | Fresh starter installation | 333 structures; 322 successful CPU ADMET predictions; 11 unsupported multicomponent structures retained as such |
 | Browser workflow | Nicotinamide input confirmation, assessment, actual Excel ZIP download, and a separate similarity-search progress-to-completion transition |
-| Downloaded assessment workbook | Five sheets, two embedded structure images and 755 nonempty cells |
+| Downloaded assessment workbook in that environment | Five sheets, two embedded structure images and 755 nonempty cells; exports without endpoint definitions omit the ADMET-definition sheet and may have four sheets |
 
 The 6,059-case figure refers to the broader development suite, which includes
 private historical-fixture checks and is not distributed in this public tree.

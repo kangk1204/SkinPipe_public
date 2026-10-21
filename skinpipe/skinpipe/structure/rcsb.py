@@ -401,7 +401,7 @@ def entry_metadata(pdb_ids: list[str]) -> dict[str, dict[str, Any]]:
     by the ``entries`` endpoint; they are returned with ``method="predicted"``
     and no ligands so the ranker can still see and deprioritise them.
     """
-    ids = [i.upper() for i in pdb_ids]
+    ids = list(dict.fromkeys(i.upper() for i in pdb_ids))
     experimental = [i for i in ids if len(i) == 4]
     out: dict[str, dict[str, Any]] = {
         i: {
@@ -417,42 +417,50 @@ def entry_metadata(pdb_ids: list[str]) -> dict[str, dict[str, Any]]:
     if not experimental:
         return out
 
-    data = _post_json(_GRAPHQL_URL, {"query": _ENTRY_GQL, "variables": {"ids": experimental}})
-    for entry in (data.get("data") or {}).get("entries") or []:
-        info = entry.get("rcsb_entry_info") or {}
-        res = info.get("resolution_combined") or []
-        ligands = []
-        for npe in entry.get("nonpolymer_entities") or []:
-            comp = ((npe or {}).get("nonpolymer_comp") or {}).get("chem_comp") or {}
-            if comp.get("id"):
-
-
-
-
-
-
-                ids = ((npe or {}).get(
-                    "rcsb_nonpolymer_entity_container_identifiers") or {})
-                chains = [str(c) for c in (ids.get("auth_asym_ids") or [])]
-                ligands.append(
-                    {
-                        "het_code": comp["id"].upper(),
-                        "name": comp.get("name") or "",
-                        "mw": comp.get("formula_weight"),
-                        "n_heavy_atoms": (((npe or {}).get("nonpolymer_comp") or {})
-                                          .get("rcsb_chem_comp_info") or {}).get("atom_count_heavy"),
-                        "chains": chains,
-                    }
-                )
-        out[entry["rcsb_id"].upper()] = {
-            "pdb_id": entry["rcsb_id"].upper(),
-            "title": (entry.get("struct") or {}).get("title") or "",
-            "resolution": float(res[0]) if res else None,
-            "method": info.get("experimental_method") or "unknown",
-            "ligands": ligands,
-        }
+    for offset in range(0, len(experimental), 500):
+        chunk = experimental[offset:offset + 500]
+        data = _post_json(_GRAPHQL_URL, {"query": _ENTRY_GQL, "variables": {"ids": chunk}})
+        entries = (data.get("data") or {}).get("entries")
+        if data.get("errors") or not isinstance(entries, list):
+            raise RCSBError(f"Entry metadata batch {offset // 500 + 1} failed")
+        received = [entry["rcsb_id"].upper() for entry in entries
+                    if isinstance(entry, dict) and isinstance(entry.get("rcsb_id"), str)]
+        if len(entries) != len(chunk) or len(received) != len(chunk) or set(received) != set(chunk):
+            raise RCSBError(f"Entry metadata batch {offset // 500 + 1} incomplete or duplicated")
+        for entry in entries:
+            out[entry["rcsb_id"].upper()] = _entry_metadata_record(entry)
     return out
 
+
+def _entry_metadata_record(entry):
+    """Decode one validated entry without changing ligand or chain semantics."""
+    info = entry.get("rcsb_entry_info") or {}
+    res = info.get("resolution_combined") or []
+    ligands = []
+    for npe in entry.get("nonpolymer_entities") or []:
+        comp = ((npe or {}).get("nonpolymer_comp") or {}).get("chem_comp") or {}
+        if comp.get("id"):
+
+            ids = ((npe or {}).get(
+                "rcsb_nonpolymer_entity_container_identifiers") or {})
+            chains = [str(c) for c in (ids.get("auth_asym_ids") or [])]
+            ligands.append(
+                {
+                    "het_code": comp["id"].upper(),
+                    "name": comp.get("name") or "",
+                    "mw": comp.get("formula_weight"),
+                    "n_heavy_atoms": (((npe or {}).get("nonpolymer_comp") or {})
+                                      .get("rcsb_chem_comp_info") or {}).get("atom_count_heavy"),
+                    "chains": chains,
+                }
+            )
+    return {
+        "pdb_id": entry["rcsb_id"].upper(),
+        "title": (entry.get("struct") or {}).get("title") or "",
+        "resolution": float(res[0]) if res else None,
+        "method": info.get("experimental_method") or "unknown",
+        "ligands": ligands,
+    }
 
 _ENTITY_GQL = """
 query($ids:[String!]!){

@@ -12,13 +12,20 @@ from pathlib import Path
 import shutil
 import tempfile
 import zipfile
+from urllib.parse import urlsplit
 
 from .artifacts import canonical_json, sha256_file
 from .engines import ResourceDeferred
 from .identity import digest
 from .export_assets import export_asset_root, implementation_files
+from .admet_search import prediction_records
 
 REVIEW_FIELDS = [
+    ("review_role", "역할 구분"),
+    ("review_priority_observed", "관측 채널만의 점수 (0–100점)"),
+    ("review_priority_neutral_percent", "결측 중립값 비중 (%)"),
+    ("review_priority_scope", "평가 점수의 근거 범위"),
+    ("review_topical_contribution", "탐색 점수에 반영한 피부 항목"),
     ("review_skin_score", "피부 적용 점수 (0–10점)"),
     ("review_permeation", "피부 투과 분류"),
     ("review_sensitisation", "감작성 구조 경보"),
@@ -41,6 +48,7 @@ REVIEW_FIELDS = [
     ("review_admet_status", "ADMET 계산 상태"),
     ("review_admet_models", "ADMET 모델"),
     ("review_procurement", "구매 정보"),
+    ("review_purchase_url", "구매처 홈페이지 (첫 링크)"),
 ]
 
 METRIC_GUIDE = [
@@ -198,6 +206,34 @@ STRUCTURE_ASSET_KEYS = {
 }
 
 
+def purchase_links(row):
+    """Expose stored supplier destinations; never invent availability or URLs."""
+    def records(value):
+        return [value] if isinstance(value, dict) else value if isinstance(value, (list, tuple)) else []
+    offers = [*records(row.get("offers")), *records(row.get("supplier_offers")),
+              *records((row.get("procurement") or {}).get("offers") if isinstance(row.get("procurement"), dict) else None)]
+    for source in records(row.get("catalog_sources")):
+        if isinstance(source, dict):
+            offers.extend(records(source.get("offers")))
+    links, seen = [], set()
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        value = next((offer.get(key) for key in ("product_url", "purchase_route", "url", "source_url") if offer.get(key)), None)
+        if not isinstance(value, str) or any(ord(c) < 32 for c in value):
+            continue
+        try:
+            parsed = urlsplit(value)
+            if parsed.scheme not in {"https", "http"} or not parsed.hostname or parsed.username or parsed.password:
+                continue
+        except ValueError:
+            continue
+        if value not in seen:
+            seen.add(value)
+            links.append({"url": value, "supplier": offer.get("supplier") or offer.get("vendor") or offer.get("source") or "공급사"})
+    return links
+
+
 def review_columns(row):
     """Expose existing values without calculating predictions or merging models."""
     def mapping(value):
@@ -209,7 +245,7 @@ def review_columns(row):
         except OverflowError:
             return None
 
-    predictions = [p for p in row.get("admet") or [] if isinstance(p, dict)]
+    predictions = prediction_records(row.get("admet"))
 
     def values(endpoint, *, classifier=False):
         found, invalid = [], []
@@ -253,7 +289,35 @@ def review_columns(row):
     if observations and not any(key in primary for key in ("score", "value", "affinity")):
         primary = mapping(observations[index]) if isinstance(index, int) and 0 <= index < len(observations) else primary
     from .procurement import has_purchase_record
+    neutral = number(row.get("priority_imputed_weight"))
+    neutral = neutral if neutral is not None and 0 <= neutral <= 1 else None
+    priority_status = row.get("priority_score_status") or (
+        "partial_channels_with_neutral_imputation" if neutral is not None and neutral > 0 else
+        "all_priority_channels_observed" if neutral == 0 else "scope_not_recorded")
+    missing = row.get("priority_missing_channels")
+    channel_names = {"measured": "실측", "structural": "구조·도킹", "discovery": "탐색"}
+    missing = [channel_names.get(key, str(key)) for key in missing] if isinstance(missing, list) else []
+    priority_scope = ("결측 채널에 중립값 50 적용" + (" · " + ", ".join(missing) if missing else "")
+                      if neutral is not None and neutral > 0 else
+                      "세 우선순위 채널 값 기록됨 · 실험 검증 여부는 별도" if neutral == 0 else "계산 범위 미기록")
+    topical = number(mapping(row.get("discovery_terms")).get("topical"))
+    neutral_topical = mapping(row.get("skin_goal_assessment")).get("permeability_ranking") == "neutral"
+    topical_contribution = ("연구 목적에 따라 중립 50 적용 · 표시 피부 점수는 별도 참고값"
+                            if neutral_topical and topical == 50 else
+                            "미평가 항목에 중립 50 적용" if topical == 50 and "topical" in (row.get("discovery_missing") or []) else
+                            "반영값 " + str(topical) + " / 100" if topical is not None else "반영 근거 미기록")
+    role = row.get("role")
+    role_label = ("관측 리간드 재도킹 대조" if row.get("redock_reference") is True else
+                  "측정 자료 참조" if row.get("control_kind") == "measured_reference" else
+                  {"query_seed": "출발구조", "candidate": "탐색 후보", "control": "대조물질",
+                   "counter_control": "반대 방향 대조물질", "reference": "참조물질"}.get(role, role or "역할 미기록"))
     fields = {
+        "review_role": role_label,
+        "review_priority_observed": number(row.get("priority_score_observed_channels")),
+        "review_priority_neutral_percent": 100 * neutral if neutral is not None else None,
+        "review_priority_scope": priority_scope,
+        "priority_score_status": priority_status,
+        "review_topical_contribution": topical_contribution,
         "review_skin_score": number(skin.get("topical_score", row.get("topical_score"))),
         "review_permeation": permeation,
         "review_sensitisation": alerts(skin, "sensitiser_alerts", "sensitisation_status"),
@@ -270,6 +334,7 @@ def review_columns(row):
             for p in predictions) or "미평가",
         "review_admet_models": "\n".join(str(p.get("model_id") or "모델 미기록") for p in predictions) or "미기록",
         "review_procurement": row.get("procurement_label") or ("구매 정보 있음" if has_purchase_record(row) else "구매 정보 미기록"),
+        "review_purchase_url": next((link["url"] for link in purchase_links(row)), "구매 링크 미기록"),
         "review_dock_affinity": number(primary.get("score", primary.get("affinity", primary.get("value")))),
         "review_dock_status": primary.get("status") or "미평가",
     }
@@ -316,7 +381,7 @@ def toxicity_columns(row, warnings):
     """Keep raw predictions; quarantine malformed display values individually."""
     from .admet_search import RISK_ENDPOINTS
     columns = {endpoint: [] for endpoint in RISK_ENDPOINTS}
-    for index, prediction in enumerate(row.get("admet") or []):
+    for index, prediction in enumerate(prediction_records(row.get("admet"))):
         if not isinstance(prediction, dict) or prediction.get("status") not in {"success", "partial_nonfinite"}:
             continue
         values = prediction.get("values")
@@ -738,7 +803,7 @@ class RunExports:
                 ("실행 상태", xlsx_value((run_summary or {}).get("status"), candidate_id="run", field="status", warnings=warnings)),
                 ("범위", "전체 저장 후보 · 필터 제외 후보 포함"),
                 ("결측", "빈 수치는 미평가·미기록이며 0이 아닙니다."),
-                ("구조", "후보 표와 개별 탭의 2D 구조는 입력 SMILES에서 생성. 저장 도킹 포즈는 개별 탭에 별도로 표시"),
+                ("구조", "후보 표와 개별 탭의 2D 구조는 확인·저장한 SMILES에서 생성. 이름 조회·카탈로그에서 얻은 구조도 포함하며 저장 도킹 포즈는 별도로 표시"),
                 ("계산값 열", "피부 평가 → 주요 독성 예측 → 물성 → 모델·구매 정보. 원래 ADMET 전체 값은 뒤쪽 원자료 열에 보존"),
                 ("ADMET 표시", "단일 모델 값은 숫자로 표시. 복수 모델은 모델별 값을 구분. 미평가·실패는 0으로 바꾸지 않음"),
                 ("점수", "우선순위 휴리스틱 · 효능이나 결합 확률 아님"),
@@ -883,6 +948,14 @@ class RunExports:
             add("SMILES · 원래 입력 구조", row.get("smiles"))
             for field, label in REVIEW_FIELDS:
                 add(label, row.get(field))
+                if field == "review_purchase_url" and purchase_links(row):
+                    detail.cell(detail.max_row, 2).hyperlink = purchase_links(row)[0]["url"]
+                    detail.cell(detail.max_row, 2).style = "Hyperlink"
+            for index, link in enumerate(purchase_links(row), 1):
+                add("구매처 " + str(index) + " · " + str(link["supplier"]), link["url"])
+                detail.cell(detail.max_row, 2).hyperlink = link["url"]
+                detail.cell(detail.max_row, 2).style = "Hyperlink"
+            add("구매 기록의 범위", "공급사 홈페이지 연결이며 현재 재고·가격·순도·배송 가능 여부는 공급사에서 확인합니다.")
             add("분자 특성", "분자량 " + brief(row.get("mw")) + " g/mol · logP " + brief(row.get("logp")))
             add("연구 목적", context.get("research_goal"))
             add("피부 평가 조건", "제품 " + brief(context.get("product")) + " · 함량 " + brief(context.get("applied_percent")) + ("%" if context.get("applied_percent") is not None else "")
@@ -994,7 +1067,7 @@ class RunExports:
             for cell in detail[1]:
                 cell.font = Font(bold=True, color="000000")
             if image_path:
-                detail["D3"] = "2D 구조 · 입력 SMILES"
+                detail["D3"] = "2D 구조 · 확인·저장한 SMILES"
                 image = Image(str(image_path))
                 image.width, image.height = 240, 140
                 detail.add_image(image, "D4")
@@ -1245,7 +1318,7 @@ class RunExports:
                 workbook, sheet = new_book()
             cid = row["candidate_id"]
             save_evidence(row, candidate_id=cid)
-            for prediction in row.get("admet") or []:
+            for prediction in prediction_records(row.get("admet")):
                 if not isinstance(prediction, dict):
                     continue
                 model = prediction.get("model_id")
@@ -1314,7 +1387,7 @@ class RunExports:
                     image_path = directory / relative
                     image_path.write_bytes(buffer.getvalue())
                     row["image"] = relative
-                    row["image_kind"] = "2D 구조 · 입력 SMILES"
+                    row["image_kind"] = "2D 구조 · 확인·저장한 SMILES"
                     add_structure_image(sheet, image_path, row=sheet.max_row + 1, column=2)
                 except (ValueError, RuntimeError):
                     row["image_kind"] = "2D 구조 생성 실패 · 원래 SMILES 참조"
@@ -1354,6 +1427,9 @@ class RunExports:
             for cell in sheet[sheet.max_row]:
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
             for i, (field, _) in enumerate(FIELDS, 1):
+                if field == "review_purchase_url" and purchase_links(row):
+                    sheet.cell(sheet.max_row, i).hyperlink = purchase_links(row)[0]["url"]
+                    sheet.cell(sheet.max_row, i).style = "Hyperlink"
                 if field in {"priority_score_v2", "review_skin_score", "review_logp", "review_tpsa", "review_mw"}:
                     sheet.cell(sheet.max_row, i).number_format = "0.00"
                 elif field.startswith("review_tox_") or field in {"review_solubility", "review_qed"}:

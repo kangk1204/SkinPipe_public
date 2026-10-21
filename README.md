@@ -106,6 +106,8 @@ The translucent amber area with a bold dashed outline marks the highest componen
 
 Excel column headings explain how to read each value: **↑ higher first**, **↓ lower first**, or **range/research-goal dependent**. The **지표 읽는 법** (*Reading the metrics*) sheet gives units, examples and comparison conditions. A more negative docking score is compared only within the same docking setup. Permeability, logP and molecular size are reviewed against the research goal. Compound tabs show the reading direction beside each metric.
 
+The candidate table labels input structures, candidates, measured references and redocking controls. Score cells show the score from channels with values and the weight filled with neutral 50; the topical cell explains its contribution to discovery scoring. For stored supplier URLs, open **근거 보기 → 구매 근거 → 구매처 홈페이지 열기**. New Excel exports have a clickable first purchase URL in the review table and supplier links in compound tabs. Check current stock, price, purity and shipping with the supplier.
+
 You have completed the first workflow when the green panel says **연구 완료** and the downloaded workbook opens. Continue with the [illustrated browser guide](docs/browser.en.md) for **SMILES, protein and PDB/file inputs**, running/cancelling/resuming, candidate comparison, 2D/3D and multiple-study exports.
 
 ## Try the other inputs and analysis modes

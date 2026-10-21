@@ -1,5 +1,6 @@
 // Allow the server's bounded CLI work to finish before the browser deadline.
 export function requestErrorText(error) {
+  if(error?.status===403&&error?.message==='이 설치의 연구 화면에서 요청해 주세요.')return '서버 재시작 등으로 화면 연결이 만료되었습니다. 브라우저를 새로고침한 뒤 저장된 연구 실행 기록을 확인하세요. 실행 요청을 다시 제출하지 마세요.';
   if(error?.name==='TimeoutError')return '서버 응답 시간이 초과되었습니다. 서버 연결을 확인하고, 실행을 요청했다면 작업·계산 자원에서 접수 상태를 먼저 확인하세요.';
   if(error?.name==='AbortError')return '요청이 중단되었습니다. 실행을 요청했다면 접수 상태를 먼저 확인하세요.';
   if(error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))return '서버에 연결할 수 없습니다. 서버 연결을 확인해 주세요. 저장된 후보 결과는 계속 확인할 수 있습니다.';

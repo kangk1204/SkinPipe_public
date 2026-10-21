@@ -253,6 +253,8 @@ def rank_candidates(candidates: list[dict[str, Any]], *,
             priority_population_sha256=population_hashes[candidate["target_id"]],
             priority_channels=channels, priority_coverage=round(coverage, 6),
             priority_missing_channels=[key for key, value in channels.items() if value["score"] is None],
+            priority_score_status=("partial_channels_with_neutral_imputation" if any(
+                value["score"] is None for value in channels.values()) else "all_priority_channels_observed"),
             priority_imputed_weight=round(sum(WEIGHTS[key] for key, value in channels.items()
                                               if value["score"] is None), 6),
             priority_missing_policy="neutral-50-placeholder-v1; not a measured percentile",

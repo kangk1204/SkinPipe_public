@@ -42,6 +42,15 @@ def search_policy():
     return {**deepcopy(SEARCH_POLICY), "sha256": digest(SEARCH_POLICY)}
 
 
+def prediction_records(predictions):
+    """Read legacy singleton and current multi-model records without mutation."""
+    if isinstance(predictions, dict):
+        return [predictions]
+    if isinstance(predictions, (list, tuple)):
+        return [row for row in predictions if isinstance(row, dict)]
+    return []
+
+
 def evaluate_risk(predictions, *, policy=None):
     """Keep model channels separate; never count missing values as zero/safe."""
     policy = deepcopy(policy) if policy is not None else search_policy()
@@ -58,8 +67,9 @@ def evaluate_risk(predictions, *, policy=None):
     ):
         raise ValueError("Unverified frozen ADMET search policy")
     assessments = []
-    for row in predictions or []:
-        manifest = row.get("model_manifest") or {}
+    for row in prediction_records(predictions):
+        manifest = row.get("model_manifest")
+        manifest = manifest if isinstance(manifest, dict) else {}
         mid = row.get("model_id") or manifest.get("model_id")
         # Other model endpoint names alone cannot establish equivalent semantics.
         if not isinstance(mid, str) or not mid.startswith("admet-ai-"):

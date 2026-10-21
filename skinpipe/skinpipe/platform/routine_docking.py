@@ -11,7 +11,7 @@ from .artifacts import atomic_bytes, canonical_json, sha256_file
 from .engines import EngineRunner, ComputeBudgetExceeded
 from .identity import chemical_identity, digest
 from .native_prepare import PreparationUnavailable
-from .routine_screening import next_compute_batch, select_representatives, validate_policy
+from .routine_screening import execution_sources, next_compute_batch, select_representatives, validate_policy
 
 
 @contextmanager
@@ -54,8 +54,9 @@ def evaluate_routine_complex(rows, descriptor, selected, service, config, reques
     from ..dock.ligprep import read_preparation_receipt
     rows = deepcopy(rows)
     policy = validate_policy(request['screening_policy'])
+    current_sources = execution_sources()
     frozen = request.get('research_docking_policy') or native.freeze_docking_policy(config)
-    receipt = {'policy': frozen, 'screening_policy': policy, 'status': 'held',
+    receipt = {'policy': frozen, 'screening_policy': policy, 'execution_sources': current_sources, 'status': 'held',
         'receptor_valid': False, 'prepared_count': 0, 'selected_count': 0,
         'completed_count': 0, 'qualified_count': 0, 'reused_count': 0,
         'new_docking_count': 0, 'candidate_results': [], 'redocking': {'status': 'not_run'},
@@ -72,7 +73,8 @@ def evaluate_routine_complex(rows, descriptor, selected, service, config, reques
     cache = service.root / 'routine-docking-cache'
     cache.mkdir(parents=True, exist_ok=True)
     signature = digest({'rows': [(r['candidate_id'], r.get('smiles')) for r in rows],
-        'descriptor': descriptor, 'selected': selected, 'policy': policy, 'docking': frozen})
+        'descriptor': descriptor, 'selected': selected, 'policy': policy, 'docking': frozen,
+        'execution_sources': current_sources})
     checkpoint = work / 'checkpoint.json'
     state = {'signature': signature, 'rows': {}, 'engine_rows': {}, 'prepared': {},
              'receipt': {}, 'compute_seconds': 0}
@@ -248,7 +250,7 @@ def evaluate_routine_complex(rows, descriptor, selected, service, config, reques
             preparation_context = {k: v for k, v in preparation_request.items() if k != 'smiles'}
             if preparation_context.get('software_identity', {}).get('package_inputs_state') != 'observed':
                 raise PreparationUnavailable('Preparation software inputs are not verified')
-            execution_context = {**policy['execution_sources'], 'preparation': preparation_context}
+            execution_context = {**current_sources, 'preparation': preparation_context}
             keys = {r['candidate_id']: _cache_key(frozen, engine_request, r,
                 descriptor['protein_structure_sha256'], execution_context) for r in candidates}
             pending = []

@@ -10,6 +10,7 @@ from collections import Counter
 from copy import deepcopy
 import math
 from pathlib import Path
+import re
 
 from .identity import chemical_identity, digest
 from .ranking import finite
@@ -19,16 +20,19 @@ CONTROL_ROLES = {'control', 'positive_control', 'negative_control', 'counter_con
                  'reference', 'reference_control', 'query_seed'}
 
 
+def execution_sources():
+    from .artifacts import sha256_file
+    directory = Path(__file__).resolve().parent
+    return {name: sha256_file(directory / name) for name in
+            ('routine_screening.py', 'routine_docking.py', 'algorithm_chemistry.py', 'engines.py')}
+
+
 def screening_policy(*, target_candidates=200, compute_budget_seconds=7200):
     if type(target_candidates) is not int or not 1 <= target_candidates <= 1000:
         raise ValueError('target_candidates must be an integer within 1..1000')
     if (type(compute_budget_seconds) not in (int, float)
             or not math.isfinite(compute_budget_seconds) or not 0 < compute_budget_seconds <= 28800):
         raise ValueError('compute budget must be within 8h')
-    from .artifacts import sha256_file
-    directory = Path(__file__).resolve().parent
-    sources = {name: sha256_file(directory / name) for name in
-               ('routine_screening.py', 'routine_docking.py', 'algorithm_chemistry.py', 'engines.py')}
     value = {'version': VERSION, 'target_candidates': target_candidates,
         'budget_seconds': compute_budget_seconds, 'max_new_docking': 1000,
         'canary_candidates': 8, 'batch_candidates': 32, 'cost_reserve': 1.25,
@@ -37,7 +41,7 @@ def screening_policy(*, target_candidates=200, compute_budget_seconds=7200):
         'missing': 'pending_not_pass', 'model_hold': 'do_not_dispatch_docking',
         'stop': ['qualified_target_reached', 'budget_exhausted', 'eligible_pool_exhausted'],
         'optional_deep_models': False, 'controls_outside_candidate_quota': True,
-        'execution_sources': sources,
+        'execution_sources': execution_sources(),
         'scope': 'one study and calculation condition; preserve separate observations'}
     return {**value, 'sha256': digest(value)}
 
@@ -51,9 +55,20 @@ def freeze_screening(body=None, *, compute_budget_seconds=7200):
 
 
 def validate_policy(policy):
-    if not isinstance(policy, dict) or policy != screening_policy(
-            target_candidates=policy.get('target_candidates'),
-            compute_budget_seconds=policy.get('budget_seconds')):
+    if not isinstance(policy, dict):
+        raise ValueError('Routine screening policy differs from the frozen version')
+    payload = {key: value for key, value in policy.items() if key != 'sha256'}
+    expected = screening_policy(target_candidates=policy.get('target_candidates'),
+                                compute_budget_seconds=policy.get('budget_seconds'))
+    sources = policy.get('execution_sources')
+    if (not isinstance(sources, dict) or set(sources) != set(expected['execution_sources'])
+            or any(not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{64}', value)
+                   for value in sources.values()) or policy.get('sha256') != digest(payload)):
+        raise ValueError('Routine screening policy integrity check failed')
+    # Source provenance is frozen at submission; compatible policy semantics
+    # survive updates. Actual execution/cache/checkpoint identities remain current.
+    expected['execution_sources'] = deepcopy(sources)
+    if payload != {key: value for key, value in expected.items() if key != 'sha256'}:
         raise ValueError('Routine screening policy differs from the frozen version')
     return deepcopy(policy)
 
