@@ -754,6 +754,34 @@ class Queue:
             self._close(conn, row, "cancelled", elapsed=elapsed)
         return {"status": "cancelled", "resource_cleanup": receipt}
 
+    def record_cleanup_diagnostic(self, job_id, token, *, worker, stage, error_type):
+        """Retain only a fixed diagnostic for the authenticated current attempt.
+
+        A closed budget lease can still report why cleanup was unverified.
+        This event neither certifies cleanup nor changes any job or budget.
+        """
+        allowed = {'owned_cleanup': {'OwnedProcessCleanupError'},
+                   'cleanup_ack': {'LeaseLost', 'ValueError'}}
+        if (not isinstance(stage, str) or not isinstance(error_type, str)
+                or error_type not in allowed.get(stage, set())):
+            raise ValueError('Unsupported cleanup diagnostic category')
+        identifier(worker, 'worker')
+        if not isinstance(token, str) or not 1 <= len(token) <= 200:
+            raise LeaseLost('Cleanup diagnostic does not own this current attempt')
+        with self.connection() as conn:
+            row = conn.execute('SELECT * FROM platform_jobs WHERE id=%s FOR UPDATE', (job_id,)).fetchone()
+            if (not row or row['status'] == 'queued'
+                    or (row['status'] == 'running' and row['lease_token'] != token)):
+                raise LeaseLost('Cleanup diagnostic does not own this current attempt')
+            attempt = conn.execute('SELECT token_sha256,worker FROM platform_attempts WHERE job_id=%s AND attempt=%s',
+                (job_id, row['attempts'])).fetchone()
+            if (not attempt or attempt['worker'] != worker
+                    or attempt['token_sha256'] != hashlib.sha256(token.encode()).hexdigest()):
+                raise LeaseLost('Cleanup diagnostic does not own this current attempt')
+            self._event(conn, job_id, 'owned_cleanup_diagnostic', {
+                'attempt': row['attempts'], 'worker': worker, 'stage': stage, 'error_type': error_type})
+            return {'status': 'cleanup_diagnostic_recorded', 'attempt': row['attempts']}
+
     def acknowledge_cleanup(self, job_id, token, *, worker, cleanup):
         """Record stopped-actor proof or clear its matching terminal quarantine.
 

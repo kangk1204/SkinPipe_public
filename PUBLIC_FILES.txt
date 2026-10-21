@@ -303,5 +303,6 @@ tests/test_snapshot_summary_ui.mjs
 tests/test_structure_viewer_seed.mjs
 docs/catalog-scale-20261021.md
 tests/test_catalog_materialization_batches.py
+tests/test_cleanup_diagnostics.py
 tests/test_export_raw_evidence.py
 tests/test_research_execution_scope.mjs

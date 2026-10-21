@@ -1777,6 +1777,16 @@ class DiscoveryRuns:
         heartbeat_state = {"error_type": None, "terminal": None, "cancel_requested": False}
         progress = {"stage": "identity_resolution"}
 
+        def cleanup_diagnostic(stage, error_type):
+            # Diagnostics must not replace the original hold or certify exit.
+            try:
+                record = getattr(self.queue, 'record_cleanup_diagnostic', None)
+                if record is not None:
+                    record(job['id'], job['lease_token'], worker='discovery-coordinator',
+                           stage=stage, error_type=error_type)
+            except Exception:
+                pass
+
         def elapsed():
             return initial + time.monotonic() - started
 
@@ -1869,6 +1879,7 @@ class DiscoveryRuns:
             # duplicate calculation or a cleanup acknowledgement.
             ending.set()
             thread.join()
+            cleanup_diagnostic('owned_cleanup', 'OwnedProcessCleanupError')
             try:
                 self.queue.fail(job["id"], job["lease_token"],
                     "owned_resource_cleanup_unverified", status="needs_data")
@@ -1946,8 +1957,8 @@ class DiscoveryRuns:
                     release_stopped_exception_frames(sys.exception())
                 try:
                     acknowledge(job['id'], job['lease_token'], worker='discovery-coordinator', cleanup=cleanup_receipt())
-                except (LeaseLost, ValueError):
-                    pass
+                except (LeaseLost, ValueError) as error:
+                    cleanup_diagnostic('cleanup_ack', 'LeaseLost' if isinstance(error, LeaseLost) else 'ValueError')
 
     def reconcile(self):
         'Restart-safe continuation is independent of preparation publication.'

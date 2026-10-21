@@ -136,3 +136,28 @@ test('historical QC figures require a valid recorded pair without inventing miss
   assert.match(researchProgressMarkup({stage,completed:4,total:32,qualified:200,target:200}),/최근 QC 후 대표 후보 200개 \/ 목표 200개/);
  }
 });
+
+for(const published of [false,true])test('budget-deferred guidance preserves records and only opens a separate input flow; published='+published,async()=>{
+ const h=harness(),calls=[],record={run_id:'budget-fixture',status:'budget_deferred',input:{kind:'protein',value:'Synthetic target'},execution:{compute_budget_seconds:7200},progress:{stage:'budget_deferred',processed:72,qualified:199,target:200},counts:{representative_selected:199},candidates:[],...(published?{snapshot_id:'synthetic-published'}:{})},saved=JSON.stringify(record);
+ const api=async(path,options)=>{calls.push({path,method:options?.method||'GET'});if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs')return{runs:[record]};if(path.endsWith('/summary'))return record;throw Error('Unexpected request '+path)};
+ await renderDiscovery(h.main,api);h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();
+ const controls=h.get('#research-run-controls').innerHTML;
+ assert.match(controls,/저장된 계산·체크포인트와 입력·조건은 보존/);assert.match(controls,/완료된 상태가 아닙니다/);assert.match(controls,/기존 연구의 시간 한도를 늘리거나 이어서 실행하지 않습니다/);
+ assert.match(controls,/별도 연구/);assert.match(controls,/2 → 4시간, 최대 8시간/);assert.match(controls,/자동 복원하지 않습니다/);assert.match(controls,/서버가 동일한 계산 조건을 검증한 경우에만 재사용/);assert.match(controls,/보장하지 않습니다/);
+ assert.doesNotMatch(controls,/research-resume-run|research-cancel-run/);
+ if(published){assert.match(controls,/이미 등록된 결과/);assert.match(h.get('#research-result-actions').innerHTML,/research-result-excel/);assert.doesNotMatch(controls,/아직 등록되지 않아/)}
+ else{assert.match(controls,/최종 결과 스냅샷이 아직 등록되지 않아/);assert.match(controls,/체크포인트는 최종 결과가 아닙니다/);assert.doesNotMatch(h.get('#research-result-actions').innerHTML,/research-result-excel|research-result-zip|research-open-population/)}
+ for(const[id,value]of Object.entries({'discovery-hours':'2','research-catalog-limit':'1000','research-representatives':'200','discovery-source':'','discovery-pdb':'1ABC'}))h.get('#'+id).value=value;
+ h.get('#discovery-critical').checked=true;const callCount=calls.length;h.get('#research-budget-new').onclick();
+ assert.equal(h.get('#research-step-1').hidden,false);assert.equal(h.get('#research-step-4').hidden,true);assert.equal(h.get('#research-confirm').disabled,true);
+ assert.equal(h.get('#discovery-hours').value,'2','Navigation never increases the old or new form budget automatically');assert.equal(h.get('#research-catalog-limit').value,'1000');assert.equal(h.get('#research-representatives').value,'200');assert.equal(h.get('#discovery-source').value,'');assert.equal(h.get('#discovery-pdb').value,'1ABC');assert.equal(h.get('#discovery-critical').checked,true);
+ assert.equal(calls.length,callCount,'Opening input preparation performs no request');assert.ok(calls.every(call=>call.method==='GET'));assert.equal(JSON.stringify(record),saved);
+});
+test('budget guidance is removed after switching studies and an obsolete button cannot navigate',async()=>{
+ const h=harness(),calls=[];let state='budget_deferred';
+ const record=()=>({run_id:'budget-switch',status:state,input:{value:'Synthetic'},counts:{},candidates:[],...(state==='complete'?{snapshot_id:'synthetic-published'}:{})});
+ await renderDiscovery(h.main,async(path,options)=>{calls.push(options?.method||'GET');if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs')return{runs:[record()]};if(path.endsWith('/summary'))return record();throw Error('Unexpected request '+path)});
+ h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();const obsolete=h.get('#research-budget-new').onclick;
+ state='complete';await h.get('#research-result-refresh').onclick();assert.doesNotMatch(h.get('#research-run-controls').innerHTML,/research-budget-new|시간 한도|체크포인트/);assert.match(h.get('#research-result-actions').innerHTML,/research-result-excel/);
+ obsolete();assert.equal(h.get('#research-step-4').hidden,false);assert.ok(calls.every(method=>method==='GET'));
+});

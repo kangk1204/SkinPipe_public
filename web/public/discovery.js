@@ -313,6 +313,11 @@ export async function renderDiscovery(main,api,role='researcher',{isCurrent:isAc
    holder.innerHTML=notice+(released?'<p><strong>작업 프로세스 종료와 자원 정리가 확인되었습니다.</strong> 이미 저장된 결과와 처리 기록은 보존됩니다. 아래에서 결과를 확인하거나 다른 입력으로 새 연구를 시작할 수 있습니다.</p>':cancellation.state==='stopping'||runState(run)==='cancelling'?'<p role="status">취소 요청은 접수되었습니다. 실행 중인 계산을 종료하고 이 연구의 작업 자원을 정리하는 중입니다. 종료 확인 전에는 취소 완료로 표시하지 않습니다. 저장된 결과는 보존됩니다.</p>':'<p role="status">취소 상태이지만 작업 프로세스 종료·자원 정리의 확인 기록이 없습니다. 자원 반환 완료로 해석하지 마세요. 결과 갱신 후에도 같으면 설치 담당자에게 처리 기록과 함께 확인을 요청하세요. 저장된 결과는 보존됩니다.</p>')+(released&&cancellation.resume_allowed===true?'<button id="research-resume-run" class="button">남은 계산 이어가기…</button>':'');
    if(released&&cancellation.resume_allowed===true)$('research-resume-run').onclick=()=>reviewRunControl(runId,sequence,'resume');return;
   }
+  if(runState(run)==='budget_deferred'){
+   const published=Boolean(run.snapshot_id||run.result_snapshot_id);
+   holder.innerHTML=notice+'<section class="notice"><h3>처리 시간 한도로 보류되었습니다</h3><p>이미 저장된 계산·체크포인트와 입력·조건은 보존됩니다. 이 연구는 완료된 상태가 아닙니다. '+(published?'이미 등록된 결과는 아래 버튼에서 그 저장 범위만 확인할 수 있습니다.':'최종 결과 스냅샷이 아직 등록되지 않아 전체 후보 표·Excel·오프라인 ZIP을 제공할 수 없습니다. 체크포인트는 최종 결과가 아닙니다.')+'</p><p>더 진행하려면 기존 기록을 유지한 채 별도 연구를 준비하세요. 기존 연구의 시간 한도를 늘리거나 이어서 실행하지 않습니다.</p><ol><li>아래 버튼으로 입력 단계에 돌아가 같은 입력을 다시 확인합니다. 이전 연구의 입력·조건을 자동 복원하지 않습니다. 파일·구조 선택, 후보 출처, 필터, 대표 목표, 생성·수용체 조건을 다시 확인하고 QC 기준은 유지하세요.</li><li>후보 수·필터·최대 처리 시간 조정에서 최대 처리 시간을 기존보다 길게 직접 정하세요(예: 2 → 4시간, 최대 8시간). 이미 8시간이면 이 화면에서 더 늘릴 수 없습니다.</li><li>확인 후 새 연구 실행을 한 번 누르세요. 저장된 계산은 서버가 동일한 계산 조건을 검증한 경우에만 재사용하며, 재사용이나 새 시간 한도 내 완료를 보장하지 않습니다.</li></ol><button type="button" id="research-budget-new" class="button">입력·조건을 다시 확인해 별도 연구 준비</button></section>';
+   $('research-budget-new').onclick=()=>{if(resultIsCurrent(runId,sequence))$('research-new').onclick()};return;
+  }
   holder.innerHTML=notice+(['queued','running','preparing','paused'].includes(runState(run))?'<p class="research-muted">화면 이동은 계산을 멈추지 않습니다. 계산을 중단하려면 아래에서 이 연구의 취소를 요청하세요. 저장된 결과는 보존됩니다.</p><button id="research-cancel-run" class="button">이 연구 분석 취소…</button>':'');
   if(['queued','running','preparing','paused'].includes(runState(run)))$('research-cancel-run').onclick=()=>reviewRunControl(runId,sequence,'cancel');
  }
