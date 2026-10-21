@@ -172,3 +172,11 @@ test('cleanup quarantine is an explicit hold even after a native checkpoint reac
  assert.doesNotMatch(controls,/research-resume-run|research-cancel-run|research-budget-new/);assert.doesNotMatch(h.get('#research-result-actions').innerHTML,/research-result-excel|research-result-zip|research-open-population/);
  assert.match(h.get('#research-result-summary').innerHTML.split('<section')[0],/추가 확인으로 보류/);assert.doesNotMatch(h.get('#research-result-summary').innerHTML.split('<section')[0],/needs_data/);assert.ok(calls.every(method=>method==='GET'));assert.equal(JSON.stringify(record),saved);
 });
+
+// Waiting for another research's cache never inherits old model/docking counts.
+test('shared docking cache wait and receptor preparation have distinct counter-free stages',()=>{
+ for(const [stage,label] of [['routine_cache_wait','공용 도킹 캐시'],['routine_receptor_preparation','고정 포켓']]){
+  const html=researchProgressMarkup({stage,selected:2,completed:8,total:32,qualified:7,target:200});
+  assert.ok(html.includes(label));assert.doesNotMatch(html,/추가 독성 계산|현재 도킹 묶음|8개|2개|최근 QC 후 대표 후보/);
+ }
+});

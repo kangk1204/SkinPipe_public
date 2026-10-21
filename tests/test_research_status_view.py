@@ -3,6 +3,9 @@ from copy import deepcopy
 import json
 from types import SimpleNamespace
 import unittest
+import tempfile
+import threading
+from pathlib import Path
 
 from skinpipe.platform.discovery import DiscoveryRuns
 from skinpipe.platform.service import PlatformService
@@ -53,3 +56,50 @@ class ResearchStatusViewTests(unittest.TestCase):
                                ("/v2/discovery-runs/fixture?view=status", "status")]:
             self.assertEqual(service._get(path, owner="alice"), expected)
             self.assertEqual(calls[-1][2], {"owner": "alice"})
+
+
+class ResearchCacheWaitTests(unittest.TestCase):
+    def test_real_lock_reports_wait_once_and_preserves_exclusion(self):
+        import fcntl
+        from skinpipe.platform.routine_docking import _owned_cache_lock
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'compute.lock'
+            waiting, acquired = threading.Event(), threading.Event()
+            calls = []
+            def notice():
+                calls.append('waiting')
+                waiting.set()
+            def worker():
+                with _owned_cache_lock(path, lambda: None, on_wait=notice):
+                    acquired.set()
+            with path.open('a+b') as owner:
+                fcntl.flock(owner, fcntl.LOCK_EX)
+                thread = threading.Thread(target=worker, daemon=True)
+                thread.start()
+                try:
+                    self.assertTrue(waiting.wait(2))
+                    self.assertFalse(acquired.is_set())
+                finally:
+                    fcntl.flock(owner, fcntl.LOCK_UN)
+                    thread.join(3)
+            self.assertFalse(thread.is_alive())
+            self.assertTrue(acquired.is_set())
+            self.assertEqual(calls, ['waiting'])
+
+    def test_stop_while_waiting_does_not_acquire_or_release_peer_lock(self):
+        import fcntl
+        from skinpipe.platform.routine_docking import _owned_cache_lock
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'compute.lock'
+            calls = []
+            def stop():
+                if calls:
+                    raise RuntimeError('stop waiting')
+            with path.open('a+b') as owner:
+                fcntl.flock(owner, fcntl.LOCK_EX)
+                with self.assertRaisesRegex(RuntimeError, 'stop waiting'):
+                    with _owned_cache_lock(path, stop, on_wait=lambda: calls.append('waiting')):
+                        self.fail('A peer lock must not be acquired')
+                with path.open('a+b') as probe:
+                    with self.assertRaises(BlockingIOError):
+                        fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)

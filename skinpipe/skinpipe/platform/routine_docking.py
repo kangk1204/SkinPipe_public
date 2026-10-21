@@ -15,7 +15,7 @@ from .routine_screening import execution_sources, next_compute_batch, select_rep
 
 
 @contextmanager
-def _owned_cache_lock(path, stop):
+def _owned_cache_lock(path, stop, *, on_wait=None):
     # The analysis host is Ubuntu (macOS also supports this lock). OS ownership
     # releases it on cancellation or process exit; no stale PID-file takeover.
     import fcntl
@@ -26,6 +26,9 @@ def _owned_cache_lock(path, stop):
                 fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 break
             except BlockingIOError:
+                if on_wait is not None:
+                    on_wait()
+                    on_wait = None
                 time.sleep(0.05)
         try:
             yield
@@ -183,7 +186,9 @@ def evaluate_routine_complex(rows, descriptor, selected, service, config, reques
 
     try:
         stop()
-        with _owned_cache_lock(cache / 'compute.lock', stop):
+        with _owned_cache_lock(cache / 'compute.lock', stop,
+                               on_wait=lambda: progress({'stage': 'routine_cache_wait'})):
+            progress({'stage': 'routine_receptor_preparation'})
             source, observed = work / 'selected-protein.pdb', work / 'observed-query.sdf'
             atomic_bytes(source, service.artifacts.get_bytes(descriptor['protein_structure_sha256']))
             seed = next(r for r in rows if r.get('role') == 'query_seed' or r.get('redock_reference') is True)
