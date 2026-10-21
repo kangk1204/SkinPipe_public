@@ -19,6 +19,15 @@ def note_catalog_query(path, result):
     query_id = result.get("query_id") if isinstance(result, dict) else None
     if isinstance(query_id, str) and re.fullmatch(r"[0-9a-f]{32}", query_id):
         tracked["queries"].add(query_id)
+        if result.get("status") == "complete":
+            # The complete payload is already local. Do not retain its remote
+            # Future throughout chemistry, past the gateway's result TTL.
+            tracked["releasing"] = True
+            try:
+                _release_queries(tracked["service"], {query_id}, tracked["timeout"])
+                tracked["queries"].discard(query_id)
+            finally:
+                tracked["releasing"] = False
     catalog_checkpoint()
 
 
@@ -38,36 +47,46 @@ def note_catalog_transport_failure(path):
 
 @contextmanager
 def owned_catalog_scope(service, *, timeout=40, stop=lambda: None):
-    tracked = {"queries": set(), "uncertain_submission": False, "releasing": False, "stop": stop}
+    tracked = {"queries": set(), "uncertain_submission": False, "releasing": False,
+               "stop": stop, "service": service, "timeout": timeout}
     token = _scope.set(tracked)
     try:
         yield
     finally:
         tracked["releasing"] = True
         try:
-            # Release known queries in parallel logically: submit every stop
-            # intent first, then poll only those whose actual future still runs.
-            pending = set()
-            deadline = time.monotonic() + timeout
-            for query_id in sorted(tracked["queries"]):
-                try:
-                    receipt = service._scout_request("/queries/" + query_id + "/cancel", body={})
-                except Exception as error:
-                    raise OwnedProcessCleanupError("Owned catalog query cleanup is unavailable") from error
-                if receipt.get("status") != "cancelled" or receipt.get("resources_released") is not True:
-                    pending.add(query_id)
-            while pending:
-                if time.monotonic() >= deadline:
-                    raise OwnedProcessCleanupError("Owned catalog query is still stopping")
-                time.sleep(0.1)
-                for query_id in list(pending):
-                    try:
-                        receipt = service._scout_request("/queries/" + query_id)
-                    except Exception as error:
-                        raise OwnedProcessCleanupError("Owned catalog query release could not be verified") from error
-                    if receipt.get("status") == "cancelled" and receipt.get("resources_released") is True:
-                        pending.remove(query_id)
+            _release_queries(service, tracked["queries"], timeout)
             if tracked["uncertain_submission"]:
                 raise OwnedProcessCleanupError("Catalog submission has no verifiable query receipt")
         finally:
             _scope.reset(token)
+
+
+def _release_queries(service, queries, timeout):
+    # Request every known stop first, then poll only unfinished owned Futures.
+    # Missing/expired queries are not evidence of process or memory release.
+    def released(query_id, receipt):
+        return (isinstance(receipt, dict) and receipt.get("query_id") == query_id
+                and receipt.get("status") == "cancelled"
+                and receipt.get("resources_released") is True)
+
+    pending = set()
+    deadline = time.monotonic() + timeout
+    for query_id in sorted(queries):
+        try:
+            receipt = service._scout_request("/queries/" + query_id + "/cancel", body={})
+        except Exception as error:
+            raise OwnedProcessCleanupError("Owned catalog query cleanup is unavailable") from error
+        if not released(query_id, receipt):
+            pending.add(query_id)
+    while pending:
+        if time.monotonic() >= deadline:
+            raise OwnedProcessCleanupError("Owned catalog query is still stopping")
+        time.sleep(0.1)
+        for query_id in list(pending):
+            try:
+                receipt = service._scout_request("/queries/" + query_id)
+            except Exception as error:
+                raise OwnedProcessCleanupError("Owned catalog query release could not be verified") from error
+            if released(query_id, receipt):
+                pending.remove(query_id)

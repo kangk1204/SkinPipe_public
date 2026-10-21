@@ -24,7 +24,7 @@ class Gateway:
     def __call__(self, path, *, body=None, response_limit=None):
         if path.endswith('/cancel'):
             self.cancelled.append(path.split('/')[2])
-            return {'status': 'cancelled', 'resources_released': True}
+            return {'status': 'cancelled', 'query_id': path.split('/')[2], 'resources_released': True}
         if path != '/materialize':
             raise AssertionError('Unexpected query or retry: ' + path)
         self.calls.append((deepcopy(body), response_limit))

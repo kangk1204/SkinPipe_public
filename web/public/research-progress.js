@@ -18,6 +18,7 @@ const VIEWS={
  cleanup_unverified:['attention','자원 정리 확인 필요','작업 자원 반환을 확인하지 못했습니다. 처리 기록을 확인하세요.','!'],
  paused:['attention','연구 일시정지','저장된 작업은 보존됩니다. 현재 조건과 이어가기 가능 여부를 확인하세요.','Ⅱ'],
  held:['attention','연구 보류','추가로 확인할 조건과 저장된 결과를 아래에서 확인하세요.','!'],
+ needs_data:['attention','추가 확인으로 연구 보류','입력 조건과 처리 기록을 확인하세요. 이미 저장된 자료는 보존됩니다.','!'],
  budget_deferred:['attention','처리 시간 한도로 보류','완료한 결과와 보류된 계산 범위를 확인하세요.','!'],
 };
 export function researchProgressView(state,{connection='current',checkedAt=null,now=Date.now()}={}){

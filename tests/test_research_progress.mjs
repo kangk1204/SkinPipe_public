@@ -10,7 +10,7 @@ for(const state of ['submitting','checking','queued','preparing','running','canc
  assert.equal(view.active,true);assert.equal(view.busy,true);
  assert.equal(view.showProgress,['running','preparing'].includes(state));
 });
-for(const [state,tone]of [['complete','complete'],['completed','complete'],['partial','attention'],['failed','failed'],['cancelled','cancelled'],['cancellation_unverified','attention'],['cleanup_unverified','attention'],['paused','attention'],['held','attention']])test(state+' has a distinct static terminal presentation',()=>{
+for(const [state,tone]of [['complete','complete'],['completed','complete'],['partial','attention'],['failed','failed'],['cancelled','cancelled'],['cancellation_unverified','attention'],['cleanup_unverified','attention'],['needs_data','attention'],['paused','attention'],['held','attention']])test(state+' has a distinct static terminal presentation',()=>{
  const view=researchProgressView(state,{checkedAt:100,now:100+RESEARCH_PROGRESS_STALE_MS});
  assert.equal(view.tone,tone);assert.equal(view.active,false);assert.equal(view.busy,false);assert.equal(view.showProgress,false);
 });
@@ -160,4 +160,15 @@ test('budget guidance is removed after switching studies and an obsolete button 
  h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();const obsolete=h.get('#research-budget-new').onclick;
  state='complete';await h.get('#research-result-refresh').onclick();assert.doesNotMatch(h.get('#research-run-controls').innerHTML,/research-budget-new|시간 한도|체크포인트/);assert.match(h.get('#research-result-actions').innerHTML,/research-result-excel/);
  obsolete();assert.equal(h.get('#research-step-4').hidden,false);assert.ok(calls.every(method=>method==='GET'));
+});
+
+test('cleanup quarantine is an explicit hold even after a native checkpoint reaches its goal',async()=>{
+ const h=harness(),calls=[],record={run_id:'quarantine-fixture',status:'needs_data',progress:{stage:'routine_pose_quality',qualified:200,target:200,resource_quarantine:{active:true,reason:'owned_resource_cleanup_unverified'}},counts:{},candidates:[]},saved=JSON.stringify(record);
+ await renderDiscovery(h.main,async(path,options)=>{calls.push(options?.method||'GET');if(path==='/v2/snapshots?view=summary')return{snapshots:[]};if(path==='/v2/research-capabilities')return{};if(path==='/v2/discovery-runs')return{runs:[record]};if(path.endsWith('/summary'))return record;throw Error('Unexpected fixture request '+path)});
+ h.get('#view').dataset.viewRun='0';await h.get('#view').onclick();
+ const panel=h.get('#research-live-status'),controls=h.get('#research-run-controls').innerHTML;
+ assert.equal(panel.attributes['data-state'],'attention');assert.equal(panel.attributes['aria-busy'],'false');assert.equal(panel.attributes['data-active'],'false');assert.match(panel.innerHTML,/자원 정리 확인 필요/);assert.doesNotMatch(panel.innerHTML,/연구 완료|현재 단계|needs_data/);
+ assert.match(controls,/작업 자원 정리를 확인하지 못해 연구를 보류/);assert.match(controls,/최종 결과로 등록되지 않은 체크포인트/);assert.match(controls,/설치 담당자/);assert.match(controls,/자동으로 재실행하지 않습니다/);
+ assert.doesNotMatch(controls,/research-resume-run|research-cancel-run|research-budget-new/);assert.doesNotMatch(h.get('#research-result-actions').innerHTML,/research-result-excel|research-result-zip|research-open-population/);
+ assert.match(h.get('#research-result-summary').innerHTML.split('<section')[0],/추가 확인으로 보류/);assert.doesNotMatch(h.get('#research-result-summary').innerHTML.split('<section')[0],/needs_data/);assert.ok(calls.every(method=>method==='GET'));assert.equal(JSON.stringify(record),saved);
 });
