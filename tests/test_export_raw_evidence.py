@@ -108,3 +108,23 @@ def test_export_raw_qc_never_reads_declared_paths_or_arbitrary_hashes(tmp_path, 
     assert exported["routine_pose_quality"] == row["routine_pose_quality"]
     assert exported["unrelated"] == row["unrelated"]
     assert external.read_bytes() == b"synthetic external path must never be read"
+
+
+def test_workbook_separates_archives_and_links_primary_supplier(tmp_path):
+    from openpyxl import load_workbook
+    row = {"offers": [{"product_url": "https://cache.docking.org/zinc22/", "supplier": "ZINC archive"},
+                      {"product_url": "https://example.org/product", "supplier": "Synthetic supplier"}]}
+    directory, receipt, exported = build_export(tmp_path, row, ArtifactStore(tmp_path / "cas"))
+    assert exported["offers"] == row["offers"]
+    book = load_workbook(directory / "review-0001.xlsx")
+    primary = [cell for sheet in book for cells in sheet for cell in cells
+               if cell.value == "https://example.org/product" and cell.hyperlink]
+    assert primary
+    assert all(cell.hyperlink.target == cell.value for cell in primary)
+    archive = [(cells[0].value, cells[1]) for sheet in book for cells in sheet
+               if len(cells) > 1 and str(cells[0].value).startswith("자료원 아카이브 ")]
+    assert len(archive) == 1
+    assert archive[0][1].hyperlink.target == "https://cache.docking.org/zinc22/"
+    summary = book.worksheets[0]
+    col = next(cell.column for cell in summary[1] if str(cell.value).startswith("구매처 홈페이지"))
+    assert summary.cell(2, col).hyperlink.target == "https://example.org/product"

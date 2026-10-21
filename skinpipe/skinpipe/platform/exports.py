@@ -206,8 +206,8 @@ STRUCTURE_ASSET_KEYS = {
 }
 
 
-def purchase_links(row):
-    """Expose stored supplier destinations; never invent availability or URLs."""
+def _offer_links(row, *, archive):
+    """Separate known raw-data archives without changing stored procurement evidence."""
     def records(value):
         return [value] if isinstance(value, dict) else value if isinstance(value, (list, tuple)) else []
     offers = [*records(row.get("offers")), *records(row.get("supplier_offers")),
@@ -228,10 +228,22 @@ def purchase_links(row):
                 continue
         except ValueError:
             continue
+        if (parsed.hostname.lower() == "cache.docking.org") != archive:
+            continue
         if value not in seen:
             seen.add(value)
             links.append({"url": value, "supplier": offer.get("supplier") or offer.get("vendor") or offer.get("source") or "공급사"})
     return links
+
+
+def purchase_links(row):
+    """Stored supplier destinations; this does not assert stock or availability."""
+    return _offer_links(row, archive=False)
+
+
+def source_archive_links(row):
+    """Keep raw-data archive destinations visible as source evidence."""
+    return _offer_links(row, archive=True)
 
 
 def review_columns(row):
@@ -953,6 +965,10 @@ class RunExports:
                     detail.cell(detail.max_row, 2).style = "Hyperlink"
             for index, link in enumerate(purchase_links(row), 1):
                 add("구매처 " + str(index) + " · " + str(link["supplier"]), link["url"])
+                detail.cell(detail.max_row, 2).hyperlink = link["url"]
+                detail.cell(detail.max_row, 2).style = "Hyperlink"
+            for index, link in enumerate(source_archive_links(row), 1):
+                add("자료원 아카이브 " + str(index) + " · " + str(link["supplier"]), link["url"])
                 detail.cell(detail.max_row, 2).hyperlink = link["url"]
                 detail.cell(detail.max_row, 2).style = "Hyperlink"
             add("구매 기록의 범위", "공급사 홈페이지 연결이며 현재 재고·가격·순도·배송 가능 여부는 공급사에서 확인합니다.")

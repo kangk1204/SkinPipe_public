@@ -34,7 +34,7 @@ try{
  ].map(row=>({...row,target_id:'synthetic-target',smiles:'CCO',priority_score_v2:60.269,
   priority_score_observed_channels:84.23,priority_imputed_weight:0.7,priority_coverage:0.3,
   topical_score:9.18,discovery_terms:{topical:50},skin_goal_assessment:{permeability_ranking:'neutral'},
-  offers:[{product_url:'https://example.org/purchase/synthetic',supplier:'Synthetic supplier'}],
+  offers:[{product_url:'https://cache.docking.org/zinc22/',supplier:'ZINC archive'},{product_url:'https://example.org/purchase/synthetic',supplier:'Synthetic supplier'}],
   admet:{model_id:'admet-ai-synthetic',status:'success',values:{AMES:0.2}}}));
  const counts={population:4,filtered:4,displayed:4,population_calculated:0,
   reasons:{critical:0,opposing:0},missing:{purchase:4,pchembl:4}};
@@ -66,6 +66,7 @@ try{
  await page.locator('#detail-dialog[open]').waitFor();
  assert.equal(await page.locator('#detail-title').innerText(),'Synthetic input');
  assert.ok((await page.locator('#detail-content').innerText()).includes('84.23'));
+ assert.equal(await page.getByRole('link',{name:'자료원 아카이브 열기 ↗'}).getAttribute('href'),'https://cache.docking.org/zinc22/');
  const purchase=page.getByRole('link',{name:'구매처 홈페이지 열기 ↗'});
  assert.equal(await purchase.getAttribute('href'),'https://example.org/purchase/synthetic');
  assert.equal(await purchase.getAttribute('target'),'_blank');

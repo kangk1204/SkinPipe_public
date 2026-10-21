@@ -30,6 +30,15 @@ class ReviewRegressionTests(unittest.TestCase):
         original = deepcopy(row)
         self.assertEqual(purchase_links(row), [{"url": "https://example.org/product", "supplier": "Synthetic"}])
         self.assertEqual(row, original)
+    def test_source_archive_is_not_the_primary_purchase_destination(self):
+        row = {"offers": [{"product_url": "https://cache.docking.org/zinc22/", "supplier": "ZINC archive"},
+                          {"product_url": "https://example.org/product", "supplier": "Synthetic supplier"}]}
+        original = deepcopy(row)
+        self.assertEqual(purchase_links(row), [{"url": "https://example.org/product", "supplier": "Synthetic supplier"}])
+        self.assertEqual(review_columns(row)["review_purchase_url"], "https://example.org/product")
+        self.assertEqual(purchase_links({"offers": row["offers"][:1]}), [])
+        self.assertEqual(row, original)
+
     def test_single_prediction_has_identical_filter_and_export_values(self):
         prediction = {"model_id": "admet-ai-synthetic", "status": "success", "values": {"AMES": 0.95}}
         row = {"candidate_id": "synthetic", "admet": prediction}
