@@ -122,6 +122,89 @@ class SubmissionLockTests(unittest.TestCase):
                 self.assertEqual(self.queue.list(owner=self.owner), [])
         self.assertEqual(self.submit()["status"], "queued")
 
+    def test_completed_excel_http_download_survives_held_submission_lock(self):
+        # Exercise the real HTTP handler, queue, exporter, CAS and workbook.
+        # Only the two candidate records are synthetic; no running study is used.
+        import io
+        import zipfile
+        from openpyxl import load_workbook
+        from psycopg import sql
+        from skinpipe.platform.artifacts import ArtifactStore
+        from skinpipe.platform.catalog import Catalog
+        from skinpipe.platform.exports import RunExports
+
+        database = "export_http_" + uuid.uuid4().hex + "_test"
+        with psycopg.connect(self.queue.dsn, autocommit=True) as admin:
+            admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
+        try:
+            queue = Queue(make_conninfo(self.queue.dsn, dbname=database))
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                catalog = Catalog(root / "catalog")
+                manifest = catalog.create_snapshot([
+                    {"candidate_id": "synthetic-kept", "target_id": "compound:synthetic", "smiles": "CCO", "discovery_filter_pass": True},
+                    {"candidate_id": "synthetic-excluded", "target_id": "compound:synthetic", "smiles": "CCN", "discovery_filter_pass": False},
+                ], provenance={"owner_id": "researcher"})
+                service = SimpleNamespace(root=root, catalog=catalog, artifacts=ArtifactStore(root / "cas"), queue=queue)
+                service.exports = RunExports(service)
+                service.post = lambda path, body, owner: service.exports.submit(body, owner=owner)
+                public = root / "public"
+                public.mkdir()
+                (public / "local-research.html").write_text("<title>Synthetic export regression</title>")
+                server = PersonalServer(service, {"discovery": {}}, port=0, asset_root=root)
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                conn = HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+                try:
+                    conn.request("GET", "/")
+                    response = conn.getresponse()
+                    cookie = response.getheader("Set-Cookie").split(";", 1)[0]
+                    response.read()
+                    headers = {"Cookie": cookie, "Content-Type": "application/json", "X-SkinPipe-Local": "1"}
+                    body = json.dumps({"snapshot_id": manifest["snapshot_id"], "target_id": "compound:synthetic", "format": "xlsx", "candidate_details": True})
+
+                    def submit_http():
+                        conn.request("POST", "/v2/exports", body, headers)
+                        response = conn.getresponse()
+                        value = json.loads(response.read())
+                        self.assertEqual(response.status, 200, value)
+                        return value
+
+                    original = submit_http()
+                    job = queue.claim("synthetic-export-worker", ["result_export"])
+                    self.assertEqual(job["id"], original["export_id"])
+                    result = service.exports.execute(job["request"], stop=lambda: None, progress=lambda value: None)
+                    queue.finish(job["id"], job["lease_token"], result, compute_seconds=1)
+                    frozen = queue.get(job["id"])
+                    with queue.connection() as holder:
+                        holder.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", ("researcher:" + job["idempotency_key"],))
+                        replay = submit_http()
+                        self.assertEqual((replay["export_id"], replay["status"]), (job["id"], "complete"))
+                        conn.request("GET", "/v2/exports/" + job["id"] + "/download", headers={"Cookie": cookie})
+                        response = conn.getresponse()
+                        downloaded = response.read()
+                        self.assertEqual(response.status, 200)
+                        self.assertEqual(response.getheader("Content-Type"), "application/zip")
+                    self.assertEqual(queue.get(job["id"]), frozen)
+                    self.assertEqual(downloaded, service.artifacts.verified_path(result["sha256"]).read_bytes())
+                    with zipfile.ZipFile(io.BytesIO(downloaded)) as bundle:
+                        self.assertIsNone(bundle.testzip())
+                        book = load_workbook(io.BytesIO(bundle.read("review-0001.xlsx")))
+                        try:
+                            self.assertEqual(book["후보 검토"].max_row, 3)
+                            self.assertEqual([name for name in book.sheetnames if name.startswith("C000")], ["C000001", "C000002"])
+                            self.assertEqual({book[name]["B1"].value for name in ("C000001", "C000002")}, {"synthetic-kept", "synthetic-excluded"})
+                        finally:
+                            book.close()
+                finally:
+                    conn.close()
+                    server.shutdown()
+                    server.server_close()
+                    thread.join(timeout=5)
+        finally:
+            with psycopg.connect(self.queue.dsn, autocommit=True) as admin:
+                admin.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(database)))
+
     def test_replay_still_checks_project_and_budget_ownership(self):
         job = self.submit()
         with self.queue.connection() as conn:
