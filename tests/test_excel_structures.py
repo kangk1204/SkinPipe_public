@@ -137,6 +137,14 @@ class ExcelStructureTests(unittest.TestCase):
             book = load_workbook(output / result["workbooks"][0])
             try:
                 self.assertEqual(len(book["후보 검토"]._images), 1)
+                for cells in list(book["후보 검토"].rows)[1:]:
+                    candidate = by_id[cells[0].value]
+                    if candidate["image"]:
+                        self.assertIsNone(cells[2].value)
+                        self.assertEqual(cells[2].comment.text, candidate["image"])
+                    else:
+                        self.assertEqual(cells[2].value, candidate["image_kind"])
+                        self.assertIsNone(cells[2].comment)
                 for entry in result["candidate_detail_tabs"]:
                     self.assertEqual(len(book[entry["sheet"]]._images), int(entry["candidate_id"] == "valid"))
             finally:
@@ -156,6 +164,8 @@ class ExcelStructureTests(unittest.TestCase):
                     for number in range(2, table.max_row + 1):
                         candidate = next(r for r in saved if r["candidate_id"] == table.cell(number, 1).value)
                         self.assertEqual(table.cell(number, 4).value, candidate["smiles"])
+                        self.assertIsNone(table.cell(number, 3).value)
+                        self.assertEqual(table.cell(number, 3).comment.text, candidate["image"])
                         image = next(i for i in table._images if i.anchor._from.row == number - 1)
                         self.assertEqual(hashlib.sha256(image._data()).hexdigest(),
                                          hashlib.sha256((output / candidate["image"]).read_bytes()).hexdigest())

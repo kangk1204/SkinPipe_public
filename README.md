@@ -94,7 +94,7 @@ First click **Excel · 전체 후보·개별 물질 탭** (*Excel: complete tabl
 
 Extract the ZIP and open `review-0001.xlsx`. Start with **후보 검토** (*Candidate review*) and follow its links to individual compound tabs such as `C000001`. Keep the whole ZIP when sharing a study. A larger study may have several workbooks; its index links them together.
 
-The candidate table automatically includes a **2D structure immediately before SMILES**. Each compound tab shows the same 2D structure and the original SMILES. A saved docking pose appears separately, with its own label. Missing or invalid SMILES remain visible with an explanation in place of the 2D image.
+The candidate table automatically includes a **2D structure immediately before SMILES**. Each compound tab shows the same 2D structure and the original SMILES. A saved docking pose appears separately, with its own label. Missing or invalid SMILES remain visible with an explanation in place of the 2D image. Image filenames are retained in cell notes and source JSON so they do not overlap the diagram.
 
 Readable columns show the evaluation score, docking, skin properties and structural alerts, six toxicity endpoints, solubility, molecular weight, logP, TPSA, hydrogen-bond counts and QED. Model identity, calculation status and purchase information follow. Predictions from multiple models remain labelled separately; missing and invalid values are explicit. The complete ADMET records remain in the raw-data columns and JSON files.
 

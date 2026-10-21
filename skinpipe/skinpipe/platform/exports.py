@@ -744,6 +744,7 @@ class RunExports:
         from rdkit import Chem
         from rdkit.Chem import Draw, rdDepictor
         from openpyxl import Workbook
+        from openpyxl.comments import Comment
         from openpyxl.drawing.image import Image
         from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, TwoCellAnchor
         from openpyxl.styles import Alignment, Font
@@ -1407,6 +1408,8 @@ class RunExports:
                     row["image_kind"] = "2D 구조 · 확인·저장한 SMILES"
                     add_structure_image(sheet, image_path, row=sheet.max_row + 1, column=2)
                 except (ValueError, RuntimeError):
+                    image_path = None
+                    row["image"] = None
                     row["image_kind"] = "2D 구조 생성 실패 · 원래 SMILES 참조"
                     warnings.append({"candidate_id": cid, "reason": "2D_depiction_failed"})
             else:
@@ -1438,8 +1441,13 @@ class RunExports:
             row.update(review_columns(row))
             values = []
             for field, _ in FIELDS:
-                values.append(xlsx_value(row.get(field), candidate_id=cid, field=field, warnings=warnings))
+                # A path underneath a drawing remains visible around its edges.
+                # Keep the path in JSON and a cell note, leaving the image clear.
+                value = (None if image_path else row["image_kind"]) if field == "image" else row.get(field)
+                values.append(xlsx_value(value, candidate_id=cid, field=field, warnings=warnings))
             sheet.append(values)
+            if image_path:
+                sheet.cell(sheet.max_row, 3).comment = Comment(row["image"], "SkinPipe")
             sheet.row_dimensions[sheet.max_row].height = 114
             for cell in sheet[sheet.max_row]:
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
