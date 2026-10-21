@@ -367,6 +367,8 @@ def apply_toxicity(rows, service, request, *, stop, progress):
             row.setdefault("source_additional_toxicity", []).append(deepcopy(row["additional_toxicity"]))
         cached = row.get("admet") or []
         cached = [cached] if isinstance(cached, dict) else cached
+        if not isinstance(cached, (list, tuple)):
+            cached = []  # Keep malformed source evidence, but do not reuse it.
         # A partial cache row can contain only null endpoints. That records a
         # failed measurement of this channel, not a reusable prediction. Keep
         # a genuine zero as observed, and leave the source cache untouched.

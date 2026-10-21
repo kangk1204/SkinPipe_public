@@ -17,4 +17,6 @@ The guard checks the allowlist, empty study configuration and sensitive content 
 python3 scripts/check-public-tree.py --package /path/to/skinpipe.whl
 ```
 
+The same empty-study rules apply to source files and packaged JSON/YAML templates. Archives must have unique, canonical paths and regular files/directories, with at most 20,000 entries and 300 MiB uncompressed content. Links, special files, encrypted entries and unreadable archives are rejected. Tutorial image exemptions remain limited to the reviewed manifest and exact hashes.
+
 Keep generated files and downloaded data outside Git. Do not merge the history of a research repository into this repository. Project distribution licensing remains undecided; retain all existing third-party notices.

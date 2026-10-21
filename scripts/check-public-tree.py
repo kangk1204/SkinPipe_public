@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import sys
 import tarfile
 import xml.etree.ElementTree as ET
@@ -25,6 +26,8 @@ PATTERNS = [
     re.compile(r"31" + r"개 (?:분석|연구|표적)|original" + r"31|routine200-" + r"qualification"),
 ]
 SCREENSHOT_MANIFEST = "docs/images/manifest.json"
+MAX_PACKAGE_BYTES = 300 * 1024**2
+MAX_PACKAGE_MEMBERS = 20000
 
 
 def screenshot_manifest(entries: dict[str, bytes]) -> tuple[dict[str, str], list[str]]:
@@ -54,11 +57,41 @@ def screenshot_manifest(entries: dict[str, bytes]) -> tuple[dict[str, str], list
     return approved, errors
 
 
-def inspect_bytes(name: str, data: bytes, approved_images: dict[str, str] | None = None) -> list[str]:
-    errors = []
+def path_errors(name: str) -> list[str]:
     path = PurePosixPath(name)
-    if path.is_absolute() or ".." in path.parts or "\\" in name:
-        errors.append(f"Unsafe file path: {name}")
+    if (not path.parts or path.is_absolute() or ".." in path.parts or "\\" in name
+            or name.rstrip("/") != path.as_posix() or any(ord(c) < 32 or ord(c) == 127 for c in name)):
+        return [f"Unsafe file path: {name!r}"]
+    return []
+
+
+def study_template_errors(name: str, text: str) -> list[str]:
+    path = PurePosixPath(name)
+    if "config" not in path.parts:
+        return []
+    if path.name in {"skin_targets.yaml", "cosmetic_actives.yaml"}:
+        field = "markers" if path.name == "skin_targets.yaml" else "actives"
+        if text.strip() != f"version: 1\n{field}: []":
+            return [f"Nonempty study configuration: {name}"]
+    fields = {"direction_evidence.json": ("evidence",), "curated_literature.json": ("sources", "claims")}
+    if path.name in fields or path.name == "structure_weight_overrides.json":
+        try:
+            value = json.loads(text)
+            valid = isinstance(value, dict)
+            if path.name in fields:
+                valid = valid and all(value.get(field) == [] for field in fields[path.name])
+            else:
+                valid = valid and value.get("nodes") == {} and value.get("automatic_application") is False
+        except (ValueError, TypeError):
+            valid = False
+        if not valid:
+            return [f"Study evidence/configuration must remain empty: {name}"]
+    return []
+
+
+def inspect_bytes(name: str, data: bytes, approved_images: dict[str, str] | None = None) -> list[str]:
+    errors = path_errors(name)
+    path = PurePosixPath(name)
     if path.suffix.lower() in FORBIDDEN_SUFFIXES:
         errors.append(f"Research/runtime file type: {name}")
     if approved_images and name in approved_images:
@@ -86,27 +119,20 @@ def inspect_bytes(name: str, data: bytes, approved_images: dict[str, str] | None
     for pattern in PATTERNS:
         if pattern.search(text):
             errors.append(f"Private/credential content pattern: {name}")
-    if path.name in {"skin_targets.yaml", "cosmetic_actives.yaml"} and "config" in path.parts:
-        field = "markers" if path.name == "skin_targets.yaml" else "actives"
-        if text.strip() != f"version: 1\n{field}: []":
-            errors.append(f"Nonempty study configuration: {name}")
+    errors.extend(study_template_errors(name, text))
     return errors
 
 
 def check_templates(root: Path) -> list[str]:
+    required = ("skin_targets.yaml", "cosmetic_actives.yaml", "direction_evidence.json",
+                "curated_literature.json", "structure_weight_overrides.json")
     errors = []
-    config = root / "skinpipe/config"
-    # These are empty platform templates, not a published target or result set.
-    for filename, field in (("skin_targets.yaml", "markers"), ("cosmetic_actives.yaml", "actives")):
-        if (config / filename).read_text().strip() != f"version: 1\n{field}: []":
-            errors.append(f"Study configuration must remain empty: {filename}")
-    for filename, fields in (("direction_evidence.json", ["evidence"]), ("curated_literature.json", ["sources", "claims"])):
-        value = json.loads((config / filename).read_text())
-        if any(value.get(field) != [] for field in fields):
-            errors.append(f"Study evidence must remain empty: {filename}")
-    value = json.loads((config / "structure_weight_overrides.json").read_text())
-    if value.get("nodes") != {} or value.get("automatic_application") is not False:
-        errors.append("Study-specific ranking overrides are not public platform defaults")
+    for filename in required:
+        path = root / "skinpipe/config" / filename
+        if not path.is_file():
+            errors.append(f"Required empty study template is missing: {filename}")
+        else:
+            errors.extend(study_template_errors(path.relative_to(root).as_posix(), path.read_text()))
     return errors
 
 
@@ -133,26 +159,71 @@ def check_tree(root: Path) -> tuple[list[str], int]:
     actual = {path.relative_to(root).as_posix() for path in files}
     errors.extend(f"Allowlisted file is missing: {name}" for name in sorted(allowed - actual))
     errors.extend(check_templates(root))
-    return errors, len(files)
+    return list(dict.fromkeys(errors)), len(files)
 
 
 def check_package(path: Path) -> tuple[list[str], int]:
-    errors = []
-    if zipfile.is_zipfile(path):
-        with zipfile.ZipFile(path) as archive:
-            entries = [(name, archive.read(name)) for name in archive.namelist() if not name.endswith("/")]
-    else:
-        with tarfile.open(path) as archive:
-            entries = []
-            for member in archive.getmembers():
-                if member.isdir():
-                    continue
-                if not member.isfile():
-                    errors.append(f"Package contains link or special file: {member.name}")
-                    continue
-                stream = archive.extractfile(member)
-                assert stream is not None
-                entries.append((member.name, stream.read()))
+    errors, entries, seen, files = [], [], set(), set()
+    total = 0
+
+    def admit(name: str, size: int, directory: bool, regular: bool) -> None:
+        nonlocal total
+        errors.extend(path_errors(name))
+        identity = PurePosixPath(name).as_posix()
+        if identity in seen:
+            errors.append(f"Duplicate package member: {name!r}")
+        seen.add(identity)
+        if regular:
+            files.add(PurePosixPath(name))
+        if not directory and not regular:
+            errors.append(f"Package contains link or special file: {name!r}")
+        if size < 0 or (directory and size):
+            errors.append(f"Invalid package member size: {name!r}")
+        total += size
+
+    try:
+        if zipfile.is_zipfile(path):
+            with zipfile.ZipFile(path) as archive:
+                members = archive.infolist()
+                if len(members) > MAX_PACKAGE_MEMBERS:
+                    return ["Package exceeds the member limit"], 0
+                for member in members:
+                    mode = stat.S_IFMT(member.external_attr >> 16)
+                    directory = member.is_dir()
+                    valid_type = mode in ({0, stat.S_IFDIR} if directory else {0, stat.S_IFREG})
+                    admit(member.filename, member.file_size, directory and valid_type, not directory and valid_type)
+                    if member.flag_bits & 1:
+                        errors.append(f"Encrypted package member: {member.filename!r}")
+                if total > MAX_PACKAGE_BYTES:
+                    errors.append("Package exceeds the uncompressed size limit")
+                if any(parent in files for name in seen for parent in PurePosixPath(name).parents):
+                    errors.append("Package file/directory paths conflict")
+                if errors:
+                    return errors, 0
+                # Read the exact central-directory entry, never a lossy name lookup.
+                entries = [(member.filename, archive.read(member)) for member in members if not member.is_dir()]
+        else:
+            with tarfile.open(path) as archive:
+                members = []
+                for member in archive:
+                    members.append(member)
+                    admit(member.name, member.size, member.isdir(), member.isfile())
+                    if len(members) > MAX_PACKAGE_MEMBERS or total > MAX_PACKAGE_BYTES:
+                        return errors + ["Package exceeds the size/member limit"], 0
+                if any(parent in files for name in seen for parent in PurePosixPath(name).parents):
+                    errors.append("Package file/directory paths conflict")
+                if errors:
+                    return errors, 0
+                for member in members:
+                    if member.isdir():
+                        continue
+                    stream = archive.extractfile(member)
+                    if stream is None:
+                        return [f"Unreadable package member: {member.name!r}"], 0
+                    with stream:
+                        entries.append((member.name, stream.read()))
+    except (OSError, ValueError, RuntimeError, tarfile.TarError, zipfile.BadZipFile) as error:
+        return [f"Unreadable package: {type(error).__name__}"], 0
     approved_images, image_errors = screenshot_manifest(dict(entries))
     errors.extend(image_errors)
     for name, data in entries:

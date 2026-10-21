@@ -1784,6 +1784,8 @@ class DiscoveryRuns:
         return self._record(run_id, owner)
 
     def run_once(self, *, shutdown_event=None, export_only=False):
+        if shutdown_event is not None and shutdown_event.is_set():
+            return None
         from .resources import probe
 
         telemetry = probe(directory=self.service.root)
@@ -1869,6 +1871,7 @@ class DiscoveryRuns:
         thread.start()
         cleanup_known = True
         try:
+            stop()
             request = {**job["request"], "_owner": job["owner_id"], "_owned_compute": True}
             if job["kind"] == "literature_review":
                 result = self.service.personal_literature.execute(

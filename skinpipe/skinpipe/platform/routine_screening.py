@@ -14,6 +14,7 @@ import re
 
 from .identity import chemical_identity, digest
 from .ranking import finite
+from .admet_search import RISK_ENDPOINTS, prediction_records
 
 VERSION = 'routine-screening-v1'
 CONTROL_ROLES = {'control', 'positive_control', 'negative_control', 'counter_control',
@@ -75,24 +76,40 @@ def validate_policy(policy):
 
 def exact_admet_channels(row, identity):
     """Keep distinct models; a name, parent or InChIKey cannot establish reuse."""
-    records = row.get('admet') or []
-    records = [records] if isinstance(records, dict) else records
-    cached = [deepcopy(p) for p in records if isinstance(p, dict)
-        and p.get('status') == 'success' and p.get('model_id')
+    def valid_values(values, definitions=None):
+        # These classifier endpoint domains share the search/display contract.
+        # Regression outputs (for example negative log-solubility) stay finite,
+        # but are not restricted to the classifier's 0..1 range.
+        classifiers = set(RISK_ENDPOINTS)
+        if isinstance(definitions, (list, tuple)):
+            classifiers.update(item.get('id') for item in definitions
+                if isinstance(item, dict) and isinstance(item.get('id'), str)
+                and (item.get('task_type') == 'classification'
+                     or item.get('units', item.get('unit')) == 'probability'))
+        return (isinstance(values, dict) and bool(values)
+                and all(finite(value) is not None
+                        and (key not in classifiers or 0 <= value <= 1)
+                        for key, value in values.items()))
+
+    cached = [deepcopy(p) for p in prediction_records(row.get('admet'))
+        if p.get('status') == 'success' and p.get('model_id')
         and p.get('model_manifest_sha256') and p.get('endpoint_definitions_sha256')
-        and isinstance(p.get('values'), dict) and p['values']
-        and all(finite(v) is not None for v in p['values'].values())
+        and valid_values(p.get('values'), p.get('endpoint_definitions'))
         and p.get('input_smiles')
         and chemical_identity(p['input_smiles'])['exact_structure_id'] == identity['exact_structure_id']]
-    extra = row.get('additional_toxicity') or {}
-    model = extra.get('model_identity') or {}
-    values = {**extra.get('values', {}), **extra.get('physicochemical_values', {})}
+    extra = row.get('additional_toxicity')
+    extra = extra if isinstance(extra, dict) else {}
+    model = extra.get('model_identity')
+    model = model if isinstance(model, dict) else {}
+    learned, computed = extra.get('values'), extra.get('physicochemical_values', {})
     if (extra.get('status') == 'success' and extra.get('exact_structure_id') == identity['exact_structure_id']
             and extra.get('smiles') and chemical_identity(extra['smiles'])['exact_structure_id'] == identity['exact_structure_id']
             and model.get('model_manifest_sha256') and model.get('endpoint_definitions_sha256')
-            and values and all(finite(v) is not None for v in values.values())):
+            and isinstance(learned, dict) and bool(learned) and isinstance(computed, dict)
+            and not (learned.keys() & computed.keys())
+            and valid_values({**learned, **computed}, extra.get('endpoint_definitions'))):
         cached.append({'channel': 'additional_model', 'model_id': model.get('model_id'),
-                       'model_identity': deepcopy(model), 'values': values})
+                       'model_identity': deepcopy(model), 'values': {**learned, **computed}})
     return cached
 
 

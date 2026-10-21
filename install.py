@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import urllib.request
 
 try:
@@ -75,20 +76,34 @@ def checked_prefix(value: str) -> Path:
 def safe_unpack(archive: Path, destination: Path) -> None:
     """Extract only regular GitHub source files; reject traversal and all links."""
     with tarfile.open(archive, "r:gz") as handle:
-        members = handle.getmembers()
-        total = sum(member.size for member in members)
-        if total > MAX_ARCHIVE_BYTES or len(members) > 20000:
-            raise ValueError("Source archive exceeds the installation limit.")
-        roots = set()
-        for member in members:
+        members, roots, seen, files = [], set(), set(), set()
+        total = 0
+        for member in handle:
+            members.append(member)
+            total += member.size
+            if total > MAX_ARCHIVE_BYTES or len(members) > 20000:
+                raise ValueError("Source archive exceeds the installation limit.")
             name = PurePosixPath(member.name)
-            if name.is_absolute() or ".." in name.parts or "\\" in member.name or not name.parts:
-                raise ValueError("Unsafe source archive path.")
+            if (name.is_absolute() or ".." in name.parts or "\\" in member.name or not name.parts
+                    or member.name.rstrip("/") != name.as_posix()
+                    or any(ord(c) < 32 or ord(c) == 127 for c in member.name)):
+                raise ValueError("Unsafe or noncanonical source archive path.")
+            if name in seen:
+                raise ValueError("Duplicate source archive path.")
+            seen.add(name)
             if not member.isfile() and not member.isdir():
                 raise ValueError("Links and special files are not accepted in source archives.")
+            if member.size < 0 or (member.isdir() and member.size):
+                raise ValueError("Invalid source archive member size.")
+            if member.isfile():
+                files.add(name)
+                if len(name.parts) == 1:
+                    raise ValueError("Expected a source directory root.")
             roots.add(name.parts[0])
         if len(roots) != 1:
             raise ValueError("Expected one source archive root.")
+        if any(parent in files for name in seen for parent in name.parents):
+            raise ValueError("Source archive file/directory paths conflict.")
         destination.mkdir()
         for member in members:
             relative = PurePosixPath(member.name).parts[1:]
@@ -140,7 +155,9 @@ def prepare_source(root: Path, local_source: Path | None, state: dict) -> Path:
             raise ValueError("GitHub did not return a valid source revision.")
         archive = root / "source.tar.gz"
         if archive.exists():
-            archive.replace(root / f"interrupted-source-{dt.datetime.now().strftime('%Y%m%d%H%M%S')}.tar.gz")
+            descriptor, preserved = tempfile.mkstemp(prefix="interrupted-source-", suffix=".tar.gz", dir=root)
+            os.close(descriptor)
+            archive.replace(preserved)
         download(f"https://codeload.github.com/{REPOSITORY}/tar.gz/{commit}", archive)
         safe_unpack(archive, source)
         state["source_commit"] = commit
@@ -271,7 +288,7 @@ def main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         print("\nInstallation interrupted. Saved files remain in the installation folder. Re-run the same command to resume catalog preparation.", file=sys.stderr)
         return 130
-    except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as error:
+    except (ValueError, RuntimeError, OSError, tarfile.TarError, subprocess.CalledProcessError) as error:
         print(f"SkinPipe: {error}", file=sys.stderr)
         return 1
 

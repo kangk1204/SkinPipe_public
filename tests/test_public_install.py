@@ -86,6 +86,106 @@ class PublicSourceTests(unittest.TestCase):
                 output.writestr("research/data" + ".csv", "private")
             self.assertTrue(guard.check_package(archive)[0])
 
+    def test_package_rejects_duplicate_zip_entries_before_name_lookup(self):
+        import warnings
+        import zipfile
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "duplicate.whl"
+            with warnings.catch_warnings(), zipfile.ZipFile(archive, "w") as output:
+                warnings.simplefilter("ignore", UserWarning)
+                output.writestr("skinpipe/code.py", ("sk-proj-" + "a" * 40))
+                output.writestr("skinpipe/code.py", "pass")
+            errors, _ = guard.check_package(archive)
+            self.assertTrue(any("Duplicate" in error for error in errors), errors)
+
+    def test_package_rejects_zip_links_and_special_files(self):
+        import stat
+        import zipfile
+        with tempfile.TemporaryDirectory() as temporary:
+            for mode in (stat.S_IFLNK, stat.S_IFIFO, stat.S_IFCHR):
+                with self.subTest(mode=mode):
+                    archive = Path(temporary) / "special.whl"
+                    info = zipfile.ZipInfo("skinpipe/code.py")
+                    info.create_system = 3
+                    info.external_attr = (mode | 0o600) << 16
+                    with zipfile.ZipFile(archive, "w") as output:
+                        output.writestr(info, "synthetic-target")
+                    errors, _ = guard.check_package(archive)
+                    self.assertTrue(any("special file" in error for error in errors), errors)
+
+    def test_package_directory_names_are_checked(self):
+        import zipfile
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "directory.whl"
+            with zipfile.ZipFile(archive, "w") as output:
+                output.writestr("../outside/", "")
+                output.writestr("skinpipe/code.py", "pass")
+            errors, _ = guard.check_package(archive)
+            self.assertTrue(any("Unsafe" in error for error in errors), errors)
+
+    def test_package_rejects_nonempty_study_json_templates(self):
+        import zipfile
+        values = {
+            "direction_evidence.json": {"evidence": [{"synthetic": "study"}]},
+            "curated_literature.json": {"sources": ["synthetic"], "claims": []},
+            "structure_weight_overrides.json": {"nodes": {"synthetic": 2}, "automatic_application": False},
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            for name, value in values.items():
+                with self.subTest(name=name):
+                    archive = Path(temporary) / "study.whl"
+                    with zipfile.ZipFile(archive, "w") as output:
+                        output.writestr("skinpipe/_assets/config/" + name, json.dumps(value))
+                    errors, _ = guard.check_package(archive)
+                    self.assertTrue(any("Study" in error for error in errors), errors)
+
+    def test_package_limits_are_checked_before_payload_read(self):
+        import zipfile
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "large.whl"
+            with zipfile.ZipFile(archive, "w") as output:
+                output.writestr("skinpipe/code.py", "pass")
+            with patch.object(guard, "MAX_PACKAGE_BYTES", 3, create=True), patch.object(zipfile.ZipFile, "read", side_effect=AssertionError("payload must not be read")):
+                errors, _ = guard.check_package(archive)
+            self.assertTrue(any("limit" in error for error in errors), errors)
+
+    def test_tar_package_duplicates_and_file_parent_conflicts_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            for names in (("source/code.py", "source/code.py"), ("source/code.py", "source/code.py/child")):
+                with self.subTest(names=names):
+                    archive = Path(temporary) / "ambiguous.tar.gz"
+                    with tarfile.open(archive, "w:gz") as output:
+                        for name in names:
+                            info = tarfile.TarInfo(name)
+                            info.size = 4
+                            output.addfile(info, io.BytesIO(b"pass"))
+                    errors, _ = guard.check_package(archive)
+                    self.assertTrue(any("Duplicate" in error or "conflict" in error for error in errors), errors)
+
+    def test_empty_templates_and_regular_tar_directories_remain_valid(self):
+        values = {"direction_evidence.json": {"evidence": []}, "curated_literature.json": {"sources": [], "claims": []},
+                  "structure_weight_overrides.json": {"nodes": {}, "automatic_application": False}}
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "source.tar.gz"
+            with tarfile.open(archive, "w:gz") as output:
+                directory = tarfile.TarInfo("source/config")
+                directory.type = tarfile.DIRTYPE
+                output.addfile(directory)
+                for name, value in values.items():
+                    data = json.dumps(value).encode()
+                    info = tarfile.TarInfo("source/config/" + name)
+                    info.size = len(data)
+                    output.addfile(info, io.BytesIO(data))
+            self.assertEqual(guard.check_package(archive), ([], 3))
+
+    def test_corrupt_package_returns_a_failure_receipt(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "broken.tar.gz"
+            archive.write_bytes(b"not-an-archive")
+            errors, count = guard.check_package(archive)
+            self.assertEqual(count, 0)
+            self.assertTrue(any("Unreadable" in error for error in errors), errors)
+
     def test_browser_imports_resolve(self):
         import re
         public = ROOT / "web/public"
@@ -192,6 +292,53 @@ class InstallerTests(unittest.TestCase):
                 output.addfile(info, io.BytesIO(b"pass"))
             bootstrap.safe_unpack(archive, root / "source")
             self.assertEqual((root / "source/skinpipe/code.py").read_text(), "pass")
+
+    def test_archive_duplicate_paths_are_rejected_before_writing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "duplicate.tar.gz"
+            with tarfile.open(archive, "w:gz") as output:
+                for name in ("source/code.py", "source/./code.py"):
+                    info = tarfile.TarInfo(name)
+                    info.size = 4
+                    output.addfile(info, io.BytesIO(b"pass"))
+            with self.assertRaisesRegex(ValueError, "Duplicate|canonical"):
+                bootstrap.safe_unpack(archive, root / "output")
+            self.assertFalse((root / "output").exists())
+
+    def test_archive_file_parent_conflict_and_size_limit_preserve_destination(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "source.tar.gz"
+            with tarfile.open(archive, "w:gz") as output:
+                for name in ("source/code.py", "source/code.py/child"):
+                    info = tarfile.TarInfo(name)
+                    info.size = 4
+                    output.addfile(info, io.BytesIO(b"pass"))
+            with self.assertRaisesRegex(ValueError, "conflict"):
+                bootstrap.safe_unpack(archive, root / "output")
+            with patch.object(bootstrap, "MAX_ARCHIVE_BYTES", 3), self.assertRaisesRegex(ValueError, "limit"):
+                bootstrap.safe_unpack(archive, root / "output")
+            self.assertFalse((root / "output").exists())
+
+    def test_rapid_source_retries_preserve_each_interrupted_download(self):
+        def fail_download(url, target):
+            target.write_bytes(b"next interrupted download")
+            raise OSError("synthetic interrupted download")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "source.tar.gz").write_bytes(b"first interrupted download")
+            with patch.object(bootstrap.dt, "datetime") as clock, patch.object(bootstrap, "download", side_effect=fail_download), patch.object(bootstrap.urllib.request, "urlopen") as request:
+                clock.now.return_value.strftime.return_value = "20000101000000"
+                request.side_effect = lambda *args, **kwargs: io.BytesIO(json.dumps({"sha": "a" * 40}).encode())
+                for _ in range(2):
+                    with self.assertRaisesRegex(OSError, "synthetic"):
+                        bootstrap.prepare_source(root, None, {})
+            preserved = list(root.glob("interrupted-source-*.tar.gz"))
+            self.assertEqual(len(preserved), 2)
+            self.assertEqual({p.read_bytes() for p in preserved}, {b"first interrupted download", b"next interrupted download"})
+            self.assertFalse((root / "source").exists())
 
     def prepared(self, temporary, ready):
         root = Path(temporary).resolve() / "app"

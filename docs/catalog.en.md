@@ -94,6 +94,7 @@ This public installer creates a versioned source snapshot. Re-running it starts/
 | Unsupported operating system/root user | Use regular-user Ubuntu 24.04 x86_64; use a browser tunnel from other systems |
 | Folder exists/unrecognized | Choose a new `--prefix`; do not delete another installation |
 | Download/hash error | Check network/provider availability; preserve the log and retry the unchanged preparation |
+| Source archive rejected or incomplete | Preserve the archive and logs; use a new `--prefix` after checking the source. Do not edit the archive to bypass validation |
 | Not enough space | Free space outside active research or choose a larger new volume/path |
 | Another build is running | Follow the existing terminal/status; do not start another catalog build |
 | GPU check fails under auto | CPU fallback is reported; inspect CUDA logs if you need GPU acceleration |

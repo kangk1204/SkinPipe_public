@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS platform_attempts (
  started_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
  ended_at TIMESTAMPTZ, status TEXT NOT NULL DEFAULT 'running',
  PRIMARY KEY(job_id,attempt));
+ALTER TABLE platform_attempts ADD COLUMN IF NOT EXISTS physical_host TEXT;
 CREATE TABLE IF NOT EXISTS platform_job_events (
  id BIGSERIAL PRIMARY KEY, job_id TEXT NOT NULL REFERENCES platform_jobs(id),
  created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(), type TEXT NOT NULL,
@@ -342,13 +343,21 @@ class Queue:
         return [{"job_id": row['id'], **row['progress']['resource_quarantine']} for row in conn.execute(
             "SELECT id,progress FROM platform_jobs WHERE progress->'resource_quarantine'->>'active'='true'").fetchall()]
 
-    def _admission_quarantined(self, conn, worker, *, gpu_uuid=None):
+    def _admission_quarantined(self, conn, worker, *, gpu_uuid=None, job=None):
         conn.execute("SELECT pg_advisory_xact_lock(hashtext('skinpipe-resource-quarantine-v1'))")
+        # Claim must use the same registration for its admission decision and
+        # immutable attempt snapshot, even if another host reuses this name.
+        node = (conn.execute('SELECT telemetry FROM platform_nodes WHERE id=%s FOR SHARE', (worker,)).fetchone()
+                if job is None else None)
         quarantines = self._quarantines(conn)
         if not quarantines:
             return False
-        node = conn.execute('SELECT telemetry FROM platform_nodes WHERE id=%s', (worker,)).fetchone()
-        host = self._host(node['telemetry']) if node else None
+        if job is not None:
+            attempt = conn.execute('SELECT physical_host FROM platform_attempts WHERE job_id=%s AND attempt=%s',
+                                   (job['id'], job['attempts'])).fetchone()
+            host = attempt['physical_host'] if attempt else None
+        else:
+            host = self._host(node['telemetry']) if node else None
         return any(not item.get('physical_host') or not host or item['physical_host'] == host
             or (gpu_uuid is not None and gpu_uuid in item.get('gpu_uuids', [])) for item in quarantines)
 
@@ -356,8 +365,12 @@ class Queue:
         if row['kind'] == 'probe' or not row['attempts']:
             return
         conn.execute("SELECT pg_advisory_xact_lock(hashtext('skinpipe-resource-quarantine-v1'))")
-        node = conn.execute('SELECT telemetry FROM platform_nodes WHERE id=%s', (row.get('worker'),)).fetchone()
-        host = self._host(node['telemetry']) if node else None
+        # Registration is mutable and a coordinator name may be reused on a
+        # different host. Only this attempt's frozen identity can locate its
+        # still-owned resources. Legacy/unknown identities remain global holds.
+        attempt = conn.execute('SELECT physical_host FROM platform_attempts WHERE job_id=%s AND attempt=%s',
+                               (row['id'], row['attempts'])).fetchone()
+        host = attempt['physical_host'] if attempt else None
         gpu = conn.execute('SELECT gpu_uuid FROM platform_gpu_reservations WHERE job_id=%s', (row['id'],)).fetchall()
         quarantine = {'active': True, 'reason': reason, 'attempt': row['attempts'],
             'worker': row.get('worker'), 'physical_host': host,
@@ -491,13 +504,15 @@ class Queue:
                 attempts=attempts+1,progress=progress-'resource_cleanup',updated_at=clock_timestamp() WHERE id=%s RETURNING *""",
                 (worker, token, self.lease_seconds, row["id"]),
             ).fetchone()
+            node = conn.execute('SELECT telemetry FROM platform_nodes WHERE id=%s FOR SHARE', (worker,)).fetchone()
             conn.execute(
-                "INSERT INTO platform_attempts(job_id,attempt,token_sha256,worker) VALUES(%s,%s,%s,%s)",
+                "INSERT INTO platform_attempts(job_id,attempt,token_sha256,worker,physical_host) VALUES(%s,%s,%s,%s,%s)",
                 (
                     row["id"],
                     row["attempts"],
                     hashlib.sha256(token.encode()).hexdigest(),
                     worker,
+                    self._host(node['telemetry']) if node else None,
                 ),
             )
             self._event(
@@ -933,7 +948,13 @@ class Queue:
         identifier(gpu_uuid, "GPU UUID")
         with self.connection() as conn:
             row = self._owned(conn, job_id, token)
-            if self._admission_quarantined(conn, row['worker'], gpu_uuid=gpu_uuid):
+            if self._admission_quarantined(conn, row['worker'], gpu_uuid=gpu_uuid, job=row):
+                return False
+            node = conn.execute('SELECT telemetry FROM platform_nodes WHERE id=%s FOR SHARE', (row['worker'],)).fetchone()
+            attempt = conn.execute('SELECT physical_host FROM platform_attempts WHERE job_id=%s AND attempt=%s',
+                                   (job_id, row['attempts'])).fetchone()
+            if (attempt and attempt['physical_host'] is not None
+                    and (not node or self._host(node['telemetry']) != attempt['physical_host'])):
                 return False
             existing = conn.execute("SELECT * FROM platform_gpu_reservations WHERE gpu_uuid=%s", (gpu_uuid,)).fetchone()
             if existing and existing["job_id"] == job_id and existing["lease_token"] == token:
@@ -967,10 +988,15 @@ class Queue:
             raise ValueError("CPU allocation must be 1..8 cores")
         with self.connection() as conn:
             job = self._owned(conn, job_id, token)
-            if self._admission_quarantined(conn, job['worker']):
+            if self._admission_quarantined(conn, job['worker'], job=job):
                 return False
             node = conn.execute("SELECT * FROM platform_nodes WHERE id=%s AND updated_at>clock_timestamp()-interval '90 seconds' FOR UPDATE", (job["worker"],)).fetchone()
             if not node:
+                return False
+            attempt = conn.execute('SELECT physical_host FROM platform_attempts WHERE job_id=%s AND attempt=%s',
+                                   (job_id, job['attempts'])).fetchone()
+            if (attempt and attempt['physical_host'] is not None
+                    and self._host(node['telemetry']) != attempt['physical_host']):
                 return False
             limits = _cpu_reservation_limits(node["telemetry"])
             if limits is None or cores > limits[0]:

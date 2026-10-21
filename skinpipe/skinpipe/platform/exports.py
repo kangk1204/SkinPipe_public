@@ -19,6 +19,7 @@ from .engines import ResourceDeferred
 from .identity import digest
 from .export_assets import export_asset_root, implementation_files
 from .admet_search import prediction_records
+from .ranking import finite
 
 REVIEW_FIELDS = [
     ("review_role", "역할 구분"),
@@ -1022,7 +1023,7 @@ class RunExports:
             def additional_value(key, value, *, derived):
                 if value is None:
                     return "미평가·결측"
-                invalid = isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
+                invalid = finite(value) is None
                 definition = definitions.get(key, {})
                 if not derived:
                     classifier = key in {"Skin_Reaction", "AMES", "Carcinogens_Lagunin", "ClinTox", "DILI", "hERG"} or definition.get("task_type") == "classification"

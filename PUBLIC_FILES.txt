@@ -36,6 +36,7 @@ docs/images/23-nicotinamide-properties.svg
 docs/images/24-nicotinamide-toxicity.svg
 docs/images/README.md
 docs/images/manifest.json
+docs/review-20261022.md
 docs/review-fixes-20261021.md
 docs/validation-20261020.md
 docs/validation-modes-20261021.md
@@ -272,19 +273,23 @@ skinpipe/skinpipe/validation_contract.py
 tests/test_catalog_materialization_batches.py
 tests/test_catalog_query_early_release.py
 tests/test_cleanup_diagnostics.py
+tests/test_coordinator_shutdown_entry.py
 tests/test_data_audit.py
 tests/test_detail_dialog.mjs
 tests/test_excel_structures.py
 tests/test_export_raw_evidence.py
 tests/test_metric_radar.mjs
 tests/test_public_install.py
+tests/test_queue_attempt_host_binding.py
 tests/test_research_docking_summary.mjs
 tests/test_research_execution_scope.mjs
 tests/test_research_export_state.mjs
 tests/test_research_progress.mjs
+tests/test_research_status_view.py
 tests/test_research_submission_timeout.mjs
 tests/test_review_regressions.py
 tests/test_runtime_audit.py
+tests/test_science_contracts_final_20261021.py
 tests/test_scientific_audit.py
 tests/test_snapshot_summary.py
 tests/test_snapshot_summary_ui.mjs
@@ -315,4 +320,3 @@ web/public/vendor/molstar/LICENSE
 web/public/vendor/molstar/NOTICE.json
 web/public/vendor/molstar/molstar.css
 web/public/vendor/molstar/molstar.js
-tests/test_research_status_view.py
