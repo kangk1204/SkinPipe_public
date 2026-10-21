@@ -58,6 +58,7 @@ test('actual discovery renderer transitions running → lost/stale → recovered
   const panel=fixture.get('#research-live-status');assert.equal(panel.attributes['data-state'],'running');assert.equal(panel.attributes['data-active'],'true');assert.match(panel.innerHTML,/카탈로그 후보 확보.*카탈로그 행 2개 확보/);
   progressPayload={stage:'routine_docking',completed:9,total:32,processed:8,selected:14,qualified:11,target:200};await next(5000);assert.match(panel.innerHTML,/현재 도킹 묶음 9개 \/ 32개 처리 완료/);
   progressPayload={...progressPayload,completed:24};await next(5000);assert.match(panel.innerHTML,/현재 도킹 묶음 24개 \/ 32개 처리 완료/);assert.doesNotMatch(panel.innerHTML,/이 단계에서 8개|선택 14개/);
+  progressPayload={stage:'routine_docking',completed:4,total:32,processed:72,qualified:75,target:200,selected:14};await next(5000);assert.match(panel.innerHTML,/현재 도킹 묶음 4개 \/ 32개 처리 완료 · 자세 QC 전 · 최근 QC 후 대표 후보 75개 \/ 목표 200개/);assert.doesNotMatch(panel.innerHTML,/72개|선택 14개/);
   fail=true;await next(5000);assert.equal(panel.attributes['data-state'],'unknown');assert.equal(panel.attributes['aria-busy'],'false');assert.match(panel.textContent,/마지막으로 확인한 상태/);assert.doesNotMatch(panel.innerHTML,/현재 단계|research-progress-icon/);
   fail=false;await next(10000);assert.equal(panel.attributes['data-active'],'true');await next(RESEARCH_PROGRESS_STALE_MS);assert.equal(panel.attributes['data-active'],'false');assert.match(panel.textContent,/최근 20초/);
   await next(5000);assert.equal(panel.attributes['data-active'],'true');
@@ -71,7 +72,8 @@ test('current docking batch advances using completed and never previous QC proce
  for(const stage of ['docking','routine_docking','bound_complex_docking','cpu_fallback'])for(const completed of [0,9,24,32]){
   const progress={stage,completed,total:32,processed:8,selected:14,acquired:1000,qualified:11,target:200},before=JSON.stringify(progress),html=researchProgressMarkup(progress);
   assert.match(html,new RegExp('현재 도킹 묶음 '+completed+'개 / 32개 처리 완료 · 자세 QC 전'));
-  assert.doesNotMatch(html,/이 단계에서 8개|선택 14개|1,000|대표 후보|QC 통과|도킹 성공|%|완료 예정/);
+  assert.match(html,/최근 QC 후 대표 후보 11개 \/ 목표 200개/);
+  assert.doesNotMatch(html,/이 단계에서 8개|선택 14개|1,000|QC 통과|도킹 성공|%|완료 예정/);
   assert.equal(JSON.stringify(progress),before);
  }
 });
@@ -115,4 +117,22 @@ test('invalid or missing counters never fall back to merged numbers; valid zero 
  assert.doesNotMatch(researchProgressMarkup({stage:'routine_pose_quality',qualified:201,target:200}),/최근 QC 후 대표 후보/);
  assert.doesNotMatch(researchProgressMarkup({stage:'routine_pose_quality',qualified:0,target:0}),/최근 QC 후 대표 후보/);
  for(const value of [null,[],true,'stage'])assert.equal(researchProgressMarkup(value),'');
+});
+
+test('latest QC representatives remain historical while the current docking batch resets and advances',()=>{
+ for(const stage of ['docking','routine_docking','bound_complex_docking','cpu_fallback'])for(const completed of [32,0,4,9]){
+  const progress={stage,completed,total:32,processed:72,qualified:75,target:200,selected:14,acquired:1000},before=JSON.stringify(progress),html=researchProgressMarkup(progress);
+  assert.match(html,new RegExp('현재 도킹 묶음 '+completed+'개 / 32개 처리 완료 · 자세 QC 전 · 최근 QC 후 대표 후보 75개 / 목표 200개'));
+  assert.doesNotMatch(html,/72개|14개|1,000|75개.*QC 통과|현재 묶음.*75개.*통과/);
+  assert.equal(JSON.stringify(progress),before);
+ }
+});
+test('historical QC figures require a valid recorded pair without inventing missing values',()=>{
+ const invalid=[undefined,null,'75',true,-1,0.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1];
+ for(const stage of ['docking','routine_docking','bound_complex_docking','cpu_fallback','routine_pose_quality']){
+  for(const qualified of invalid)assert.doesNotMatch(researchProgressMarkup({stage,completed:4,total:32,qualified,target:200,processed:72,selected:14}),/최근 QC 후 대표 후보/);
+  for(const target of [...invalid,0,74])assert.doesNotMatch(researchProgressMarkup({stage,completed:4,total:32,qualified:75,target,processed:72,selected:14}),/최근 QC 후 대표 후보/);
+  assert.match(researchProgressMarkup({stage,completed:4,total:32,qualified:0,target:200}),/최근 QC 후 대표 후보 0개 \/ 목표 200개/);
+  assert.match(researchProgressMarkup({stage,completed:4,total:32,qualified:200,target:200}),/최근 QC 후 대표 후보 200개 \/ 목표 200개/);
+ }
 });

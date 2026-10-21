@@ -17,13 +17,16 @@ export function researchProgressMarkup(progress,{state='running'}={}){
  // Worker events merge across stages. Read only counters owned by this emitter;
  // batch totals, cumulative attempts and selected model inputs are different units.
  const pair=(done,total)=>!valid(done)||(valid(total)&&done>total)?'':number(done)+'개'+(valid(total)?' / '+number(total)+'개':'');
+ // The latest QC result remains historical when the next docking batch starts.
+ const recentQc=valid(progress.qualified)&&valid(progress.target)&&progress.target>0&&progress.qualified<=progress.target?' · 최근 QC 후 대표 후보 '+number(progress.qualified)+'개 / 목표 '+number(progress.target)+'개':'';
  let detail='';
  if(['docking','routine_docking','bound_complex_docking','cpu_fallback'].includes(stage)){
   const current=pair(progress.completed,progress.total);
   detail=current?' · 현재 도킹 묶음 '+current+' 처리 완료 · 자세 QC 전':' · 현재 도킹 묶음의 처리 수 확인 필요 · 자세 QC 전';
+  detail+=recentQc;
  }else if(stage==='routine_pose_quality'){
   if(valid(progress.processed))detail+=' · 누적 도킹 시도 '+number(progress.processed)+'개';
-  if(valid(progress.qualified)&&valid(progress.target)&&progress.target>0&&progress.qualified<=progress.target)detail+=' · 최근 QC 후 대표 후보 '+number(progress.qualified)+'개 / 목표 '+number(progress.target)+'개';
+  detail+=recentQc;
  }else if(stage==='additional_toxicity'){
   detail=(valid(progress.selected)?' · 이번 단계 선택 '+number(progress.selected)+'개':'')+' · 완료 수는 아직 확정하지 않았습니다.';
  }else if(stage==='catalog_acquisition'){
