@@ -30,6 +30,7 @@ from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHand
 from .artifacts import atomic_bytes, canonical_json
 from .cli import _outside_git, read_config, service_from_config
 from .export_assets import export_asset_root
+from .queue import SubmissionBusy
 
 SCHEMA = "skinpipe-personal-install-v1"
 OWNER = "researcher"
@@ -366,6 +367,12 @@ class PersonalHandler(BaseHTTPRequestHandler):
             self._error(error)
 
     def _error(self, error):
+        if isinstance(error, SubmissionBusy):
+            self._json({
+                "error": "다른 요청을 저장 중입니다. 잠시 후 같은 버튼을 다시 눌러 주세요. 기존 연구와 계산 한도는 유지됩니다.",
+                "error_type": "SubmissionBusy", "retryable": True,
+            }, 503)
+            return
         status = 403 if isinstance(error, PermissionError) else 404 if isinstance(error, KeyError) else 400 if isinstance(error, (ValueError, TypeError)) else 500
         message = str(error) if status != 500 else "처리를 완료하지 못했습니다. 설치 상태를 확인한 뒤 다시 시도해 주세요."
         self._json({"error": message, "error_type": type(error).__name__}, status)

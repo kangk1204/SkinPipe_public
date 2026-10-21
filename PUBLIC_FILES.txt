@@ -10,6 +10,7 @@ docs/candidate-docking-20261021.md
 docs/catalog-scale-20261021.md
 docs/catalog.en.md
 docs/catalog.ko.md
+docs/ci-verification.md
 docs/images/01-installation-ready.jpg
 docs/images/02-compound-input.jpg
 docs/images/03-confirm-compound.jpg
@@ -294,6 +295,7 @@ tests/test_scientific_audit.py
 tests/test_snapshot_summary.py
 tests/test_snapshot_summary_ui.mjs
 tests/test_structure_viewer_seed.mjs
+tests/test_submission_contention.py
 web/bridge/export_images.py
 web/public/api-request.js
 web/public/column-help.js

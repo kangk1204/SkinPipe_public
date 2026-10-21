@@ -92,6 +92,9 @@ First click **Excel · 전체 후보·개별 물질 탭** (*Excel: complete tabl
 
 ![Prepared Excel bundle ZIP save link beside the Excel button](docs/images/10-excel-ready.jpg)
 
+If Excel reports that another request is being saved, wait a few seconds and click the same Excel button again. This reuses the saved submission; it does not restart the study or reset its computation budget. A completed export can be downloaded again.
+
+
 Extract the ZIP and open `review-0001.xlsx`. Start with **후보 검토** (*Candidate review*) and follow its links to individual compound tabs such as `C000001`. Keep the whole ZIP when sharing a study. A larger study may have several workbooks; its index links them together.
 
 The candidate table automatically includes a **2D structure immediately before SMILES**. Each compound tab shows the same 2D structure and the original SMILES. A saved docking pose appears separately, with its own label. Missing or invalid SMILES remain visible with an explanation in place of the 2D image. Image filenames are retained in cell notes and source JSON so they do not overlap the diagram.
@@ -198,3 +201,5 @@ python3 -m pip wheel --no-deps --wheel-dir /tmp/skinpipe-public-wheel ./skinpipe
 Put installations and test outputs outside the checkout. Before contributing, read [CONTRIBUTING.md](CONTRIBUTING.md). Distribution licensing for SkinPipe is being decided; no project license has been selected. Bundled third-party components retain their own notices.
 
 [Operating browser mode verification (2026-10-21)](docs/validation-modes-20261021.md) records the protein, PDB/file and compound workflows, actual Excel downloads and retained scientific holds.
+
+For maintainer checks, follow [Verify GitHub Actions for a pushed commit](docs/ci-verification.md) and record the exact commit and run URL.

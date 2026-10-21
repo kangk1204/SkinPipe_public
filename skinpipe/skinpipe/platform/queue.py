@@ -31,6 +31,10 @@ class BudgetExhausted(ValueError):
     """Stopped work cannot resume within its unchanged frozen allowance."""
 
 
+class SubmissionBusy(RuntimeError):
+    """A submission transaction rolled back after a bounded lock wait."""
+
+
 def canonical(value):
     return json.dumps(
         value,
@@ -164,6 +168,41 @@ class Queue:
             (job_id, event_type, Jsonb(payload or {})),
         )
 
+    @contextmanager
+    def _submission_connection(self):
+        try:
+            with self.connection() as conn:
+                yield conn
+        except psycopg.errors.LockNotAvailable as error:
+            # connection() has rolled back before callers can retry. Do not
+            # expose PostgreSQL diagnostics or turn contention into a new key.
+            raise SubmissionBusy(
+                "Another submission is still being saved. Wait a few seconds "
+                "and retry the same request."
+            ) from error
+
+    def _existing_submission(self, conn, owner, project, key, signature):
+        row = conn.execute(
+            "SELECT * FROM platform_jobs WHERE owner_id=%s AND idempotency_key=%s",
+            (owner, key),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["request_sha256"] != signature:
+            raise ValueError("Idempotency key already bound to different request")
+        bound_project = conn.execute(
+            "SELECT owner_id FROM platform_projects WHERE id=%s", (project,)
+        ).fetchone()
+        if bound_project is None or bound_project["owner_id"] != owner:
+            raise ValueError("Project belongs to another owner")
+        bound_budget = conn.execute(
+            "SELECT owner_id FROM platform_compute_budgets WHERE id=%s",
+            (row["budget_scope"],),
+        ).fetchone()
+        if bound_budget is not None and bound_budget["owner_id"] != owner:
+            raise ValueError("Compute budget belongs to another owner")
+        return self._public(row)
+
     def enqueue(
         self,
         kind,
@@ -205,11 +244,21 @@ class Queue:
             }
         )
         scope = owner + ":" + effective_scope
-        with self.connection() as conn:
+        with self._submission_connection() as conn:
+            # A committed submission is immutable. Replays need no writes or
+            # advisory lock, even while another submitter holds the same key.
+            existing = self._existing_submission(conn, owner, project, idempotency_key, signature)
+            if existing is not None:
+                return existing
             conn.execute(
                 "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
                 (owner + ":" + idempotency_key,),
             )
+            # A concurrent creator may have committed while we waited. Check
+            # again under the lock before creating users, projects or budgets.
+            existing = self._existing_submission(conn, owner, project, idempotency_key, signature)
+            if existing is not None:
+                return existing
             conn.execute(
                 "INSERT INTO platform_users(id) VALUES(%s) ON CONFLICT DO NOTHING",
                 (owner,),
@@ -225,22 +274,6 @@ class Queue:
                 != owner
             ):
                 raise ValueError("Project belongs to another owner")
-            row = conn.execute(
-                "SELECT * FROM platform_jobs WHERE owner_id=%s AND idempotency_key=%s",
-                (owner, idempotency_key),
-            ).fetchone()
-            if row:
-                if row["request_sha256"] != signature:
-                    raise ValueError(
-                        "Idempotency key already bound to different request"
-                    )
-                bound = conn.execute(
-                    "SELECT owner_id FROM platform_compute_budgets WHERE id=%s",
-                    (row["budget_scope"],),
-                ).fetchone()
-                if bound is not None and bound["owner_id"] != owner:
-                    raise ValueError("Compute budget belongs to another owner")
-                return self._public(row)
             job_id = uuid.uuid4().hex
             conn.execute(
                 "INSERT INTO platform_compute_budgets(id,owner_id,limit_seconds) VALUES(%s,%s,%s) ON CONFLICT DO NOTHING",
