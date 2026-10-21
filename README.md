@@ -6,6 +6,20 @@ SkinPipe is a locally installed platform for compound screening in skin research
 
 This repository contains the software and installation instructions. Research inputs, study results, chemical databases, calculated predictions and model weights are kept in each user's installation folder. The platform starts with an empty study history and no predefined study targets.
 
+## Preview: 3D structures and prediction profiles
+
+**Mol* 3D view — public PDB `1CBS`, chain A, observed ligand REA 200.** This is the original observed ligand in its receptor, viewed with **결합 부위** (*Binding site*); it is not a newly docked candidate. Drag to rotate and use the wheel/pinch to zoom in the app. [Open the 4K pocket image](docs/images/21-molstar-bound-pocket.png) or [the complete structure](docs/images/22-molstar-bound-overview.png).
+
+[![Mol* pocket view of the observed REA ligand in PDB 1CBS; native 3840 by 2160 PNG](docs/images/21-molstar-bound-pocket.png)](docs/images/21-molstar-bound-pocket.png)
+
+**SwissADME-style radar presentation — SkinPipe's own axes and reference ranges.** The two graphs below show the public **Nicotinamide / PubChem CID 936** tutorial example, using cached **ADMET-AI 2.0.1** outputs. These are SkinPipe plots, not results from the SwissADME service. Green shows the compound; amber marks the four configured property reference ranges. Larger radii mean larger values, including larger toxicity-model outputs.
+
+| Molecular properties | Toxicity model outputs |
+|---|---|
+| [![Nicotinamide molecular-property radar with SkinPipe reference ranges](docs/images/23-nicotinamide-properties.svg)](docs/images/23-nicotinamide-properties.svg) | [![Nicotinamide six-endpoint toxicity radar](docs/images/24-nicotinamide-toxicity.svg)](docs/images/24-nicotinamide-toxicity.svg) |
+
+The 3D images are native **3840 × 2160 PNGs**; the plots are **SVG vectors**, which stay sharp when enlarged. Click an image for its original. In the app, use **원값·단위·표시 범위** (*Raw values, units and display ranges*) and **그래프 SVG 저장** (*Save graph SVG*). Follow the [illustrated study workflow](#your-first-study-in-pictures) below and the [3D walkthrough](docs/browser.en.md#bound-structure-example). [Image sources and capture details](docs/images/README.md).
+
 ## Install and start
 
 Use a **regular user account on Ubuntu 24.04 x86_64**, with sudo access, Python 3 and an Internet connection. Allow **20 GiB of free space** for the starter installation. The installer requests the Ubuntu password in the terminal when installing system packages.

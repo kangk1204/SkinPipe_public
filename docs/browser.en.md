@@ -61,6 +61,8 @@ For the public `1CBS` example, inspect **model 1 / chain A / REA / residue 200**
 
 ![MolStar display of observed ligand and receptor, with pocket and whole-structure controls](images/16-observed-pocket-3d.jpg)
 
+For a sharper structure image, open the [native 4K pocket export](images/21-molstar-bound-pocket.png) or [whole-structure export](images/22-molstar-bound-overview.png). To save your own image, open Mol*'s **Screenshot / State Snapshot**, choose **Ultra HD (3840 x 2160)** and **PNG**, then **Download**. This exports the structure view; it does not export a new docking calculation.
+
 **3D controls:** drag to rotate, use the wheel/pinch to zoom, **결합 부위** to focus on the pocket, **전체 구조** to restore the whole protein, and **×** to close. This screenshot is an observed PDB ligand, not a new docking result.
 
 ## 3. Choose the analysis and limits
@@ -179,6 +181,8 @@ If the table becomes empty, compare **전체 모집단** (*Stored population*) w
 ![Two-dimensional compound structure and skin properties](images/08-structure-and-skin.jpg)
 
 ![ADMET outputs with scales and model version](images/09-admet-results.jpg)
+
+See the [high-resolution molecular-property and toxicity radars](../README.md#preview-3d-structures-and-prediction-profiles). The SVG originals retain raw values, axis ranges and model-source metadata; use **그래프 SVG 저장** in the app to save your own graph.
 
 ### Distinguish completion, holds and zero candidates
 

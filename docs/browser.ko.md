@@ -59,6 +59,8 @@
 
 ![관측 리간드와 수용체의 MolStar 3D 화면](images/16-observed-pocket-3d.jpg)
 
+선명한 구조 이미지는 [포켓 4K 원본](images/21-molstar-bound-pocket.png)과 [단백질 전체 구조 원본](images/22-molstar-bound-overview.png)을 여세요. 직접 저장하려면 Mol*의 **Screenshot / State Snapshot → Ultra HD (3840 x 2160) → PNG → Download**를 사용합니다. 구조 화면을 저장하는 기능이며 새 도킹 계산을 수행하지 않습니다.
+
 **3D 조작:** 드래그로 회전, 휠·핀치로 확대, **결합 부위**로 포켓 확대, **전체 구조**로 전체 보기, **×**로 닫습니다. 위 화면은 공개 PDB의 관측 리간드이며 새 도킹 결과 화면과 구분됩니다.
 
 ## 3. 탐색 방식과 조건
@@ -165,6 +167,8 @@ REA·사슬 A·잔기 200·모델 1과 단백질 사슬 A를 확인하고, 이 �
 ![2D 분자 구조와 피부 특성](images/08-structure-and-skin.jpg)
 
 ![모델 버전과 척도를 함께 보여주는 ADMET 결과](images/09-admet-results.jpg)
+
+[물성·독성 레이더 고화질 예제](../README.ko.md#먼저-보는-3d-구조와-예측-그래프)도 확인하세요. SVG 원본에는 원값·축 범위·모델 출처가 보존되며, 앱의 **그래프 SVG 저장**으로 자신의 그래프를 내려받을 수 있습니다.
 
 ### 완료·보류·후보 0개를 구분하기
 

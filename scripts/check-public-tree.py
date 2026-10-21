@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 import re
 import sys
 import tarfile
+import xml.etree.ElementTree as ET
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +28,7 @@ SCREENSHOT_MANIFEST = "docs/images/manifest.json"
 
 
 def screenshot_manifest(entries: dict[str, bytes]) -> tuple[dict[str, str], list[str]]:
-    """Only individually reviewed, hash-pinned tutorial JPEGs may be binary."""
+    """Only individually reviewed, hash-pinned tutorial images are exempted."""
     matches = [name for name in entries if name == SCREENSHOT_MANIFEST or name.endswith("/" + SCREENSHOT_MANIFEST)]
     if not matches:
         return {}, []
@@ -41,7 +42,7 @@ def screenshot_manifest(entries: dict[str, bytes]) -> tuple[dict[str, str], list
         assert value["scope"] == "public-tutorial-screenshots"
         for row in value["images"]:
             filename, digest = row["file"], row["sha256"]
-            assert re.fullmatch(r"[0-9]{2}-[a-z0-9-]+\.jpg", filename)
+            assert re.fullmatch(r"[0-9]{2}-[a-z0-9-]+\.(?:jpg|png|svg)", filename)
             assert re.fullmatch(r"[0-9a-f]{64}", digest)
             name = prefix + "docs/images/" + filename
             assert name not in approved
@@ -61,11 +62,23 @@ def inspect_bytes(name: str, data: bytes, approved_images: dict[str, str] | None
     if path.suffix.lower() in FORBIDDEN_SUFFIXES:
         errors.append(f"Research/runtime file type: {name}")
     if approved_images and name in approved_images:
-        if not (data.startswith(b"\xff\xd8\xff") and data.endswith(b"\xff\xd9")):
-            errors.append(f"Reviewed screenshot is not a JPEG: {name}")
         if hashlib.sha256(data).hexdigest() != approved_images[name]:
             errors.append(f"Reviewed screenshot hash changed: {name}")
-        return errors
+        if path.suffix == ".jpg":
+            if not (data.startswith(b"\xff\xd8\xff") and data.endswith(b"\xff\xd9")):
+                errors.append(f"Reviewed screenshot is not a JPEG: {name}")
+            return errors
+        if path.suffix == ".png":
+            if not (data.startswith(b"\x89PNG\r\n\x1a\n") and data.endswith(b"\x00\x00\x00\x00IEND\xaeB`\x82")):
+                errors.append(f"Reviewed screenshot is not a PNG: {name}")
+            return errors
+        if path.suffix == ".svg":
+            try:
+                if ET.fromstring(data).tag != "{http://www.w3.org/2000/svg}svg":
+                    raise ValueError("Not an SVG root")
+            except (ET.ParseError, ValueError):
+                errors.append(f"Reviewed graph is not an SVG: {name}")
+            # Vector exports remain subject to all private-content checks below.
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:

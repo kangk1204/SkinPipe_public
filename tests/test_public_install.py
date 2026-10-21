@@ -51,6 +51,29 @@ class PublicSourceTests(unittest.TestCase):
         self.assertTrue(guard.screenshot_manifest({guard.SCREENSHOT_MANIFEST: json.dumps(value).encode()})[1])
         value["images"][0]["file"] = "01-example.jpg"
         self.assertTrue(guard.screenshot_manifest({guard.SCREENSHOT_MANIFEST: json.dumps(value).encode()})[1])
+        value["images"][0]["file"] = "01-example.pdb"
+        self.assertTrue(guard.screenshot_manifest({
+            guard.SCREENSHOT_MANIFEST: json.dumps(value).encode(), "docs/images/01-example.pdb": b"data"})[1])
+
+    def test_png_and_svg_are_hash_bound_and_text_still_checked(self):
+        import hashlib
+        png = b"\x89PNG\r\n\x1a\nreviewed-tutorial\x00\x00\x00\x00IEND\xaeB`\x82"
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><title>Tutorial</title></svg>'
+        for filename, data in (("21-example.png", png), ("22-example.svg", svg)):
+            name = "docs/images/" + filename
+            digest = hashlib.sha256(data).hexdigest()
+            value = {"scope": "public-tutorial-screenshots", "images": [
+                {"file": filename, "sha256": digest}]}
+            approved, errors = guard.screenshot_manifest({
+                guard.SCREENSHOT_MANIFEST: json.dumps(value).encode(), name: data})
+            self.assertEqual(errors, [])
+            self.assertEqual(guard.inspect_bytes(name, data, approved), [])
+            self.assertTrue(guard.inspect_bytes(name, data + b"changed", approved))
+            self.assertTrue(guard.inspect_bytes(name, b"wrong format", {name: hashlib.sha256(b"wrong format").hexdigest()}))
+        self.assertTrue(guard.inspect_bytes("docs/images/23-unreviewed.png", png))
+        private_svg = svg.replace(b"Tutorial", ("/Users/" + "researcher/private").encode())
+        name = "docs/images/22-example.svg"
+        self.assertTrue(guard.inspect_bytes(name, private_svg, {name: hashlib.sha256(private_svg).hexdigest()}))
 
     def test_package_guard(self):
         import zipfile

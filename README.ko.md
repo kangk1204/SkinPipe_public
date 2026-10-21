@@ -6,6 +6,20 @@ SkinPipe는 피부 연구용 화합물 스크리닝 플랫폼입니다. 화합�
 
 이 저장소는 소프트웨어와 설치 안내만 제공합니다. 연구 입력·분석 결과·화합물 DB·예측값·모델 가중치는 각 사용자의 별도 설치 폴더에 저장됩니다. 연구 이력과 사전 지정 표적은 빈 상태로 시작합니다.
 
+## 먼저 보는 3D 구조와 예측 그래프
+
+**Mol* 3D 보기 — 공개 PDB `1CBS`, 사슬 A, 관측 리간드 REA 200.** **결합 부위**로 확대한 원래 관측 구조입니다. 새 후보의 도킹 결과와 구분합니다. 앱에서는 드래그로 회전하고 휠·핀치로 확대할 수 있습니다. [포켓 4K 원본](docs/images/21-molstar-bound-pocket.png)과 [단백질 전체 구조](docs/images/22-molstar-bound-overview.png)를 열어 보세요.
+
+[![공개 PDB 1CBS의 관측 REA 리간드와 수용체를 보여주는 Mol* 포켓 보기, 3840×2160 PNG](docs/images/21-molstar-bound-pocket.png)](docs/images/21-molstar-bound-pocket.png)
+
+**SwissADME 스타일의 레이더 표현 — 축과 참고 범위는 SkinPipe 기준입니다.** 아래는 공개 **Nicotinamide / PubChem CID 936** 예제의 **ADMET-AI 2.0.1** 저장 예측입니다. SwissADME 서비스의 산출물이 아닌 SkinPipe 그래프입니다. 초록색은 화합물의 값, 주황색은 물성 4축의 설정된 참고 범위입니다. 바깥쪽일수록 값이 크며, 독성 그래프에서는 해당 모델의 양성 출력이 큰 방향입니다.
+
+| 분자 물성 | 독성 모델 출력 |
+|---|---|
+| [![Nicotinamide의 분자 물성 6축과 SkinPipe 참고 범위](docs/images/23-nicotinamide-properties.svg)](docs/images/23-nicotinamide-properties.svg) | [![Nicotinamide의 독성 모델 출력 6항목](docs/images/24-nicotinamide-toxicity.svg)](docs/images/24-nicotinamide-toxicity.svg) |
+
+3D는 **3840 × 2160 PNG 원본**, 그래프는 확대해도 선명한 **SVG 벡터**입니다. 이미지를 누르면 원본을 엽니다. 앱의 **원값·단위·표시 범위**에서 수치를 확인하고 **그래프 SVG 저장**으로 내려받을 수 있습니다. 아래 [첫 연구 사용 순서](#화면을-보며-첫-연구-진행하기)와 [3D 사용 순서](docs/browser.ko.md#결합-구조-예제)를 따라 하세요. [이미지 출처·촬영 범위](docs/images/README.md).
+
 ## 한 번에 설치하고 실행하기
 
 **Ubuntu 24.04 x86_64의 일반 사용자 계정**에서 실행합니다. sudo 권한, Python 3, 인터넷, **20 GiB 이상의 여유 공간**이 필요합니다. 시스템 패키지 설치 시 터미널에서 Ubuntu 비밀번호를 묻습니다.

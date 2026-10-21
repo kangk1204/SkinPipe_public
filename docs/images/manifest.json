@@ -88,6 +88,42 @@
     {
       "file": "20-empty-filter-results.jpg",
       "sha256": "966064149c8246c7e3892693b0125a94a1a2c0412a0c90ca5e267eff4be894aa"
+    },
+    {
+      "file": "21-molstar-bound-pocket.png",
+      "sha256": "312edd6d8d2deb7f84047416dd353f6de77a7517b3e222d7994c19811048c366",
+      "description": "Mol* native PNG export; pocket focus; observed 1CBS chain A / REA 200",
+      "width": 3840,
+      "height": 2160
+    },
+    {
+      "file": "22-molstar-bound-overview.png",
+      "sha256": "a75bc17e6b17f97a08e7b7259577857145148a462b0f5419d8977055bce101a7",
+      "description": "Mol* native PNG export; whole structure; observed 1CBS chain A / REA 200",
+      "width": 3840,
+      "height": 2160
+    },
+    {
+      "file": "23-nicotinamide-properties.svg",
+      "sha256": "d21b7f4401b7241e47caeb0f406426954030324578922aab5801b6bd417b5ddf",
+      "description": "Nicotinamide CID 936; native molecular-property SVG export with white display background",
+      "format": "vector SVG",
+      "native_export_sha256": "c6ab6af34d6f3eb64c9298d4110f9d73a4dc74c94404361d96ae6294bc8dc837"
+    },
+    {
+      "file": "24-nicotinamide-toxicity.svg",
+      "sha256": "96da7b2349a4593b52580546b023addf0582212a015c05caa76c1449398bc578",
+      "description": "Nicotinamide CID 936; native toxicity SVG export with white display background",
+      "format": "vector SVG",
+      "native_export_sha256": "8401440ed5a63a8793dac442657c3dbd4b7e26b5ce20faf1fdb2b4a591eda2d0"
     }
-  ]
+  ],
+  "high_resolution_capture": {
+    "date": "2026-10-21",
+    "installed_backend": "0.3.0rc1",
+    "public_ui_commit": "31e3b53cc3cccee9309b904fd314742cb6881d62",
+    "environment": "Isolated child of the public Ubuntu 24.04 tutorial installation; starter examples only",
+    "png": "Native Mol* 5.12.0 export, 3840 x 2160; no enlargement or generative editing",
+    "svg": "Native SkinPipe graph exports; white background CSS added for light/dark README readability; values, axes and metadata unchanged"
+  }
 }

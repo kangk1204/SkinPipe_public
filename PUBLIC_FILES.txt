@@ -30,6 +30,11 @@ docs/images/17-cancel-confirmation.jpg
 docs/images/18-optional-chatgpt.jpg
 docs/images/19-candidate-filters.jpg
 docs/images/20-empty-filter-results.jpg
+docs/images/21-molstar-bound-pocket.png
+docs/images/22-molstar-bound-overview.png
+docs/images/23-nicotinamide-properties.svg
+docs/images/24-nicotinamide-toxicity.svg
+docs/images/README.md
 docs/images/manifest.json
 docs/validation-20261020.md
 docs/validation-modes-20261021.md
