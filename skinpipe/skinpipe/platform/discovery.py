@@ -1953,8 +1953,9 @@ class DiscoveryRuns:
             if cleanup_known and acknowledge is not None:
                 from .engines import cleanup_receipt, release_stopped_exception_frames
                 import sys
-                if sys.exception() is not None:
-                    release_stopped_exception_frames(sys.exception())
+                stopped_error = sys.exc_info()[1]
+                if stopped_error is not None:
+                    release_stopped_exception_frames(stopped_error)
                 try:
                     acknowledge(job['id'], job['lease_token'], worker='discovery-coordinator', cleanup=cleanup_receipt())
                 except (LeaseLost, ValueError) as error:
