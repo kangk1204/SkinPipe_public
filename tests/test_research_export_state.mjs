@@ -31,17 +31,17 @@ function harness(){
   return nodes.get(selector);
  };
  function buildHistory(html){
-  for(const row of history){row.remove();row.view.remove();row.export.remove();row.output.remove()}
+  for(const row of history){row.remove();row.view.remove();row.export.remove();row.select.remove();row.output.remove()}
   history.length=0;
   for(const [,index]of String(html).matchAll(/data-view-run="(\d+)"/g)){
-   const row=make();row.historyRow=true;row.view=make('',row);row.view.dataset.viewRun=index;row.export=make('',row);row.export.dataset.exportRun=index;row.export.textContent='Excel 받기';row.output=make('',row);history.push(row);
+   const row=make();row.historyRow=true;row.view=make('',row);row.view.dataset.viewRun=index;row.export=make('',row);row.export.dataset.exportRun=index;row.export.textContent='Excel 받기';row.output=make('',row);row.select=make('',row);row.select.dataset.selectRun=index;history.push(row);
   }
  }
  const kinds=['compound','protein','bound_complex'].map(value=>Object.assign(make(),{value}));
  const modes=['similarity','scaffold_hopping','assessment'].map(value=>Object.assign(make(),{value,checked:value==='similarity'}));
  const main={innerHTML:'',contains:node=>Boolean(node?.isConnected),querySelector:selector=>selector==='input[name="research-mode"]:checked'?modes.find(mode=>mode.checked):get(selector),querySelectorAll(selector){
   if(selector==='input[name="research-kind"]')return kinds;if(selector==='input[name="research-mode"]')return modes;
-  if(selector==='[data-view-run]')return history.map(row=>row.view);if(selector==='[data-export-run]')return history.map(row=>row.export);return[];
+  if(selector==='[data-select-run]')return history.map(row=>row.select);if(selector==='[data-view-run]')return history.map(row=>row.view);if(selector==='[data-export-run]')return history.map(row=>row.export);return[];
  }};
  return{main,get,history,links,make};
 }
@@ -156,4 +156,24 @@ test('uploaded assembly labels do not claim a public source and preserve raw pro
   const result={kind:'bound_complex',status:'verified',input:{kind:'bound_complex',format:'upload',value:'synthetic-upload'},selection:{assembly_id,protein_chains:['A']},source_receipts:[{source:'upload',sha256:'b'.repeat(64)}]},before=JSON.stringify(result);
   const html=researchIdentityMarkup(result);assert.ok(html.includes(label));assert.doesNotMatch(html,/공개 구조의/);assert.equal(JSON.stringify(result),before);assert.ok(html.includes('synthetic-upload'));
  }
+});
+
+function selectRun(h,index,checked){const checkbox=h.history[index].select;checkbox.checked=checked;checkbox.onchange()}
+test('changing the selected population removes the previous ready download',async()=>{
+ const h=await fixture(),button=h.get('#research-export-selected');selectRun(h,0,true);await button.onclick();
+ assert.equal(h.links[0].isConnected,true);selectRun(h,0,false);
+ assert.equal(h.links[0].isConnected,false);assertNoNotice(h);assert.equal(button.disabled,true);
+ selectRun(h,1,true);assert.equal(button.disabled,false);
+});
+test('late old selection completion cannot re-enable a newer pending export',async()=>{
+ const a=deferred(),b=deferred(),h=await fixture(body=>body.run_id==='A'?a.promise:b.promise),button=h.get('#research-export-selected');
+ selectRun(h,0,true);const old=button.onclick();selectRun(h,0,false);selectRun(h,1,true);const current=button.onclick();
+ assert.equal(button.disabled,true);a.resolve(ready('A'));await old;
+ assert.equal(h.links.length,0);assert.equal(button.disabled,true,'The new request still owns its button');
+ b.resolve(ready('B'));await current;assert.equal(button.disabled,false);assert.equal(h.links.length,1);assert.match(h.links[0].filename,/SkinPipe-B/);
+});
+test('deselecting every run during submission keeps the export button disabled',async()=>{
+ const pending=deferred(),h=await fixture(()=>pending.promise),button=h.get('#research-export-selected');
+ selectRun(h,0,true);const request=button.onclick();selectRun(h,0,false);pending.resolve(ready());await request;
+ assert.equal(button.disabled,true);assert.equal(h.links.length,0);assertNoNotice(h);
 });
