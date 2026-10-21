@@ -42,3 +42,19 @@ research results, databases and recipient delivery archives are excluded.
 Verification uses isolated PostgreSQL, synthetic export fixtures and a real
 Chromium DOM. Full-library screening, new native docking, GPU/OpenMM, OAuth
 and biological validation are outside this repair run.
+
+## Subsequent live link check
+
+The reviewed purchase-link presentation was also applied to the existing
+operating UI and exporter. One stored supplier destination was opened from
+the live candidate detail in a new browser tab. The same destination was
+opened using Microsoft Excel's **Open Hyperlink** command on an actual
+exported candidate-table cell. This checked navigation to the supplier's
+product page; it did not place an order or certify inventory.
+
+The workbook check used a read-only copy of a completed operating snapshot
+and the qualified exporter on a separate computer. This is distinct from
+completing a new export job on the operating coordinator. Existing sealed
+workbooks and archives are retained unchanged; purchase hyperlinks in a new
+export do not retroactively add links to earlier files. Private inputs,
+compound identifiers, outputs and screenshots are kept outside this repository.
