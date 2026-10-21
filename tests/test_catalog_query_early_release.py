@@ -109,6 +109,54 @@ class CatalogQueryEarlyReleaseTests(unittest.TestCase):
                 note_catalog_transport_failure('/materialize')
         self.assertEqual(calls, ['/queries/' + QUERY + '/cancel'])
 
+    def test_missing_peer_does_not_prevent_remaining_query_release(self):
+        peer = 'b' * 32
+        calls = []
+        def call(path, body=None):
+            calls.append((path, body))
+            if path.split('/')[2] == QUERY:
+                raise KeyError('missing receipt')
+            return released(peer)
+        with self.assertRaises(OwnedProcessCleanupError):
+            with owned_catalog_scope(SimpleNamespace(_scout_request=call)):
+                for query in (QUERY, peer):
+                    note_catalog_query('/query', {'query_id': query, 'status': 'running'})
+        self.assertEqual(calls, [('/queries/' + QUERY + '/cancel', {}),
+                                 ('/queries/' + peer + '/cancel', {})])
+
+    def test_failed_cancel_keeps_polling_remaining_owned_query(self):
+        peer = 'b' * 32
+        calls = []
+        def call(path, body=None):
+            calls.append((path, body))
+            if path.split('/')[2] == QUERY:
+                raise KeyError('missing receipt')
+            return {'query_id': peer, 'status': 'stopping'} if body is not None else released(peer)
+        with self.assertRaises(OwnedProcessCleanupError):
+            with owned_catalog_scope(SimpleNamespace(_scout_request=call)):
+                for query in (QUERY, peer):
+                    note_catalog_query('/query', {'query_id': query, 'status': 'running'})
+        self.assertEqual(calls[-1], ('/queries/' + peer, None))
+
+    def test_failed_poll_does_not_prevent_remaining_query_release(self):
+        peer = 'b' * 32
+        calls = []
+        def call(path, body=None):
+            calls.append((path, body))
+            query = path.split('/')[2]
+            if body is not None:
+                return {'query_id': query, 'status': 'stopping'}
+            if query == QUERY:
+                raise ConnectionError('receipt unavailable')
+            return released(peer)
+        with self.assertRaises(OwnedProcessCleanupError):
+            with owned_catalog_scope(SimpleNamespace(_scout_request=call)):
+                for query in (QUERY, peer):
+                    note_catalog_query('/query', {'query_id': query, 'status': 'running'})
+        self.assertIn(('/queries/' + QUERY, None), calls)
+        self.assertIn(('/queries/' + peer, None), calls)
+        catalog_checkpoint()
+
     def test_user_stop_keeps_original_reason_after_completed_query_release(self):
         calls = []
         def stop():

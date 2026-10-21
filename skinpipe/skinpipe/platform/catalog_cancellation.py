@@ -71,22 +71,32 @@ def _release_queries(service, queries, timeout):
                 and receipt.get("resources_released") is True)
 
     pending = set()
+    failure = None
     deadline = time.monotonic() + timeout
     for query_id in sorted(queries):
         try:
             receipt = service._scout_request("/queries/" + query_id + "/cancel", body={})
         except Exception as error:
-            raise OwnedProcessCleanupError("Owned catalog query cleanup is unavailable") from error
+            if failure is None:
+                failure = ("Owned catalog query cleanup is unavailable", error)
+            continue
         if not released(query_id, receipt):
             pending.add(query_id)
     while pending:
         if time.monotonic() >= deadline:
-            raise OwnedProcessCleanupError("Owned catalog query is still stopping")
+            raise OwnedProcessCleanupError("Owned catalog query is still stopping") from (failure[1] if failure else None)
         time.sleep(0.1)
-        for query_id in list(pending):
+        for query_id in sorted(pending):
             try:
                 receipt = service._scout_request("/queries/" + query_id)
             except Exception as error:
-                raise OwnedProcessCleanupError("Owned catalog query release could not be verified") from error
+                if failure is None:
+                    failure = ("Owned catalog query release could not be verified", error)
+                pending.remove(query_id)
+                continue
             if released(query_id, receipt):
                 pending.remove(query_id)
+    # A failed receipt still holds the research, but must not prevent release
+    # of its other known Futures on the shared Gateway.
+    if failure is not None:
+        raise OwnedProcessCleanupError(failure[0]) from failure[1]
