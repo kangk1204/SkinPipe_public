@@ -13,7 +13,7 @@ These images illustrate public tutorial examples in an isolated Ubuntu 24.04 sta
 
 The installed backend is **0.3.0rc1**; the displayed public UI was copied from public commit `31e3b53cc3cccee9309b904fd314742cb6881d62`. The tutorial's saved prediction source is **ADMET-AI 2.0.1**, identified in each SVG's metadata. No new docking or model inference was performed to create these images. The Mol* images show observed coordinates, not candidate docking or evidence of efficacy.
 
-PNG files were exported directly at the stated resolution, without upscaling, retouching or generative editing. SVGs preserve the app's exported geometry, text, values and metadata; one white-background CSS rule was added so labels remain readable in both light and dark README themes. Native-export and published-file SHA-256 hashes are recorded in [manifest.json](manifest.json).
+PNG files were exported directly at the stated resolution, without upscaling, retouching or generative editing. SVGs preserve the app's exported geometry, text, values and metadata; a white-background CSS rule and explicit intrinsic display dimensions were added so labels remain readable in both light and dark README themes. Native-export and published-file SHA-256 hashes are recorded in [manifest.json](manifest.json).
 
 The radar layout resembles a SwissADME-style profile, but its axes, ranges, property policy and model outputs are SkinPipe's. It is not an export from the SwissADME service. Amber is the highest component-score range in SkinPipe's skin-property policy for logP, molecular weight, TPSA and HBD; HBA and QED have no reference band. Display normalization does not modify scoring, QC or filters.
 

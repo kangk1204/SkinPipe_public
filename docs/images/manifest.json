@@ -105,14 +105,14 @@
     },
     {
       "file": "23-nicotinamide-properties.svg",
-      "sha256": "d21b7f4401b7241e47caeb0f406426954030324578922aab5801b6bd417b5ddf",
+      "sha256": "332fb327a89670170cbde7f6821abc99698f0f2dd865cb6b92529cd5366b3572",
       "description": "Nicotinamide CID 936; native molecular-property SVG export with white display background",
       "format": "vector SVG",
       "native_export_sha256": "c6ab6af34d6f3eb64c9298d4110f9d73a4dc74c94404361d96ae6294bc8dc837"
     },
     {
       "file": "24-nicotinamide-toxicity.svg",
-      "sha256": "96da7b2349a4593b52580546b023addf0582212a015c05caa76c1449398bc578",
+      "sha256": "26b40a4626857d2adeaf972e2185a5c6de84bdff0348b61d0d3cffe74e0dc50d",
       "description": "Nicotinamide CID 936; native toxicity SVG export with white display background",
       "format": "vector SVG",
       "native_export_sha256": "8401440ed5a63a8793dac442657c3dbd4b7e26b5ce20faf1fdb2b4a591eda2d0"
@@ -124,6 +124,6 @@
     "public_ui_commit": "31e3b53cc3cccee9309b904fd314742cb6881d62",
     "environment": "Isolated child of the public Ubuntu 24.04 tutorial installation; starter examples only",
     "png": "Native Mol* 5.12.0 export, 3840 x 2160; no enlargement or generative editing",
-    "svg": "Native SkinPipe graph exports; white background CSS added for light/dark README readability; values, axes and metadata unchanged"
+    "svg": "Native SkinPipe graph exports; white background CSS and explicit intrinsic display dimensions added for README readability; values, geometry, axes and metadata unchanged"
   }
 }

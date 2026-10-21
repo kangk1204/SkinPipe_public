@@ -8,7 +8,7 @@ This repository contains the software and installation instructions. Research in
 
 ## Preview: 3D structures and prediction profiles
 
-**Mol* 3D view — public PDB `1CBS`, chain A, observed ligand REA 200.** This is the original observed ligand in its receptor, viewed with **결합 부위** (*Binding site*); it is not a newly docked candidate. Drag to rotate and use the wheel/pinch to zoom in the app. [Open the 4K pocket image](docs/images/21-molstar-bound-pocket.png) or [the complete structure](docs/images/22-molstar-bound-overview.png).
+**Mol\* 3D view — public PDB `1CBS`, chain A, observed ligand REA 200.** This is the original observed ligand in its receptor, viewed with **결합 부위** (*Binding site*); it is not a newly docked candidate. Drag to rotate and use the wheel/pinch to zoom in the app. [Open the 4K pocket image](docs/images/21-molstar-bound-pocket.png) or [the complete structure](docs/images/22-molstar-bound-overview.png).
 
 [![Mol* pocket view of the observed REA ligand in PDB 1CBS; native 3840 by 2160 PNG](docs/images/21-molstar-bound-pocket.png)](docs/images/21-molstar-bound-pocket.png)
 

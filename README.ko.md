@@ -8,7 +8,7 @@ SkinPipe는 피부 연구용 화합물 스크리닝 플랫폼입니다. 화합�
 
 ## 먼저 보는 3D 구조와 예측 그래프
 
-**Mol* 3D 보기 — 공개 PDB `1CBS`, 사슬 A, 관측 리간드 REA 200.** **결합 부위**로 확대한 원래 관측 구조입니다. 새 후보의 도킹 결과와 구분합니다. 앱에서는 드래그로 회전하고 휠·핀치로 확대할 수 있습니다. [포켓 4K 원본](docs/images/21-molstar-bound-pocket.png)과 [단백질 전체 구조](docs/images/22-molstar-bound-overview.png)를 열어 보세요.
+**Mol\* 3D 보기 — 공개 PDB `1CBS`, 사슬 A, 관측 리간드 REA 200.** **결합 부위**로 확대한 원래 관측 구조입니다. 새 후보의 도킹 결과와 구분합니다. 앱에서는 드래그로 회전하고 휠·핀치로 확대할 수 있습니다. [포켓 4K 원본](docs/images/21-molstar-bound-pocket.png)과 [단백질 전체 구조](docs/images/22-molstar-bound-overview.png)를 열어 보세요.
 
 [![공개 PDB 1CBS의 관측 REA 리간드와 수용체를 보여주는 Mol* 포켓 보기, 3840×2160 PNG](docs/images/21-molstar-bound-pocket.png)](docs/images/21-molstar-bound-pocket.png)
 
