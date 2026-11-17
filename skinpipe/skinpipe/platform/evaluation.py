@@ -237,8 +237,16 @@ def cluster_bootstrap(rows: list[dict[str, Any]], *, metric: str = "hit_rate_amo
     estimates = []
     base = []
     contributing_targets = []
+    candidate_order = {}
     for target in targets:
-        value = evaluator([r for block in groups[target].values() for r in block], k=k).get(metric)
+        target_rows = [r for block in groups[target].values() for r in block]
+        value = evaluator(target_rows, k=k).get(metric)
+        # The evaluator resolves score ties by candidate ID. Synthetic copy IDs
+        # must preserve that frozen order, independently of input row order and
+        # the order in which scaffold blocks are sampled.
+        ids = sorted(r["candidate_id"] for r in target_rows)
+        width = len(str(len(ids)))
+        candidate_order[target] = {cid: f"{rank:0{width}d}" for rank, cid in enumerate(ids)}
         if finite(value) is not None:
             base.append(value)
             contributing_targets.append(target)
@@ -248,9 +256,10 @@ def cluster_bootstrap(rows: list[dict[str, Any]], *, metric: str = "hit_rate_amo
             cores = sorted(groups[target])
             sample = []
             for copy_index, core in enumerate(rng.choices(cores, k=len(cores))):
-                for row_index, original in enumerate(groups[target][core]):
+                for original in groups[target][core]:
                     row = deepcopy(original)
-                    row["candidate_id"] = f"bootstrap:{copy_index}:{row_index}:{original['candidate_id']}"
+                    rank = candidate_order[target][original["candidate_id"]]
+                    row["candidate_id"] = f"bootstrap:{rank}:{copy_index}"
                     if row.get("parent_id"):
                         row["parent_id"] = f"bootstrap:{copy_index}:{row['parent_id']}"
                     sample.append(row)

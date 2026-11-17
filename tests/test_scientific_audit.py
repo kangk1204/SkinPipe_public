@@ -213,5 +213,108 @@ class MeasuredReferenceTests(unittest.TestCase):
             measurement(raw, descriptor, {**assay, "confidence_score": float("inf")})
 
 
+class BootstrapOrderAudit(unittest.TestCase):
+    def test_tied_cluster_bootstrap_is_row_order_invariant(self):
+        from copy import deepcopy
+        import random
+        from skinpipe.platform.evaluation import cluster_bootstrap
+
+        rows = [
+            {"candidate_id": f"{target}-{core}-{index}",
+             "parent_id": f"{target}-{core}-{index}", "target_id": target,
+             "scaffold_id": core, "score": 1.0,
+             "label_measured": True, "label": 1 - index}
+            for target in ("T1", "T2") for core in ("A", "B") for index in range(2)
+        ]
+        original = deepcopy(rows)
+        expected = cluster_bootstrap(rows, k=1, repeats=80)
+        self.assertEqual(expected["estimate"], 1.0)
+        self.assertEqual(expected["interval_95"], [1.0, 1.0])
+        permutations = [list(reversed(rows))]
+        for seed in range(6):
+            shuffled = list(rows)
+            random.Random(seed).shuffle(shuffled)
+            permutations.append(shuffled)
+        for permutation in permutations:
+            self.assertEqual(cluster_bootstrap(permutation, k=1, repeats=80), expected)
+        self.assertEqual(rows, original)
+
+    def test_bootstrap_keeps_frozen_candidate_tie_order_across_scaffolds(self):
+        from skinpipe.platform.evaluation import cluster_bootstrap
+
+        # The higher-priority candidate ID belongs to the later scaffold.
+        # Resampling order must not replace the frozen candidate-ID tie-break.
+        rows = [
+            {"candidate_id": f"{identifier}-{target}", "parent_id": f"{identifier}-{target}",
+             "target_id": target, "scaffold_id": core, "score": 1.0,
+             "label_measured": True, "label": label}
+            for target in ("T1", "T2")
+            for identifier, core, label in (("a", "Z", 1), ("b", "A", 0))
+        ]
+        seen = []
+
+        def independently_checked(sample, *, k):
+            from skinpipe.platform.evaluation import evaluate_ranked_candidates
+            expected = min(sample, key=lambda row: row["original_id"])["label"]
+            actual = evaluate_ranked_candidates(sample, k=k)
+            self.assertEqual(actual["hit_at_k"], expected)
+            seen.append(actual)
+            return actual
+
+        for row in rows:
+            row["original_id"] = row["candidate_id"]
+        result = cluster_bootstrap(rows, k=1, repeats=40, evaluator=independently_checked)
+        self.assertTrue(seen)
+        self.assertEqual(result["estimate"], 1.0)
+
+
+class FeedbackContextAudit(unittest.TestCase):
+    def test_mixed_assay_conditions_stop_before_fitting(self):
+        from copy import deepcopy
+        from unittest.mock import patch
+        from skinpipe.platform import feedback
+
+        # Synthetic identities isolate admission logic; no chemistry or fitted
+        # model performance is asserted by this preflight regression.
+        rows = [{"candidate_id": f"C{i}", "parent_id": f"parent:fixture-{i}",
+                 "smiles": f"fixture-{i}", "target_id": "T", "endpoint": "activity",
+                 "species": "human", "assay_id": "A", "unit": "binary",
+                 "value": i % 2, "status": "measured", "relation": "=",
+                 "conditions": {"duration_h": 24}, "biological_context": "cell-line-A",
+                 "concentration": 10, "concentration_unit": "nM"} for i in range(200)]
+        for field, value in (("conditions", {"duration_h": 48}),
+                             ("biological_context", "cell-line-B"),
+                             ("concentration", 100), ("concentration_unit", "uM"),
+                             ("conditions", None)):
+            with self.subTest(field=field, value=value):
+                changed = deepcopy(rows)
+                changed[-1][field] = value
+                original = deepcopy(changed)
+                with patch.object(feedback, "_parent_key", side_effect=lambda value: value), \
+                     patch.object(feedback, "leakage_groups", side_effect=feedback.FeedbackError("fixture reached grouping")) as groups:
+                    result = feedback.train_baseline(changed)
+                self.assertIsNone(result["model"])
+                self.assertEqual(result["card"]["status"], "held")
+                self.assertIn("Do not pool", result["card"]["reason"])
+                groups.assert_not_called()
+                self.assertEqual(changed, original)
+
+        # Equivalent structured conditions are compared canonically. Historical
+        # records without these optional fields still share one unknown context.
+        for unknown in (False, True):
+            same = deepcopy(rows)
+            for i, row in enumerate(same):
+                row["conditions"] = ({"duration_h": 24, "temperature_c": 37} if i % 2
+                                     else {"temperature_c": 37, "duration_h": 24})
+                if unknown:
+                    for key in feedback.ASSAY_CONTEXT_FIELDS:
+                        row.pop(key, None)
+            with patch.object(feedback, "_parent_key", side_effect=lambda value: value), \
+                 patch.object(feedback, "leakage_groups", side_effect=feedback.FeedbackError("fixture reached grouping")) as groups:
+                result = feedback.train_baseline(same)
+            self.assertEqual(result["card"]["reason"], "fixture reached grouping")
+            groups.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

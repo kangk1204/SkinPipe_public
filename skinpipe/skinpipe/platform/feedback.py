@@ -16,6 +16,7 @@ from typing import Any
 from .experiments import _parent_key, canonical_json
 
 CONTEXT_FIELDS = ("target_id", "endpoint", "species", "assay_id", "unit")
+ASSAY_CONTEXT_FIELDS = ("conditions", "biological_context", "concentration", "concentration_unit")
 FINGERPRINT_BITS = 2048
 MAX_TRAINING_ROWS = 2000
 
@@ -214,14 +215,16 @@ def train_baseline(records: list[dict], *, family: str = "logistic", seed: int =
     try:
         if not 200 <= len(records) <= MAX_TRAINING_ROWS:
             raise FeedbackError("Model fitting requires 200 to 2000 unique measured parent compounds")
-        contexts = set()
+        contexts = {}
         seen = set()
         seen_structures = set()
         for row in records:
-            context = tuple(row.get(key) for key in CONTEXT_FIELDS)
-            if not all(context):
+            context = {key: row.get(key) for key in CONTEXT_FIELDS + ASSAY_CONTEXT_FIELDS}
+            if not all(context[key] for key in CONTEXT_FIELDS):
                 raise FeedbackError("Target, endpoint, species, assay_id and unit must be explicit")
-            contexts.add(context)
+            # Preserve assay conditions, including explicit missingness. The
+            # same assay ID can contain different doses, cell models or times.
+            contexts[canonical_json(context)] = context
             if (row.get("status") != "measured" or row.get("relation") != "="
                     or isinstance(row.get("value"), (bool, np.bool_))
                     or row.get("value") not in (0, 1) or row.get("unit") != "binary"):
@@ -236,7 +239,7 @@ def train_baseline(records: list[dict], *, family: str = "logistic", seed: int =
                 raise FeedbackError("Salt or supplier duplicates cannot inflate model sample size")
             seen_structures.add(parent_key)
         if len(contexts) != 1:
-            raise FeedbackError("Do not pool different assay, species, endpoint or target contexts")
+            raise FeedbackError("Do not pool different assay, species, endpoint, target or experimental-condition contexts")
         y = np.asarray([row["value"] for row in records], dtype=int)
         if min(Counter(y).get(0, 0), Counter(y).get(1, 0)) < 50:
             raise FeedbackError("Both measured classes require at least 50 unique compounds")
@@ -262,7 +265,7 @@ def train_baseline(records: list[dict], *, family: str = "logistic", seed: int =
         raw_test = np.clip(estimator.predict_proba(x[test])[:, 1], 1e-8, 1 - 1e-8)
         prediction = calibrator.predict_proba(np.log(raw_test / (1 - raw_test)).reshape(-1, 1))[:, 1]
         baseline = np.full(len(test), float(np.mean(y[train])))
-        card.update(status="exploratory", context=dict(zip(CONTEXT_FIELDS, next(iter(contexts)))),
+        card.update(status="exploratory", context=next(iter(contexts.values())),
                     dataset_sha256=hashlib.sha256(canonical_json(records).encode()).hexdigest(),
                     metrics={"pr_auc": float(average_precision_score(y[test], prediction)),
                              "roc_auc": float(roc_auc_score(y[test], prediction)),
