@@ -277,6 +277,7 @@ tests/test_cleanup_diagnostics.py
 tests/test_coordinator_shutdown_entry.py
 tests/test_data_audit.py
 tests/test_detail_dialog.mjs
+tests/test_discovery_loading.mjs
 tests/test_excel_structures.py
 tests/test_export_raw_evidence.py
 tests/test_metric_radar.mjs

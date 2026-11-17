@@ -81,6 +81,8 @@ export function receptorPreparationRequest({target,pdb='',chain='',ligand='',ph=
 }
 export async function renderDiscovery(main,api,role='researcher',{isCurrent:isActive}={}){
  const epoch=++generation,startRoute=globalThis.location?.hash?.split('?')[0],routeIsCurrent=()=>epoch===generation&&(isActive?isActive():startRoute!=='#discovery'||globalThis.location?.hash?.split('?')[0]==='#discovery');
+ if(!routeIsCurrent())return;
+ main.innerHTML='<div class="page-heading"><div><h1>새 피부 화합물 연구</h1><p>아는 정보를 입력하고 확인한 뒤, 후보를 탐색하거나 평가합니다.</p></div></div><section class="platform-panel" role="status" aria-live="polite">연구 입력 화면을 준비하고 있습니다…</section>';
  const snapshots=(await api('/v2/snapshots?view=summary')).snapshots||[];if(!routeIsCurrent())return;
  let kind='compound',format='name',selectedCid=null,uploadId=null,selection=null,ligandSmiles='',resolution=null,resolutionKey=null,imageUrl=null,activeRun=null,pollTimer=null,progressTimer=null,lastLiveRun=null,lastCheckedAt=null,resultRequest=0,inputGeneration=0,resolveRequest=0,resolveButtonOwner=0,submissionInFlight=false,submissionSequence=0,navigationIntent=0,reviewingControl=null;
  let exportView=0,exportNotice=0;
