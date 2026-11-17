@@ -11,10 +11,10 @@ const compact=()=>({
   primary_docking_protocols:[{target_id:'uniprot:SYNTHETIC',protocol_id:'synthetic-protocol',engine:'vina',seed:17,candidate_count:3}]}
 });
 function harness(){
- const nodes=new Map(),make=()=>({_html:'',textContent:'',value:'',checked:false,disabled:false,hidden:false,dataset:{},attributes:{},
+ const nodes=new Map(),make=()=>({_html:'',textContent:'',value:'',checked:false,disabled:false,hidden:false,dataset:{},attributes:{},listeners:{},
   get innerHTML(){return this._html},set innerHTML(value){this._html=value},
   setAttribute(key,value){this.attributes[key]=value},removeAttribute(key){delete this.attributes[key]},
-  addEventListener(){},focus(){},scrollIntoView(){}});
+  addEventListener(type,fn){this.listeners[type]=fn},focus(){},scrollIntoView(){}});
  const get=key=>{if(!nodes.has(key))nodes.set(key,make());return nodes.get(key)};
  const kinds=['compound','protein','bound_complex'].map(value=>Object.assign(make(),{value}));
  const modes=['similarity','scaffold_hopping','assessment'].map(value=>Object.assign(make(),{value,checked:value==='similarity'}));
@@ -24,7 +24,7 @@ function harness(){
  body.querySelector=select;body.querySelectorAll=all;
  return{main,body,get};
 }
-async function platform({snapshots=[compact()],selection={snapshot:'synthetic-summary',target:'uniprot:SYNTHETIC',protocol:'synthetic-protocol'},namespace='legacy',route='research',runs=[]}={}){
+async function platform({snapshots=[compact()],selection={snapshot:'synthetic-summary',target:'uniprot:SYNTHETIC',protocol:'synthetic-protocol'},namespace='legacy',route='research',runs=[],catalogReply=null}={}){
  const previous=globalThis.sessionStorage;
  globalThis.sessionStorage={getItem:()=>null,removeItem(){}};
  const h=harness(),calls=[],api=async(path,options)=>{
@@ -34,6 +34,7 @@ async function platform({snapshots=[compact()],selection={snapshot:'synthetic-su
   if(path==='/v2/catalog-status')return{compound_count:100,prediction_admitted_partitions:0};
   if(path==='/v2/candidate-queries')return{snapshot_id:body.snapshot_id,target_id:body.target_id,rows:[],next_offset:null,
    counts:{population:52,filtered:0,displayed:0,population_calculated:3,reasons:{critical:0,opposing:0},missing:{purchase:0,pchembl:0}}};
+  if(catalogReply&&(path==='/v2/catalog-queries'||path.startsWith('/v2/catalog-queries/')))return catalogReply(path);
   throw Error('Unexpected initial UI request '+path);
  };
  try{await renderPlatform({main:h.main,api,selection,namespace,route})}
@@ -95,4 +96,28 @@ test('discovery source choices use compact verified target counts without a full
  assert.match(h.main.innerHTML,/value="synthetic-summary\|uniprot:SYNTHETIC">Synthetic &lt;target&gt; · 52개/);
  assert.doesNotMatch(h.main.innerHTML,/held-summary/);
  assert.equal(typeof h.get('#research-input-form').onsubmit,'function');
+});
+
+test('catalog poll failures end pending state, remove stale rows and allow an explicit retry',async()=>{
+ let failure=true;
+ const h=await platform({route:'catalog',catalogReply:path=>{
+  if(failure){if(path==='/v2/catalog-queries')return{status:'running',query_id:'synthetic-query',elapsed_seconds:0};throw Error('Global catalog gateway returned HTTP 400')}
+  return{status:'complete',rows:[],elapsed_seconds:1};
+ }});
+ h.get('#catalog-table').innerHTML='stale previous result';
+ h.get('#catalog-next').disabled=false;
+ await h.get('#platform-catalog-search').listeners.submit({preventDefault(){}});
+ assert.match(h.get('#catalog-progress').textContent,/검색을 완료하지 못했습니다/);
+ assert.doesNotMatch(h.get('#catalog-progress').textContent,/검색 진행 중/);
+ assert.equal(h.get('#catalog-table').innerHTML,'');
+ assert.equal(h.get('#catalog-table').attributes['aria-busy'],'false');
+ assert.equal(h.get('#catalog-prev').disabled,true);assert.equal(h.get('#catalog-next').disabled,true);
+ assert.match(h.get(':scope > .platform-errors').innerHTML,/화합물 검색 서버/);
+ assert.doesNotMatch(h.get(':scope > .platform-errors').innerHTML,/Global catalog gateway/);
+ assert.equal(h.calls.filter(c=>c.path==='/v2/catalog-queries').length,1);
+ failure=false;
+ await h.get('#platform-catalog-search').listeners.submit({preventDefault(){}});
+ assert.match(h.get('#catalog-progress').textContent,/검색 완료/);
+ assert.equal(h.get(':scope > .platform-errors').innerHTML,'');
+ assert.equal(h.calls.filter(c=>c.path==='/v2/catalog-queries').length,2);
 });
