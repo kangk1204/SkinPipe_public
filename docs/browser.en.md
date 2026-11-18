@@ -168,7 +168,7 @@ The 2D diagram shows bonding; the 3D viewer shows spatial coordinates. Rotate/zo
 
 Click **전체 후보 표 보기** (*Open complete candidate table*) in a completed study to compare rows. Filters can be toggled independently. **All enabled conditions must match** (AND). **제외 필터 해제** (*Clear exclusion filters*) resets exclusion criteria; the snapshot, search and sorting controls are separate. The count distinguishes stored rows, matches and the display limit. Sorting changes order, not the underlying saved observations. Hide/unhide unassessed values deliberately; absent activity or toxicity is not a measured zero.
 
-![Candidate comparison filters and counts from a separate Nicotinamide similarity search](images/19-candidate-filters.jpg)
+![Candidate comparison filters and counts from a separate Nicotinamide scaffold search](images/19-candidate-filters.jpg)
 
 This search example has **1 stored observation**, the seed alone; in this starter catalog the study summary reports **0 new unique candidates**. Yields depend on the catalog scope and conditions. The first “assess input only” example does not search for candidates.
 
@@ -182,7 +182,7 @@ If the table becomes empty, compare **전체 모집단** (*Stored population*) w
 
 ![How the ADMET section reads when no stored prediction exists](images/09-admet-results.jpg)
 
-See the [high-resolution molecular-property and toxicity radars](../README.md#preview-3d-structures-and-prediction-profiles). The SVG originals retain raw values, axis ranges and model-source metadata; use **그래프 SVG 저장** in the app to save your own graph.
+The ADMET image above was captured before catalog registration to show an unassessed state. When stored predictions are available, inspect their values and model sources in the app; use **그래프 SVG 저장** to save your own graph.
 
 ### Distinguish completion, holds and zero candidates
 

@@ -33,8 +33,6 @@ docs/images/19-candidate-filters.jpg
 docs/images/20-empty-filter-results.jpg
 docs/images/21-molstar-bound-pocket.png
 docs/images/22-molstar-bound-overview.png
-docs/images/23-nicotinamide-properties.svg
-docs/images/24-nicotinamide-toxicity.svg
 docs/images/README.md
 docs/images/manifest.json
 docs/review-20261022.md

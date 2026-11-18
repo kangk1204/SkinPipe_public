@@ -102,20 +102,6 @@
       "description": "Mol* native PNG export; whole structure; observed 1CBS chain A / REA 200",
       "width": 3840,
       "height": 2160
-    },
-    {
-      "file": "23-nicotinamide-properties.svg",
-      "sha256": "332fb327a89670170cbde7f6821abc99698f0f2dd865cb6b92529cd5366b3572",
-      "description": "Nicotinamide CID 936; native molecular-property SVG export with white display background",
-      "format": "vector SVG",
-      "native_export_sha256": "c6ab6af34d6f3eb64c9298d4110f9d73a4dc74c94404361d96ae6294bc8dc837"
-    },
-    {
-      "file": "24-nicotinamide-toxicity.svg",
-      "sha256": "26b40a4626857d2adeaf972e2185a5c6de84bdff0348b61d0d3cffe74e0dc50d",
-      "description": "Nicotinamide CID 936; native toxicity SVG export with white display background",
-      "format": "vector SVG",
-      "native_export_sha256": "8401440ed5a63a8793dac442657c3dbd4b7e26b5ce20faf1fdb2b4a591eda2d0"
     }
   ],
   "high_resolution_capture": {
@@ -123,7 +109,35 @@
     "installed_backend": "0.3.0rc1",
     "public_ui_commit": "31e3b53cc3cccee9309b904fd314742cb6881d62",
     "environment": "Isolated child of the public Ubuntu 24.04 tutorial installation; starter examples only",
-    "png": "Native Mol* 5.12.0 export, 3840 x 2160; no enlargement or generative editing",
-    "svg": "Native SkinPipe graph exports; white background CSS and explicit intrinsic display dimensions added for README readability; values, geometry, axes and metadata unchanged"
+    "png": "Native Mol* 5.12.0 export, 3840 x 2160; no enlargement or generative editing"
+  },
+  "recapture": {
+    "date": "2026-11-18",
+    "public_source_commit": "f1a77923bfb0671dc581b0d00e4560bca5831772",
+    "os": "Ubuntu 24.04.5 LTS",
+    "browser": "Chrome 154 headless",
+    "python": "3.12",
+    "postgresql": "16",
+    "dependency_setup": "Python and PostgreSQL provided by conda because apt required an unavailable sudo password; this capture is not an unchanged rerun of the documented sudo/apt installer",
+    "states": [
+      {
+        "files": [
+          "08-structure-and-skin.jpg",
+          "09-admet-results.jpg"
+        ],
+        "catalog_state": "Before catalog registration; no stored predictions are shown"
+      },
+      {
+        "files": [
+          "19-candidate-filters.jpg",
+          "20-empty-filter-results.jpg"
+        ],
+        "catalog_state": "After starter catalog preparation",
+        "analysis_mode": "Nicotinamide scaffold search",
+        "stored_observations": 1,
+        "new_unique_candidates": 0,
+        "purchase_only_matches": 0
+      }
+    ]
   }
 }

@@ -6,19 +6,13 @@ SkinPipe is a locally installed platform for compound screening in skin research
 
 This repository contains the software and installation instructions. Research inputs, study results, chemical databases, calculated predictions and model weights are kept in each user's installation folder. The platform starts with an empty study history and no predefined study targets.
 
-## Preview: 3D structures and prediction profiles
+## Preview: the 3D structure viewer
 
 **Mol\* 3D view — public PDB `1CBS`, chain A, observed ligand REA 200.** This is the original observed ligand in its receptor, viewed with **결합 부위** (*Binding site*); it is not a newly docked candidate. Drag to rotate and use the wheel/pinch to zoom in the app. [Open the 4K pocket image](docs/images/21-molstar-bound-pocket.png) or [the complete structure](docs/images/22-molstar-bound-overview.png).
 
 [![Mol* pocket view of the observed REA ligand in PDB 1CBS; native 3840 by 2160 PNG](docs/images/21-molstar-bound-pocket.png)](docs/images/21-molstar-bound-pocket.png)
 
-**SwissADME-style radar presentation — SkinPipe's own axes and reference ranges.** The two graphs below show the public **Nicotinamide / PubChem CID 936** tutorial example, using cached **ADMET-AI 2.0.1** outputs. These are SkinPipe plots, not results from the SwissADME service. Green shows the compound; amber marks the four configured property reference ranges. Larger radii mean larger values, including larger toxicity-model outputs.
-
-| Molecular properties | Toxicity model outputs |
-|---|---|
-| [<img src="docs/images/23-nicotinamide-properties.svg" alt="Nicotinamide molecular-property radar with SkinPipe reference ranges" width="460" height="370">](docs/images/23-nicotinamide-properties.svg) | [<img src="docs/images/24-nicotinamide-toxicity.svg" alt="Nicotinamide six-endpoint toxicity radar" width="460" height="370">](docs/images/24-nicotinamide-toxicity.svg) |
-
-The 3D images are native **3840 × 2160 PNGs**; the plots are **SVG vectors**, which stay sharp when enlarged. Click an image for its original. In the app, use **원값·단위·표시 범위** (*Raw values, units and display ranges*) and **그래프 SVG 저장** (*Save graph SVG*). Follow the [illustrated study workflow](#your-first-study-in-pictures) below and the [3D walkthrough](docs/browser.en.md#bound-structure-example). [Image sources and capture details](docs/images/README.md).
+The images are native **3840 × 2160 PNGs**. Click an image for its original. Follow the [illustrated study workflow](#your-first-study-in-pictures) below and the [3D walkthrough](docs/browser.en.md#bound-structure-example). [Image sources and capture details](docs/images/README.md).
 
 ## Install and start
 
@@ -40,7 +34,7 @@ For macOS or Windows, install on an Ubuntu server and use your browser through t
 
 ## Your first study, in pictures
 
-The screenshots below come from an installed **0.3.0rc1 starter environment**. Try **Nicotinamide** first: it needs no protein or docking setup. The interface currently uses Korean labels; the instructions give the exact button text. Click any image to enlarge it. Counts and times will depend on your catalog and computer.
+The screenshots below come from an **Ubuntu 24.04 tutorial installation**. [Capture dates and setup details](docs/images/README.md) distinguish the original images from the four updated views. Try **Nicotinamide** first: it needs no protein or docking setup. The interface currently uses Korean labels; the instructions give the exact button text. Click any image to enlarge it. Counts and times will depend on your catalog and computer.
 
 ### 1. Check that the installation is ready
 
@@ -86,7 +80,7 @@ Scroll down to the **2D structure**, skin properties and **기존 DB 독성·ADM
 
 ![How the ADMET section reads when no stored prediction exists](docs/images/09-admet-results.jpg)
 
-The example above has no stored prediction for that structure, so the section stays **미평가** (*not evaluated*). When predictions exist, the same place lists each endpoint value with its model version.
+The image above was captured **before catalog registration** to illustrate **미평가** (*not evaluated*). After starter preparation, available stored predictions appear in the same section with each endpoint value and model version.
 
 ### 7. Save Excel — there are two clicks
 

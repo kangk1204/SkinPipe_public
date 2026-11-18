@@ -6,19 +6,13 @@ SkinPipe는 피부 연구용 화합물 스크리닝 플랫폼입니다. 화합�
 
 이 저장소는 소프트웨어와 설치 안내만 제공합니다. 연구 입력·분석 결과·화합물 DB·예측값·모델 가중치는 각 사용자의 별도 설치 폴더에 저장됩니다. 연구 이력과 사전 지정 표적은 빈 상태로 시작합니다.
 
-## 먼저 보는 3D 구조와 예측 그래프
+## 먼저 보는 3D 구조
 
 **Mol\* 3D 보기 — 공개 PDB `1CBS`, 사슬 A, 관측 리간드 REA 200.** **결합 부위**로 확대한 원래 관측 구조입니다. 새 후보의 도킹 결과와 구분합니다. 앱에서는 드래그로 회전하고 휠·핀치로 확대할 수 있습니다. [포켓 4K 원본](docs/images/21-molstar-bound-pocket.png)과 [단백질 전체 구조](docs/images/22-molstar-bound-overview.png)를 열어 보세요.
 
 [![공개 PDB 1CBS의 관측 REA 리간드와 수용체를 보여주는 Mol* 포켓 보기, 3840×2160 PNG](docs/images/21-molstar-bound-pocket.png)](docs/images/21-molstar-bound-pocket.png)
 
-**SwissADME 스타일의 레이더 표현 — 축과 참고 범위는 SkinPipe 기준입니다.** 아래는 공개 **Nicotinamide / PubChem CID 936** 예제의 **ADMET-AI 2.0.1** 저장 예측입니다. SwissADME 서비스의 산출물이 아닌 SkinPipe 그래프입니다. 초록색은 화합물의 값, 주황색은 물성 4축의 설정된 참고 범위입니다. 바깥쪽일수록 값이 크며, 독성 그래프에서는 해당 모델의 양성 출력이 큰 방향입니다.
-
-| 분자 물성 | 독성 모델 출력 |
-|---|---|
-| [<img src="docs/images/23-nicotinamide-properties.svg" alt="Nicotinamide의 분자 물성 6축과 SkinPipe 참고 범위" width="460" height="370">](docs/images/23-nicotinamide-properties.svg) | [<img src="docs/images/24-nicotinamide-toxicity.svg" alt="Nicotinamide의 독성 모델 출력 6항목" width="460" height="370">](docs/images/24-nicotinamide-toxicity.svg) |
-
-3D는 **3840 × 2160 PNG 원본**, 그래프는 확대해도 선명한 **SVG 벡터**입니다. 이미지를 누르면 원본을 엽니다. 앱의 **원값·단위·표시 범위**에서 수치를 확인하고 **그래프 SVG 저장**으로 내려받을 수 있습니다. 아래 [첫 연구 사용 순서](#화면을-보며-첫-연구-진행하기)와 [3D 사용 순서](docs/browser.ko.md#결합-구조-예제)를 따라 하세요. [이미지 출처·촬영 범위](docs/images/README.md).
+이미지는 **3840 × 2160 PNG 원본**입니다. 누르면 원본을 엽니다. 아래 [첫 연구 사용 순서](#화면을-보며-첫-연구-진행하기)와 [3D 사용 순서](docs/browser.ko.md#결합-구조-예제)를 따라 하세요. [이미지 출처·촬영 범위](docs/images/README.md).
 
 ## 한 번에 설치하고 실행하기
 
@@ -40,7 +34,7 @@ macOS·Windows는 Ubuntu 서버에 설치한 뒤 [SSH 터널로 접속](docs/cat
 
 ## 화면을 보며 첫 연구 진행하기
 
-아래는 **0.3.0rc1 starter 설치 환경에서 직접 촬영한 화면**입니다. 처음에는 단백질·도킹 설정이 필요 없는 **Nicotinamide**로 따라 해보세요. 이미지를 누르면 크게 볼 수 있습니다. DB 구성과 컴퓨터에 따라 개수·시간은 달라집니다.
+아래는 **Ubuntu 24.04 튜토리얼 설치본에서 직접 촬영한 화면**입니다. 원래 화면과 교체한 4장의 [촬영 시점·환경](docs/images/README.md)을 구분해 두었습니다. 처음에는 단백질·도킹 설정이 필요 없는 **Nicotinamide**로 따라 해보세요. 이미지를 누르면 크게 볼 수 있습니다. DB 구성과 컴퓨터에 따라 개수·시간은 달라집니다.
 
 ### 1. 설치 준비 상태 확인
 
@@ -86,7 +80,7 @@ macOS·Windows는 Ubuntu 서버에 설치한 뒤 [SSH 터널로 접속](docs/cat
 
 ![저장된 ADMET 예측이 없을 때의 표시](docs/images/09-admet-results.jpg)
 
-위 그림은 해당 구조의 저장 예측이 없어 **미평가**로 남은 경우입니다. 예측이 있으면 같은 자리에 지표별 값과 모델 버전이 표시됩니다.
+위 그림은 **카탈로그 등록 전** 촬영한 **미평가** 예시입니다. starter 준비 후 저장 예측이 있으면 같은 자리에 지표별 값과 모델 버전이 표시됩니다.
 
 ### 7. Excel 받기 — 두 번 클릭합니다
 
