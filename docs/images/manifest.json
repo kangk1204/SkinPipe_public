@@ -1,7 +1,7 @@
 {
   "scope": "public-tutorial-screenshots",
   "version": "0.3.0rc1",
-  "capture_environment": "Installed Ubuntu 24.04 starter catalog, local browser interface",
+  "capture_environment": "Installed Ubuntu 24.04 starter catalog, local browser interface; the 2026-11-18 re-captures of 08 and 09 were taken in the same installation before catalog registration",
   "examples": [
     "Nicotinamide / PubChem CID 936",
     "Nicotinamide SMILES",
@@ -39,11 +39,11 @@
     },
     {
       "file": "08-structure-and-skin.jpg",
-      "sha256": "72359b18fbf7c471b850c48938d1ecaec0d15bc6f8d812a94909057e7afdac5a"
+      "sha256": "c23d542aed5871c51fe58abe291accbf9235fed15606050e06d20e7b56ef425b"
     },
     {
       "file": "09-admet-results.jpg",
-      "sha256": "0cd346eece8aaecf309dc90759a239debbe25827249d2cd105da94d0d827af08"
+      "sha256": "8fcbaea287dfd95fea88a73b63fba0a52bdc6babeeeaa4e27df64d5ddb3d0eb3"
     },
     {
       "file": "10-excel-ready.jpg",
@@ -83,11 +83,11 @@
     },
     {
       "file": "19-candidate-filters.jpg",
-      "sha256": "a106c3b1b58a08e061664e3505a69c01fd12f38d5583f538e595e7f038d7c4d8"
+      "sha256": "6e4bda884359d24cf2ce8b379e3e391e236a5e40be5106fd8531ce09fd5f705d"
     },
     {
       "file": "20-empty-filter-results.jpg",
-      "sha256": "966064149c8246c7e3892693b0125a94a1a2c0412a0c90ca5e267eff4be894aa"
+      "sha256": "204819a4fb02483394f18c58dbe9d88bec6ddbf2deb968039451f4816a524904"
     },
     {
       "file": "21-molstar-bound-pocket.png",

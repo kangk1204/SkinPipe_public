@@ -170,17 +170,17 @@ Click **전체 후보 표 보기** (*Open complete candidate table*) in a comple
 
 ![Candidate comparison filters and counts from a separate Nicotinamide similarity search](images/19-candidate-filters.jpg)
 
-This similarity-search example has **4 stored observations**, including the seed and a repeated structure; its study summary reports **2 new unique candidates**. The first “assess input only” example does not search for candidates.
+This search example has **1 stored observation**, the seed alone; in this starter catalog the study summary reports **0 new unique candidates**. Yields depend on the catalog scope and conditions. The first “assess input only” example does not search for candidates.
 
-![An enabled purchase-only filter gives zero matches while four observations remain saved](images/20-empty-filter-results.jpg)
+![An enabled purchase-only filter gives zero matches while the stored observation remains saved](images/20-empty-filter-results.jpg)
 
-If the table becomes empty, compare **전체 모집단** (*Stored population*) with **필터 적용 후** (*After filters*). Here the purchase-only condition hides all four rows. Turn it off or click **제외 필터 해제** to see them again. Filters do not delete saved results.
+If the table becomes empty, compare **전체 모집단** (*Stored population*) with **필터 적용 후** (*After filters*). Here the purchase-only condition hides every stored row. Turn it off or click **제외 필터 해제** to see them again. Filters do not delete saved results.
 
 ![Completed Nicotinamide assessment and result actions](images/07-completed-study.jpg)
 
-![Two-dimensional compound structure and skin properties](images/08-structure-and-skin.jpg)
+![Two-dimensional structure of the input compound](images/08-structure-and-skin.jpg)
 
-![ADMET outputs with scales and model version](images/09-admet-results.jpg)
+![How the ADMET section reads when no stored prediction exists](images/09-admet-results.jpg)
 
 See the [high-resolution molecular-property and toxicity radars](../README.md#preview-3d-structures-and-prediction-profiles). The SVG originals retain raw values, axis ranges and model-source metadata; use **그래프 SVG 저장** in the app to save your own graph.
 

@@ -84,7 +84,9 @@ If a status request fails or no new response arrives for 20 seconds, the spinner
 
 Scroll down to the **2D structure**, skin properties and **기존 DB 독성·ADMET 예측** (*Cached toxicity/ADMET predictions*). The table shows each model output, scale and model version. Missing values remain unassessed. For a structure-based study, use the [3D pocket walkthrough](docs/browser.en.md#bound-structure-example) to inspect the observed ligand and receptor.
 
-![ADMET outputs with endpoint names, units and model version](docs/images/09-admet-results.jpg)
+![How the ADMET section reads when no stored prediction exists](docs/images/09-admet-results.jpg)
+
+The example above has no stored prediction for that structure, so the section stays **미평가** (*not evaluated*). When predictions exist, the same place lists each endpoint value with its model version.
 
 ### 7. Save Excel — there are two clicks
 
